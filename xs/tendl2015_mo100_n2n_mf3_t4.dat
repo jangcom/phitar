@@ -1,0 +1,52 @@
+#LIBRARY    TENDL-2015
+#REACTION   MO-100(N,2N)MO-99,SIG
+#NUCLEUS    Mo-100
+#MF         3
+#MT         16
+#EN-MIN     8.37555e+06
+#EN-MAX     2e+08
+#E,eV        Sig,b        Interpolation
+ 8.37555E+06 0            Lin-Lin
+ 8.5E+06     0.0113095    Lin-Lin
+ 9E+06       0.227352     Lin-Lin
+ 9.5E+06     0.53006      Lin-Lin
+ 1E+07       0.79964      Lin-Lin
+ 1.05E+07    1.00902      Lin-Lin
+ 1.1E+07     1.17015      Lin-Lin
+ 1.15E+07    1.28155      Lin-Lin
+ 1.2E+07     1.36388      Lin-Lin
+ 1.25E+07    1.42035      Lin-Lin
+ 1.3E+07     1.45928      Lin-Lin
+ 1.35E+07    1.48724      Lin-Lin
+ 1.4E+07     1.50757      Lin-Lin
+ 1.45E+07    1.52149      Lin-Lin
+ 1.5E+07     1.52762      Lin-Lin
+ 1.6E+07     1.49201      Lin-Lin
+ 1.7E+07     1.378        Lin-Lin
+ 1.8E+07     1.1918       Lin-Lin
+ 1.9E+07     0.989327     Lin-Lin
+ 2E+07       0.810747     Lin-Lin
+ 2.1E+07     0.672433     Lin-Lin
+ 2.2E+07     0.570278     Lin-Lin
+ 2.3E+07     0.496929     Lin-Lin
+ 2.4E+07     0.44495      Lin-Lin
+ 2.5E+07     0.405512     Lin-Lin
+ 2.6E+07     0.376366     Lin-Lin
+ 2.7E+07     0.353763     Lin-Lin
+ 2.8E+07     0.335575     Lin-Lin
+ 2.9E+07     0.319807     Lin-Lin
+ 3E+07       0.306703     Lin-Lin
+ 3.2E+07     0.28357      Lin-Lin
+ 3.4E+07     0.264458     Lin-Lin
+ 3.6E+07     0.248773     Lin-Lin
+ 4E+07       0.220147     Lin-Lin
+ 4.6E+07     0.184926     Lin-Lin
+ 4.8E+07     0.174312     Lin-Lin
+ 5E+07       0.164541     Lin-Lin
+ 5.2E+07     0.156976     Lin-Lin
+ 5.4E+07     0.151168     Lin-Lin
+ 5.8E+07     0.143922     Lin-Lin
+ 6E+07       0.137777     Lin-Lin
+ 6E+07       0            Lin-Lin
+ 2E+08       0            Lin-Lin
+#END

@@ -1,0 +1,42 @@
+#
+# J. Jang
+# 2018-09-26
+# > Headers copy-pasted from 'tendl2014_mo100_p2n_mf3_t4.dat' and modified,
+#   which contains xs for Mo-100(p,2n)Tc-99g.
+# > Energy-xs pairs copy-pasted from 'tendl2014_mo100_p2n_mf10_endf6.dat'
+#   and modified, which can be retrieved from the IAEA EXFOR-ENDF
+#   for the following conditions:
+#   > Target: Mo-100
+#   > Reaction: p,2n
+#   > Quantity: SIG/ACT
+#
+
+#LIBRARY    TENDL-2014
+#REACTION   MO-100(P,2N)TC-99M2,SIG/ACT
+#NUCLEUS    Mo-100
+#MF         10
+#MT         16
+#EN-MIN     7.938300e+6
+#EN-MAX     2e+08
+#E,eV        Sig,b
+ 7.938300e+6 0.000000e+0
+ 8.000000e+6 1.094260e-2
+ 9.000000e+6 1.133980e-1
+ 1.000000e+7 1.591590e-1
+ 1.100000e+7 1.763310e-1
+ 1.200000e+7 1.797870e-1
+ 1.300000e+7 1.787920e-1
+ 1.400000e+7 1.758030e-1
+ 1.500000e+7 1.709570e-1
+ 1.600000e+7 1.647920e-1
+ 1.700000e+7 1.579950e-1
+ 1.800000e+7 1.371860e-1
+ 1.900000e+7 1.054260e-1
+ 2.000000e+7 7.990731e-2
+ 2.200000e+7 4.342440e-2
+ 2.400000e+7 2.925370e-2
+ 2.600000e+7 2.290240e-2
+ 2.800000e+7 1.923690e-2
+ 3.000000e+7 1.724310e-2
+ 3.000000e+7 0.000000e+0
+ 2.000000e+8 0.000000e+0

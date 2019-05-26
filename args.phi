@@ -1,0 +1,323 @@
+#
+# List of available arguments for phitar
+#
+# Jaewoong Jang
+# jangj@korea.ac.kr
+#
+# date_last  = 2019-05-23
+# date_first = 2018-07-14
+#
+
+
+#
+# > Syntax
+#   obj.key    = value
+#   obj.subkey = value
+#   obj.key    = value,value
+#
+# >> String values can be surrounded with a pair of single or double quotes,
+#    or can be barewords.
+#
+# >> Multiple values
+#    (1) Multiple values are separated by the comma (,).
+#    (2) The following flags are shown in comments explaining available values:
+#        "Compulsory multiple:" for values that must be a list
+#        "Multiple:" for values that "can be" a list
+#        Nothing is shown, on the other hand, for values that must be "single".
+#
+#   Available values common to a group of commands is shown
+#   in the next line of the group name.
+#   e.g. # Switches
+#        # 'on','off'
+#        meaning that 'on' or 'off' can be input.
+#
+#   Unless the option-explaining comment mentions quoted strings,
+#   the values must be numbers.
+#   e.g. # Tungsten RCC
+#        bconv.height_fixed = 0.33
+#        meaning that the value must be a number, not a string.
+#
+#   Command-specific values and/or warnings are shown
+#   at the end of a command.
+#   e.g. bconv.iteration_geoms = height,radius # Multiple: 'height','radius'
+#        meaning that 'height' and 'radius' can be input.
+#
+# > Unit: wrto MCNP (thereby PHITS) conventions
+#   Dimensions: cm
+#   Energy:     MeV
+#
+# > Comment symbol
+#   The hash (#)
+#
+# > Default values are assigned to the arguments that are not specified here.
+#
+
+
+#
+# TOC
+# 1. Controls
+# 2. PHITS targets
+# 3. PHITS source
+# 4. Linac
+# 5. PHITS tally
+# 6. PHITS parameters section
+#
+
+
+#
+# 1. Controls
+# 'on','off'
+#
+phits.switch              = on   # You can also comment here.
+phits.write_fm            = 'on' # Quotes can optionally be used for string vals.
+phits.openmp              = 0    # Number of cores for shared-memory parallel computing; 0:max
+mapdl.switch              = on   # => Generates macro files for ANSYS MAPDL.
+mapdl.write_fm            = 'on'
+mapdl_of_macs.switch      = 'off'
+mapdl_of_macs_all.switch  = "off"
+t_shared.shortname.switch = 'on'
+t_track.switch            = 'on'
+t_track.err_switch        = 'off'
+t_cross.switch            = 'on'
+t_heat.switch             = 'on'
+t_heat.err_switch         = 'off'
+t_gshow.switch            = 'on'
+t_3dshow.switch           = 'on'
+t_tot_fluence.switch      = on
+t_tot_fluence.write_fm    = 'on'
+angel.switch              = on
+angel.modify.switch       = on
+angel.mute.switch         = 'on'  # off: modifications printed on the shell
+angel.noframe.switch      = 'on'
+angel.nomessage.switch    = 'on'
+angel.annot_type          = beam  # none (d), beam, geom
+angel.orientation         = land  # land (d), port, slnd
+angel.dim_unit            = mm    # cm (d), mm, um
+angel.cmin_track          = 1e-3  # [t_track.unit==1] 1e-3, [t_track.unit==2] 5e-5
+angel.cmax_track          = 1e+0  # [t_track.unit==1] 1e+0, [t_track.unit==2] 5e-3
+angel.cmin_heat           = 1e-1
+angel.cmax_heat           = 1e+2
+image.png.switch          = on
+image.png_trn.switch      = on    # Transparent
+image.jpg.switch          = "off"
+image.raster_dpi          = 300   # Default: 150. Sane range 50--200.
+image.pdf.switch          = on
+image.emf.switch          = 'off' # EMF conversion is slow!
+image.wmf.switch          = 'off'
+image.mute.switch         = 'on'
+animate.raster            = 'png' # 'png', 'jpg'
+animate.duration          = 5     # In second; positive integer.
+animate.gif.switch        = on
+animate.avi.switch        = on    # Encoded in MPEG-4 and YUV420p: QuickTime-compatible.
+animate.avi.kbps          = 1000  # Default: 1000. Sane range 200--1000.
+animate.mp4.switch        = on    # Encoded in H.264 and YUV420p: QuickTime-compatible.
+# Caveat: If you have increased image.dpi from the default,
+#         then decrease the crf appropriately. Otherwise, the bitrate
+#         and thereby the size of the mp4 video will become too large.
+# Recommended pairs of dpi-crf are:
+#                      150-18
+animate.mp4.crf           = 18   # Default 18. Sane range 15--25.
+animate.mute.switch       = 'on'
+# Yields
+yield.avg_beam_curr              = 15   # uA
+yield.end_of_irr                 = 5/60 # Hour
+yield.unit                       = kBq  # Bq, kBq, MBq, GBq, TBq, uCi, mCi, Ci
+# Mo-99 yields
+yield_mo99.switch                = on
+yield_mo99.pwm_switch            = 'off'
+yield_mo99.write_fm              = 'on'
+yield_mo99.react_nucl_enri_lev   = 0.09744 # Range [0,1]. 0.09744: Mo-100 natural abund
+yield_mo99.num_of_nrg_bins       = 1000
+yield_mo99.micro_xs_dir          = xs
+yield_mo99.micro_xs_dat          = tendl2015_mo100_gn_mf3_t4.dat
+yield_mo99.micro_xs_interp_algo  = csplines # csplines, acsplines
+# Au-196 yields
+yield_au196.switch               = off
+yield_au196.pwm_switch           = 'off'
+yield_au196.write_fm             = 'on'
+yield_au196.react_nucl_enri_lev  = 1.00000 # Range [0,1]. 1.00000: Au-197 natural abund
+yield_au196.num_of_nrg_bins      = 1000
+yield_au196.micro_xs_dir         = xs
+yield_au196.micro_xs_dat         = tendl2015_au197_gn_mf3_t4.dat
+yield_au196.micro_xs_interp_algo = csplines # csplines, acsplines
+
+#
+# 2. PHITS cells
+#
+
+# Bremsstrahlung converter
+# Keys suffixed by "_of_int" - Compulsory multiple: min,incre,max
+#
+# To skip geometric parameters from iteration:
+# Input nothing or comment out the values
+# following "bconv.iteration_geoms =".
+bconv.material        = w      # ta, w, ir, pt, au, none, vac, air
+bconv.dens_ratio      = 1.0000 # Range [0,1]
+bconv.iteration_geoms = height,radius,gap # Multiple: 'height','radius','gap'
+bconv.height_fixed    = 0.30
+bconv.heights_of_int  = 0.20,0.01,0.30
+bconv.radius_fixed    = 1.25
+bconv.radii_of_int    = 0.50,0.25,1.00
+bconv.gap_fixed       = 1.0
+bconv.gaps_of_int     = 0.0,0.5,2.0
+
+# Molybdenum target
+# Keys suffixed by "_of_int" - Compulsory multiple: min,incre,max
+motar.material   = mo     # mo, moo2, moo3, vac, air, pb
+motar.dens_ratio = 1.0000 # Range [0,1]
+
+# Molybdenum RCC
+# Keys suffixed by "_of_int" - Compulsory multiple: min,incre,max
+motar_rcc.iteration_geoms = height,radius # Multiple: 'height','radius'
+motar_rcc.height_fixed    = 0.50
+motar_rcc.heights_of_int  = 0.50,0.25,1.00
+motar_rcc.radius_fixed    = 0.50
+motar_rcc.radii_of_int    = 0.50,0.25,1.00
+
+# Molybdenum "T"RC
+# Keys suffixed by "_of_int" - Compulsory multiple: min,incre,max
+motar_trc.iteration_geoms   = bot_radius,top_radius # Multiple: 'height','bot_radius','top_radius'
+motar_trc.height_fixed      = 1.00
+motar_trc.heights_of_int    = 1.00,0.15,1.30
+motar_trc.bot_radius_fixed  = 0.15
+motar_trc.bot_radii_of_int  = 0.10,0.15,0.40
+motar_trc.top_radius_fixed  = 0.60
+motar_trc.top_radii_of_int  = 0.50,0.15,0.80
+
+# Photon flux monitors (for irradiation experiment)
+flux_mnt_up.material       = au     # au, vac, air
+flux_mnt_up.dens_ratio     = 1.0000 # Range [0,1]
+flux_mnt_up.height_fixed   = 0.000  # 50 um. Set 0 to suppress
+flux_mnt_up.radius_fixed   = 0.500  # 5 mm
+flux_mnt_down.material     = au
+flux_mnt_down.dens_ratio   = 1.0000 # Range [0,1]
+flux_mnt_down.height_fixed = 0.000
+flux_mnt_down.radius_fixed = 0.500
+
+# Target wrap (for irradiation experiment)
+tar_wrap.material        = al     # al, vac, air
+tar_wrap.dens_ratio      = 1.0000 # Range [0,1]
+tar_wrap.thickness_fixed = 0.0000 # 0.0012 == 12 um. Set 0 to suppress
+
+# MC calculation space
+mc_space.material = air # vac, air, h2, he, water
+
+
+#
+# 3. PHITS source
+# Keys suffixed by "_of_int" - Compulsory multiple: min,incre,max
+#
+source.shape         = gaussian_xy # 'cylind','gaussian_xyz','gaussian_xy'
+source.varying_param = nrg # 'nrg','rad','x_fwhm','y_fwhm','z_fwhm','xy_fwhms'
+source.nrg_fixed     = 35
+source.nrgs_of_int   = 20,15,50
+# For source.shape = cylind
+source.rad_fixed     = 0.45
+source.radii_of_int  = 0.10,0.05,0.50
+# For source.shape = gaussian_xyz
+source.x_fwhm_fixed   = 0.45
+source.x_fwhms_of_int = 0.10,0.05,0.50
+source.y_fwhm_fixed   = 0.45
+source.y_fwhms_of_int = 0.10,0.05,0.50
+source.z_fwhm_fixed   = 0.0
+source.z_fwhms_of_int = 0.0,0.0,0.0
+# For source.shape = gaussian_xy
+source.xy_fwhm_fixed   = 0.45
+source.xy_fwhms_of_int = 0.10,0.05,1.00
+
+
+#
+# 4. Linac
+#
+# Available klystrons for the 'rf_power_source' attribute (As of 2018-07-31):
+# 'thales_lband_tv2022b'
+# 'tetd_sband_e37307'
+# 'tetd_xband_e37113'
+linac.lband.name            = 'Our new L-band linac' # Quotes for whitespaces.
+linac.lband.rf_power_source = thales_lband_tv2022b
+linac.lband.peak_beam_curr  = 0.5 # in A
+linac.sband.name            = 'Your new S-band linac'
+linac.sband.rf_power_source = tetd_sband_e37307
+linac.sband.peak_beam_curr  = 0.5
+linac.xband.name            = 'My new X-band linac'
+linac.xband.rf_power_source = tetd_xband_e37113
+linac.xband.peak_beam_curr  = 0.13
+# Place the of_int attribute after the lband, sband, and xband subkeys above.
+linac.of_int                = xband # 'lband','sband','xband'
+
+
+#
+# 5. PHITS tallies
+#
+
+# Particles of tallying interest
+# Multiple: electron, positron, photon, neutron, proton
+t_track.particles_of_int = electron,photon,neutron
+t_cross.particles_of_int = electron,photon,neutron
+
+# Mesh size (fineness)
+# Multiple: 'x':integer, where 'x' can be substituted by 'y','z','e'.
+t_track.mesh_sizes      = 'x':200,'y':200,'z':200,'e':100 # Auto-settings: xy => nz =1, xz => ny =1, ...
+t_cross.mesh_sizes      = 'e':100
+t_cross_dump.mesh_sizes = 'e':500 # Effective only for -dump run mode
+t_heat.mesh_sizes       = 'x':200,'y':200,'z':200,'r':100
+t_heat_mapdl.mesh_sizes = 'x':100,'y':100,'z':20 # Avoid too large meshes.
+t_gshow.mesh_sizes      = 'x':500,'y':500,'z':500
+
+# Cell boundary resolution and width
+t_track.bnd_resol  = 1.2 # Default: 1.2 (PHITS default: 1.0)
+t_track.bnd_width  = 1.0 # Default: 1.0 (PHITS default: 0.5)
+t_heat.bnd_resol   = 1.2
+t_heat.bnd_width   = 1.0
+t_gshow.bnd_resol  = 1.2
+t_gshow.bnd_width  = 1.0
+t_3dshow.bnd_resol = 1.2
+t_3dshow.bnd_width = 1.0
+
+# Unit
+t_track.unit = 1 # [1] cm^-2 source-^1 [2] cm^-2 MeV^-1 source-^1
+t_cross.unit = 1 # [1] cm^-2 source-^1 [2] cm^-2 MeV^-1 source-^1
+t_heat.unit  = 1 # [0] Gy source-^1    [1] MeV^-1 cm^-3 source-^1 [2] MeV source-^1
+
+# Multiplication factor
+# (6.25e18*1e-06) == Number of charged particles in 1 uA.
+# (i) Based on a linac:
+#     'linac.of_int','linac.lband','linac.sband','linac.xband'
+#     A comment is automatically inserted next to the factor.
+# (ii) Based on a number:
+#      A number. Scientific notation is allowed.
+#      If given, the string following a factor and a colon (:)
+#      is inserted next to the factor as a comment.
+t_track.factor      = #(6.25e18*1e-06)*260:'260 uA'
+t_cross.factor      = #(6.25e18*1e-06)*260:'260 uA'
+t_heat.factor       = #(6.25e18*1e-06)*260:'260 uA'
+t_heat_mapdl.factor = #(6.25e18*1e-06)*260:'260 uA'
+
+# Figure range offset
+# Multiple: 'x':integer, where 'x' can be substituted by 'y','z'.
+t_shared.offsets = 'x':2,'y':2,'z':2
+
+
+#
+# 6. PHITS parameters section
+#
+params.icntl     = 0     # [0] MC run [8] Gshow [11] 3Dshow
+params.istdev    = 0     # [-1] Recalculate from the last batch
+params.maxcas    = 1000  # Integer up to 2147483647
+params.maxbch    = 10    # Integer up to 2147483647
+params.ipnint    = 1     # [0] Off [1] Photonuclear reactions considered
+params.negs      = 1     # [0] Off [1] emin(12,13)=0.1,emin(14)=1e-3,dmax(12-14)=1e3
+params.nucdata   = 1     # [0] Off [1] emin(2)=1e-10,dmax(2)=20 for neut calc
+params.emin.neut = 1e-10 # Calc cutoff nrg for neutrons; >=0
+params.emin.elec = 1e-01 # Calc cutoff nrg for electrons; >=5.4461935e-07
+params.emin.posi = 1e-01 # Calc cutoff nrg for positrons; >=5.4461935e-07
+params.emin.phot = 1e-03 # Calc cutoff nrg for photons; >=0 and <emin.elec
+params.dmax.neut = 70    # Nuclear data max nrg for neutrons
+params.dmax.elec = 70    # Nuclear data max nrg for electrons
+params.dmax.posi = 70    # Nuclear data max nrg for positrons
+params.dmax.phot = 70    # Nuclear data max nrg for photons
+params.ipcut     = 0     # [0] Off [1] Output [2] Output with time info
+params.incut     = 0     # [0] Off [1] Output [2] Output with time info
+params.igcut     = 0     # [0] Off [1] Output [2] Output with time info
+                         # [3] Output for gamma-rays, electrons, and positrons
+#eof
