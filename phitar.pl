@@ -77,8 +77,8 @@ my $yield_au196_2_for_specific_source  = Yield->new();
 my $pwm_au196_2_for_specific_source    = Yield->new();
 
 
-our $VERSION = '1.01';
-our $LAST    = '2019-05-24';
+our $VERSION = '1.02';
+our $LAST    = '2019-05-30';
 our $FIRST   = '2018-04-23';
 
 
@@ -9742,6 +9742,7 @@ sub inner_iterator {
             
             # PWM
             if ($yield_mo99->Ctrls->pwm_switch =~ /on/i) {
+                # Write data over the photon energy range.
                 for (
                     my $i=0;
                     $i<=$#{$yield_mo99->calc_rn_yield->{mc_flue_nrg_mega_ev}};
@@ -9766,6 +9767,26 @@ sub inner_iterator {
                         $yield_mo99->calc_rn_yield->{react_rate}[$i],
                     );
                 }
+                
+                # Append the sums of pointwise multiplication products.
+                $pwm_mo99_for_specific_source->add_columnar_arr(
+                    $phits->curr_v_source_param->{val},
+                    $varying_val * 10,
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    $yield_mo99->calc_rn_yield->{pwm_micro_tot},
+                    $yield_mo99->calc_rn_yield->{pwm_macro_tot},
+                    'NaN',
+                    $yield_mo99->calc_rn_yield->{source_rate_tot},
+                    $yield_mo99->calc_rn_yield->{react_rate_per_vol_tot},
+                    'NaN',
+                    $yield_mo99->calc_rn_yield->{react_rate_tot},
+                );
             }
         }
         #-----------------------------------------------------------
@@ -9889,6 +9910,7 @@ sub inner_iterator {
                     };
                     $i++
                 ) {
+                    # Write data over the photon energy range.
                     $pwm_au196_1_for_specific_source->add_columnar_arr(
                         $phits->curr_v_source_param->{val},
                         $varying_val * 10,
@@ -9906,6 +9928,26 @@ sub inner_iterator {
                         $yield_au196_1->calc_rn_yield->{react_rate_per_vol}[$i],
                         $yield_au196_1->calc_rn_yield->{tar_vol},
                         $yield_au196_1->calc_rn_yield->{react_rate}[$i],
+                    );
+                    
+                    # Append the sums of pointwise multiplication products.
+                    $pwm_au196_1_for_specific_source->add_columnar_arr(
+                        $phits->curr_v_source_param->{val},
+                        $varying_val * 10,
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        $yield_au196_1->calc_rn_yield->{pwm_micro_tot},
+                        $yield_au196_1->calc_rn_yield->{pwm_macro_tot},
+                        'NaN',
+                        $yield_au196_1->calc_rn_yield->{source_rate_tot},
+                        $yield_au196_1->calc_rn_yield->{react_rate_per_vol_tot},
+                        'NaN',
+                        $yield_au196_1->calc_rn_yield->{react_rate_tot},
                     );
                 }
             }
@@ -10026,6 +10068,7 @@ sub inner_iterator {
                     };
                     $i++
                 ) {
+                    # Write data over the photon energy range.
                     $pwm_au196_2_for_specific_source->add_columnar_arr(
                         $phits->curr_v_source_param->{val},
                         $varying_val * 10,
@@ -10043,6 +10086,26 @@ sub inner_iterator {
                         $yield_au196_2->calc_rn_yield->{react_rate_per_vol}[$i],
                         $yield_au196_2->calc_rn_yield->{tar_vol},
                         $yield_au196_2->calc_rn_yield->{react_rate}[$i],
+                    );
+                    
+                    # Append the sums of pointwise multiplication products.
+                    $pwm_au196_2_for_specific_source->add_columnar_arr(
+                        $phits->curr_v_source_param->{val},
+                        $varying_val * 10,
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        'NaN',
+                        $yield_au196_2->calc_rn_yield->{pwm_micro_tot},
+                        $yield_au196_2->calc_rn_yield->{pwm_macro_tot},
+                        'NaN',
+                        $yield_au196_2->calc_rn_yield->{source_rate_tot},
+                        $yield_au196_2->calc_rn_yield->{react_rate_per_vol_tot},
+                        'NaN',
+                        $yield_au196_2->calc_rn_yield->{react_rate_tot},
                     );
                 }
             }
