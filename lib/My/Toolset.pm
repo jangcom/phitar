@@ -19,7 +19,6 @@ use Exporter qw(import);
 our @EXPORT = qw(
     show_front_matter
     validate_argv
-    chk_env_vars
     include
     reduce_data
     show_elapsed_real_time
@@ -42,7 +41,6 @@ our %EXPORT_TAGS = (
     coding => [qw(
         show_front_matter
         validate_argv
-        chk_env_vars
         include
         reduce_data
         show_elapsed_real_time
@@ -69,7 +67,7 @@ our %EXPORT_TAGS = (
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.02';
-our $LAST     = '2019-05-23';
+our $LAST     = '2019-05-30';
 our $FIRST    = '2018-08-19';
 
 
@@ -1621,22 +1619,6 @@ sub calc_vol {
     }
     
     return eval $shapes{$shape}{eq}; # cm^3
-}
-
-
-sub chk_env_vars {
-    # """Check environment variables."""
-    
-#    my %progs = (
-#        ghostscript => 
-#        gnuplot     => 
-#        pdflatex    => 
-#        lualatex    => 
-#    );
-    
-    say "Entering the environment checking mode...\n";
-    
-    exit;
 }
 
 
