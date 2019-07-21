@@ -31,7 +31,9 @@ OPTIONS
                     electron
                     photon
                     neutron
-                Run simulations with the dump source.
+                Run simulations using a dump source.
+                (as of v1.03, particles entering a Mo target are used
+                as the dump source)
 
         -rpt_subdir=dname (short: -subdir, default: reports)
             Name of subdirectory to which report files will be stored.

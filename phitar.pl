@@ -77,8 +77,8 @@ my $yield_au196_2_for_specific_source  = Yield->new();
 my $pwm_au196_2_for_specific_source    = Yield->new();
 
 
-our $VERSION = '1.02';
-our $LAST    = '2019-05-30';
+our $VERSION = '1.03';
+our $LAST    = '2019-07-21';
 our $FIRST   = '2018-04-23';
 
 
@@ -9929,27 +9929,27 @@ sub inner_iterator {
                         $yield_au196_1->calc_rn_yield->{tar_vol},
                         $yield_au196_1->calc_rn_yield->{react_rate}[$i],
                     );
-                    
-                    # Append the sums of pointwise multiplication products.
-                    $pwm_au196_1_for_specific_source->add_columnar_arr(
-                        $phits->curr_v_source_param->{val},
-                        $varying_val * 10,
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        $yield_au196_1->calc_rn_yield->{pwm_micro_tot},
-                        $yield_au196_1->calc_rn_yield->{pwm_macro_tot},
-                        'NaN',
-                        $yield_au196_1->calc_rn_yield->{source_rate_tot},
-                        $yield_au196_1->calc_rn_yield->{react_rate_per_vol_tot},
-                        'NaN',
-                        $yield_au196_1->calc_rn_yield->{react_rate_tot},
-                    );
                 }
+                
+                # Append the sums of pointwise multiplication products.
+                $pwm_au196_1_for_specific_source->add_columnar_arr(
+                    $phits->curr_v_source_param->{val},
+                    $varying_val * 10,
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    $yield_au196_1->calc_rn_yield->{pwm_micro_tot},
+                    $yield_au196_1->calc_rn_yield->{pwm_macro_tot},
+                    'NaN',
+                    $yield_au196_1->calc_rn_yield->{source_rate_tot},
+                    $yield_au196_1->calc_rn_yield->{react_rate_per_vol_tot},
+                    'NaN',
+                    $yield_au196_1->calc_rn_yield->{react_rate_tot},
+                );
             }
         }
         # Downstream
@@ -10087,27 +10087,27 @@ sub inner_iterator {
                         $yield_au196_2->calc_rn_yield->{tar_vol},
                         $yield_au196_2->calc_rn_yield->{react_rate}[$i],
                     );
-                    
-                    # Append the sums of pointwise multiplication products.
-                    $pwm_au196_2_for_specific_source->add_columnar_arr(
-                        $phits->curr_v_source_param->{val},
-                        $varying_val * 10,
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        'NaN',
-                        $yield_au196_2->calc_rn_yield->{pwm_micro_tot},
-                        $yield_au196_2->calc_rn_yield->{pwm_macro_tot},
-                        'NaN',
-                        $yield_au196_2->calc_rn_yield->{source_rate_tot},
-                        $yield_au196_2->calc_rn_yield->{react_rate_per_vol_tot},
-                        'NaN',
-                        $yield_au196_2->calc_rn_yield->{react_rate_tot},
-                    );
                 }
+                
+                # Append the sums of pointwise multiplication products.
+                $pwm_au196_2_for_specific_source->add_columnar_arr(
+                    $phits->curr_v_source_param->{val},
+                    $varying_val * 10,
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    'NaN',
+                    $yield_au196_2->calc_rn_yield->{pwm_micro_tot},
+                    $yield_au196_2->calc_rn_yield->{pwm_macro_tot},
+                    'NaN',
+                    $yield_au196_2->calc_rn_yield->{source_rate_tot},
+                    $yield_au196_2->calc_rn_yield->{react_rate_per_vol_tot},
+                    'NaN',
+                    $yield_au196_2->calc_rn_yield->{react_rate_tot},
+                );
             }
         }
     }
@@ -12723,7 +12723,9 @@ phitar - A PHITS wrapper for targetry design
                 electron
                 photon
                 neutron
-            Run simulations with the dump source.
+            Run simulations using a dump source.
+            (as of v1.03, particles entering a Mo target are used
+            as the dump source)
 
     -rpt_subdir=dname (short: -subdir, default: reports)
         Name of subdirectory to which report files will be stored.
