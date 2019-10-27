@@ -23,6 +23,7 @@ our @EXPORT = qw(
     reduce_data
     show_elapsed_real_time
     pause_shell
+    yn_prompt
 );
 our @EXPORT_OK = qw(
     construct_timestamps
@@ -45,6 +46,7 @@ our %EXPORT_TAGS = (
         reduce_data
         show_elapsed_real_time
         pause_shell
+        yn_prompt
         construct_timestamps
         construct_range
     )],
@@ -67,7 +69,7 @@ our %EXPORT_TAGS = (
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.02';
-our $LAST     = '2019-05-30';
+our $LAST     = '2019-10-26';
 our $FIRST    = '2018-08-19';
 
 
@@ -163,7 +165,12 @@ sub show_front_matter {
             ($lead_symb ? $lead_symb.' ' : $lead_symb),
             $prog_info_href->{auth}{$_},
             $newline,
-        ) for qw(name posi affi mail);
+        ) for (
+            'name',
+#            'posi',
+#            'affi',
+            'mail',
+        );
     }
     
     # Bottom rule
@@ -1199,6 +1206,22 @@ sub pause_shell {
     
     print $notif;
     while (<STDIN>) { last; }
+    
+    return;
+}
+
+
+sub yn_prompt {
+    # """Invoke a y/n prompt."""
+    
+    my $yn;
+    my $yn_msg = $_[0] ? $_[0] : "Run? (y/n)> ";
+    print $yn_msg;
+    while (chomp($yn = <STDIN>)) {
+        return 1 if $yn =~ /\by\b/i;
+        return 0 if $yn =~ /\bn\b/i;
+        print $yn_msg;
+    }
     
     return;
 }

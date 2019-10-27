@@ -187,7 +187,7 @@ motar_trc.top_radii_of_int  = 0.50,0.15,0.80
 # Photon flux monitors (for irradiation experiment)
 flux_mnt_up.material       = au     # au, vac, air
 flux_mnt_up.dens_ratio     = 1.0000 # Range [0,1]
-flux_mnt_up.height_fixed   = 0.000  # 50 um. Set 0 to suppress
+flux_mnt_up.height_fixed   = 0.000  # Set 0 to suppress
 flux_mnt_up.radius_fixed   = 0.500  # 5 mm
 flux_mnt_down.material     = au
 flux_mnt_down.dens_ratio   = 1.0000 # Range [0,1]
@@ -197,7 +197,7 @@ flux_mnt_down.radius_fixed = 0.500
 # Target wrap (for irradiation experiment)
 tar_wrap.material        = al     # al, vac, air
 tar_wrap.dens_ratio      = 1.0000 # Range [0,1]
-tar_wrap.thickness_fixed = 0.0000 # 0.0012 == 12 um. Set 0 to suppress
+tar_wrap.thickness_fixed = 0.0000 # Set 0 to suppress
 
 # MC calculation space
 mc_space.material = air # vac, air, h2, he, water

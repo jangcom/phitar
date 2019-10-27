@@ -1,0 +1,35 @@
+# github archive
+github/
+
+# phitar records
+bak_phitar.pl/
+phitar_baker.bat
+bak_args.phi/
+args_baker.bat
+
+updates.txt
+
+# phitar aux and result files
+2019*/
+demos/
+elph_expt_dat/
+eps_size_wrto_mesh_size/
+figs/
+lines_counted/
+recs/
+reports/
+utils/
+why_had_no_neuts/
+xs/goto_xs_dir.bat
+xs/*splines*
+phitar_lcounter.bat
+deployer_to_phd_diss_code.bat
+
+# MSWin link files
+*.lnk
+
+# POD-related
+phitar_usage.bat
+phitar.html
+pod2htmd.tmp
+phitar_pod2html.bat
