@@ -1,0 +1,12 @@
+v1.02 (2019-04-21)
+- Routine has been added: include()
+
+v1.01 (2019-04-17)
+- Routine calc_vol() reorganized such that it can be easily scaled
+  by other users
+- Routine calc_vol() can now calculate volumes of:
+  - rectangular cuboid
+  - sphere
+  - right circular cylinder
+  - truncated right circular cylinder cone
+- Routine calc_area() added

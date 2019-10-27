@@ -77,21 +77,21 @@ my $yield_au196_2_for_specific_source  = Yield->new();
 my $pwm_au196_2_for_specific_source    = Yield->new();
 
 
-our $VERSION = '1.03';
-our $LAST    = '2019-07-21';
+our $VERSION = '1.04';
+our $LAST    = '2019-10-27';
 our $FIRST   = '2018-04-23';
 
 
 sub parse_argv {
     # """@ARGV parser"""
-    
+
     my(
         $argv_aref,
         $cmd_opts_href,
         $run_opts_href,
     ) = @_;
     my %cmd_opts = %$cmd_opts_href; # For regexes
-    
+
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
@@ -100,7 +100,7 @@ sub parse_argv {
             croak "\n[$_] NOT found; default params will be used\n" if not -e;
             $run_opts_href->{inp} = $_;
         }
-        
+
         # Dump mode and its source particle
         if (/$cmd_opts{dump_src}/) {
             s/$cmd_opts{dump_src}//i;
@@ -114,18 +114,18 @@ sub parse_argv {
                 $phits->source->set_mode('dump');
             }
         }
-        
+
         # Program run with default (predefined) parameters
         if (/$cmd_opts{default}/) {
             $run_opts_href->{is_default} = 1;
         }
-        
+
         # Report path
         if (/$cmd_opts{rpt_subdir}/) {
             s/$cmd_opts{rpt_subdir}//i;
             $run_opts_href->{rpt_path} = getcwd().'/'.$_;
         }
-        
+
         # Report formats
         if (/$cmd_opts{rpt_fmts}/) {
             s/$cmd_opts{rpt_fmts}//;
@@ -136,31 +136,31 @@ sub parse_argv {
                 @{$run_opts_href->{rpt_fmts}} = split /$field_sep/;
             }
         }
-        
+
         # Report flag
         if (/$cmd_opts{rpt_flag}/) {
             s/$cmd_opts{rpt_flag}//;
             $run_opts_href->{rpt_flag} = $_ if $_;
         }
-        
+
         # The front matter won't be displayed at the beginning of the program.
         if (/$cmd_opts{nofm}/) {
             $run_opts_href->{is_nofm} = 1;
         }
-        
+
         # The shell won't be paused at the end of the program.
         if (/$cmd_opts{nopause}/) {
             $run_opts_href->{is_nopause} = 1;
         }
     }
-    
+
     return;
 }
 
 
 sub init {
     # """Initialize object attributes."""
-    
+
     #
     # ANSYS MAPDL
     #
@@ -179,7 +179,7 @@ sub init {
         # Target-dependent parameters are defined
         # in the inner_iterator() subroutine.
     );
-    
+
     #
     # phitar input file parser
     #
@@ -189,7 +189,7 @@ sub init {
         list_val => ',',
         dict_val => ':', # Like the Python's dictionary key-val delim
     );
-    
+
     #
     # PHITS
     #
@@ -234,7 +234,7 @@ sub init {
     # change the last index from [1] to [0].
     $phits->FileIO->set_varying_str($phits->Cmt->abbrs->{varying}[1]);
     $phits->FileIO->set_fixed_str($phits->Cmt->abbrs->{fixed}[1]);
-    
+
     # PHITS source
     $phits->source->set_cylindrical(
         # Parameters
@@ -435,7 +435,7 @@ sub init {
             boil_pt       => undef,
             thermal_cond  => undef,
         },
-        
+
         # Vacuum
         vac => {
             mat_id        => 0, # Predefined ID for the "inner void"
@@ -450,7 +450,7 @@ sub init {
             boil_pt       => undef,
             thermal_cond  => undef,
         },
-        
+
         # Gas
         air => { # Dry air
             mat_id        => 1,
@@ -485,7 +485,7 @@ sub init {
             boil_pt       => 4.222,
             thermal_cond  => 0.1513,
         },
-        
+
         # Liquid
         water => {
             mat_id        => 100,
@@ -498,7 +498,7 @@ sub init {
             boil_pt       => 373.15,
             thermal_cond  => 0.0014,
         },
-        
+
         #
         # Metals
         #
@@ -510,7 +510,7 @@ sub init {
         # 421 for molybdenum(IV) oxide (MoO2; molybdenum dioxide)
         # 422 for molybdenum(VI) oxide (MoO3; molybdenum trioxide)
         #
-        
+
         al => {
             mat_id        => 130,
             mat_comp      => 'Al 1',
@@ -522,7 +522,7 @@ sub init {
             boil_pt       => 2_743.15,
             thermal_cond  => 237,
         },
-        
+
         mo => {
             mat_id        => 420,
             mat_comp      => 'Mo 1',
@@ -556,7 +556,7 @@ sub init {
             boil_pt       => 1_428.15,
             thermal_cond  => undef,
         },
-        
+
         # Group 6 transition metals
         ta => {
             mat_id        => 730,
@@ -565,7 +565,7 @@ sub init {
             mat_lab_size  => 1,
             mat_lab_color => 'darkgray',
             mass_dens     => 16.69,
-            melt_pt       => 3_290.15, 
+            melt_pt       => 3_290.15,
             boil_pt       => 5_731.15,
             thermal_cond  => 57.5,
         },
@@ -613,7 +613,7 @@ sub init {
             boil_pt       => 3_243.15,
             thermal_cond  => 318,
         },
-        
+
         # Group 6 post-transition metals
         pb => {
             mat_id        => 820,
@@ -627,7 +627,7 @@ sub init {
             thermal_cond  => 35.3,
         },
     );
-    
+
     # Examine if a duplicate 'mat_id' exists.
     my %_seen = (); # Must be initialized to an empty hash
     foreach my $mat (keys %_cell_mats_list) {
@@ -642,7 +642,7 @@ sub init {
             );
         }
     }
-    
+
     $bconv->set_cell_mats_list(
         # Group 6 transition metals
         ta => $_cell_mats_list{ta},
@@ -656,7 +656,7 @@ sub init {
         vac  => $_cell_mats_list{vac},
         air  => $_cell_mats_list{air},
     );
-    
+
     $motar->set_cell_mats_list(
         mo   => $_cell_mats_list{mo},
         moo2 => $_cell_mats_list{moo2},
@@ -667,25 +667,25 @@ sub init {
         # Below is used for examining the photon stopping powers of materials.
         pb => $_cell_mats_list{pb},
     );
-    
+
     $flux_mnt_up->set_cell_mats_list(
         au  => $_cell_mats_list{au},
         vac => $_cell_mats_list{vac},
         air => $_cell_mats_list{air},
     );
-    
+
     $flux_mnt_down->set_cell_mats_list(
         au  => $_cell_mats_list{au},
         vac => $_cell_mats_list{vac},
         air => $_cell_mats_list{air},
     );
-    
+
     $tar_wrap->set_cell_mats_list(
         al  => $_cell_mats_list{al},
         vac => $_cell_mats_list{vac},
         air => $_cell_mats_list{air},
     );
-    
+
     $mc_space->set_cell_mats_list(
         vac   => $_cell_mats_list{vac},
         # Coolants
@@ -694,11 +694,11 @@ sub init {
         he    => $_cell_mats_list{he},
         water => $_cell_mats_list{water},
     );
-    
+
     $motar_ent->set_cell_mats_list( # Nonmaterial space for dump file gen
         %{$mc_space->cell_mats_list}
     );
-    
+
     # Set constrained user-input argument names
     # to prevent typos in the user input.
     $phits->set_constrained_args(
@@ -719,7 +719,7 @@ sub init {
         motar_ent_cell_mat     => [keys %{$motar_ent->cell_mats_list}    ],
         mc_space_cell_mat      => [keys %{$mc_space->cell_mats_list}     ],
     );
-    
+
     # PHITS tallies
     $t_track->set_flag('track');
     $t_cross->set_flag('cross');
@@ -732,7 +732,7 @@ sub init {
     $t_subtotal->set_flag('subtotal');
     $t_total->set_flag('total');
     $t_shared->set_flag('total');
-    
+
     #
     # ANGEL
     #
@@ -742,7 +742,7 @@ sub init {
         leading_symb => $angel->Cmt->symb,
         border_symbs => ['=', '-']
     );
-    
+
     #
     # Linac
     #
@@ -766,7 +766,7 @@ sub init {
     );
     $slinac->set_params(
         name            => 'S-band electron linac: Being Designed',
-        rf_power_source => 'tetd_sband_e37307', 
+        rf_power_source => 'tetd_sband_e37307',
         peak_beam_nrg   => 35e+06,
         peak_beam_curr  => 340e-03,
     );
@@ -777,7 +777,7 @@ sub init {
         peak_beam_nrg   => 35e+06,
         peak_beam_curr  => 130e-03,
     );
-    
+
     #
     # Animating programs
     #
@@ -785,21 +785,21 @@ sub init {
         imagemagick => 'magick.exe', # Legacy: 'convert.exe'
         ffmpeg      => 'ffmpeg.exe',
     );
-    
+
     return;
 }
 
 
 sub particle_dependent_settings {
     # """Update attributes overridden in parse_argv()."""
-    
+
     # Used for "toggling" ipnint, negs, and nucdata, but not for actual tallies
     $t_shared->set_particles_of_int(
         @{$t_track->particles_of_int},
         @{$t_cross->particles_of_int},
         @{$t_cross_dump->particles_of_int},
     );
-    
+
     #
     # Part of 6. PHITS parameters section
     # -> Overridden in the parse_argv() subroutine
@@ -831,7 +831,7 @@ sub particle_dependent_settings {
                    ' [0] Off [1] emin(2)=1e-10,dmax(2)=20 for neut calc',
         },
     );
-    
+
     return;
 }
 
@@ -839,7 +839,7 @@ sub particle_dependent_settings {
 sub default_run_settings {
     # """Default run settings: Almost all of the attributes defined in here
     # can be modified in parse_argv() via the input file."""
-    
+
     #
     # TOC: In the order of independence (i.e. the latter depends on the former)
     # 1. Controls                 <= Independent
@@ -849,13 +849,13 @@ sub default_run_settings {
     # 5. PHITS tallies            <= Depends on 4. Linac
     # 6. PHITS parameters section <= Depends on 5. Tally
     #
-    
+
     #
     # Units
     # Dimensions: cm
     # Energy:     MeV
     #
-    
+
     #
     # 1. Controls
     #
@@ -923,11 +923,11 @@ sub default_run_settings {
     $yield_au196->FileIO->set_micro_xs_dir('xs');
     $yield_au196->FileIO->set_micro_xs_dat('tendl2015_au197_gn_mf3_t4.dat');
     $yield_au196->set_micro_xs_interp_algo('csplines');
-    
+
     #
     # 2. PHITS cells
     #
-    
+
     # Bremsstrahlung converter
     # 'ta', 'w', 'ir', 'pt', 'au', 'vac', 'air', 'mo', 'pb'
     $bconv->set_cell_mat('w');
@@ -944,7 +944,7 @@ sub default_run_settings {
     $bconv->set_radii_of_int([1..5]);
     $bconv->set_gap_fixed(0.15);
     $bconv->set_gaps_of_int([map sprintf("%.2f", $_ /= 100), 10..30]);
-    
+
     # Molybdenum target
     # 'mo', 'moo2', 'moo3', 'vac', 'air', 'pb'
     $motar->set_cell_mat('moo3');
@@ -970,33 +970,33 @@ sub default_run_settings {
     $motar_trc->set_bot_radii_of_int([map sprintf("%.2f", $_ /= 100), 10..40]);
     $motar_trc->set_top_radius_fixed(0.60);
     $motar_trc->set_top_radii_of_int([map sprintf("%.2f", $_ /= 100), 50..80]);
-    
+
     # Flux monitor, upstream
     $flux_mnt_up->set_cell_mat('au');      # 'au', 'vac', 'air'
     $flux_mnt_up->set_dens_ratio(1.0000);  # Range [0,1]
     $flux_mnt_up->set_height_fixed(0.005); # 50 um
     $flux_mnt_up->set_radius_fixed(0.500); # 5 mm
-    
+
     # Flux monitor, downstream
     $flux_mnt_down->set_cell_mat('au');      # 'au', 'vac', 'air'
     $flux_mnt_down->set_dens_ratio(1.0000);  # Range [0,1]
     $flux_mnt_down->set_height_fixed(0.005); # 50 um
     $flux_mnt_down->set_radius_fixed(0.500); # 5 mm
-    
+
     # Target wrap
     $tar_wrap->set_cell_mat('al');          # 'al', 'vac', 'air'
     $tar_wrap->set_dens_ratio(1.0000);      # Range [0,1]
     $tar_wrap->set_thickness_fixed(0.0012); # 12 um
-    
+
     # MC space
     $mc_space->set_cell_mat('vac');    # 'vac', 'air', 'he', 'water'
     $mc_space->set_dens_ratio(1.0000); # Range [0,1]
-    
+
     # Molybdenum target entrance; must be the same as $mc_space->cell_mat
     $motar_ent->set_cell_mat($mc_space->cell_mat);
     $motar_ent->set_dens_ratio($mc_space->dens_ratio);
     $motar_ent->set_height_fixed(1e-7); # 1 nm
-    
+
     #
     # 3. PHITS source
     #
@@ -1017,16 +1017,16 @@ sub default_run_settings {
     $phits->source->set_nrg_vals_of_int([30..40]);
     $phits->source->set_rad_val_fixed(0.3);
     $phits->source->set_rad_vals_of_int([map $_ /= 10, 1..5]);
-    
+
     #
     # 4. Linac
     #
     $elinac_of_int = $xlinac;
-    
+
     #
     # 5. PHITS tallies
     #
-    
+
     # Particle track tally
     $t_track->set_particles_of_int(
         'electron',
@@ -1112,7 +1112,7 @@ sub default_run_settings {
         # [1]    On when: [mesh=xyz 'and' axis = xy, yz, or xz]
         0
     );
-    
+
     # Surface-crossing tally
     $t_cross->set_particles_of_int(
         'electron',
@@ -1153,7 +1153,7 @@ sub default_run_settings {
         'flux'
     );
     $t_cross->set_epsout(0);
-    
+
     # Surface-crossing tally: "dump source"
     $t_cross_dump->set_particles_of_int(
         # Choose only one at a time
@@ -1172,7 +1172,7 @@ sub default_run_settings {
         'flux'
     );
     $t_cross_dump->set_epsout(0);
-    
+
     # Heat tallies
     $t_heat->set_mesh_types(
         x => 2,
@@ -1216,7 +1216,7 @@ sub default_run_settings {
         # [1]    Ionization loss of electrons
         1
     );
-    
+
     # Heat tallies for MAPDL (an ANSYS module)
     $t_heat_mapdl->set_mesh_types(
         x => 2,
@@ -1230,17 +1230,17 @@ sub default_run_settings {
         z => 20,
     );
     # Set the multiplication factor based on MeV cm^-3 source^-1
-    $t_heat_mapdl->set_unit(1); 
+    $t_heat_mapdl->set_unit(1);
     $t_heat_mapdl->set_factor(
         # The product of 'unit=>1', (i), (ii), and (iii)
         # will be (only the units are shown for brevity):
         #
         # 'unit=>1' * (i):
         # (MeV cm^-3 source^-1)(J MeV^-1) == J cm^-3 source^-1
-        # 
+        #
         # (J cm^-3 source^-1) * (ii):
         # (J cm^-3 source^-1)(cm^3  m^-3) == (J m^-3 source^-1)
-        # 
+        #
         # (J m^-3 source^-1) * (iii):
         # (J m^-3 source^-1)(num_part s^-1) == J s^-1 m^-3
         #                                   == W m^-3
@@ -1254,10 +1254,10 @@ sub default_run_settings {
             # == 1.602e-13  J / MeV
             # == (1e+06 * 1.602e-19) J / MeV
             (1e+06 * $phys->constants->{coulomb_per_elec})
-            
+
             # (ii) cm^-3 --> m^-3
             * 1e+06
-            
+
             # (iii) Number of source particles per second
             * (
                 $elinac_of_int->avg_beam_curr          # C s^-1
@@ -1279,7 +1279,7 @@ sub default_run_settings {
     $t_heat_mapdl->set_vtkout(0);
     $t_heat_mapdl->set_material('all');
     $t_heat_mapdl->set_electron(1);
-    
+
     # Gshow tallies
     $t_gshow->set_mesh_types(
         x => 2,
@@ -1313,7 +1313,7 @@ sub default_run_settings {
     $t_gshow->set_vtkout(
         0
     );
-    
+
     # 3Dshow tallies
     $t_3dshow->set_output(
         # Drawing options
@@ -1377,31 +1377,31 @@ sub default_run_settings {
     $t_3dshow->set_epsout(
         1
     );
-    
+
     # Shared tally settings
     $t_shared->set_offsets( # Figure range offsets
         x => 2,
         y => 2,
         z => 2,
     );
-    
+
     #
     # 6. PHITS parameters section
     #
-    
+
     # Part of the PHITS parameters whose values are affected by
     # the particles of interest. Have been separated to allow
     # user-defined overriding. For details,
     # see the sections 5 and 6 of the parse_argv() subroutine.
     particle_dependent_settings();
-    
+
     $phits->set_params(
         icntl   => {
             key => 'icntl',
             val => 0,
             cmt => $phits->Cmt->symb.
                    ' [0] MC run [7] Gshow [11] 3Dshow',
-        }, 
+        },
         istdev  => {
             key => 'istdev',
             val => 0,
@@ -1597,16 +1597,16 @@ sub default_run_settings {
             },
         },
     );
-    
+
     return;
 }
 
 
 sub parse_inp {
     # """Input file parser"""
-    
+
     my $run_opts_href = shift;
-    
+
     # Below is preferred to using symbolic references
     my %_switch_holders = (
         # (key) Strings
@@ -1657,11 +1657,11 @@ sub parse_inp {
         t_3dshow     => $t_3dshow,
         t_shared     => $t_shared,
     );
-    
+
     # Key-val holders
     my($key, $subkey, $val, @dict_val, $cmt);
     my $obj_attr_delim = $parser->Data->delims->{obj_attr}; # For regexes
-    
+
     # Begin parsing the input file.
     open my $inp_fh, '<', $run_opts_href->{inp};
     foreach my $line (<$inp_fh>) {
@@ -1674,39 +1674,39 @@ sub parse_inp {
         # 5. PHITS tally
         # 6. PHITS parameters section
         #
-        
+
         # Initializations
         @{$parser->Data->list_val} = undef;
-        
+
         chomp($line);
         $line =~ s/\s*#.*//;       # Remove a comment.
         next if $line =~ /^(#|$)/; # Skip comment or blank lines.
-        
+
         # Split the key and value.
         $key = (split $parser->Data->delims->{key_val}, $line)[0];
         $val = (split $parser->Data->delims->{key_val}, $line)[1];
-        
+
         # Preprocess the lines.
         rm_space(\$key);
         rm_space(\$val)            if $val and not $val =~ /["']/;
         rm_space(\$val, 'surr')    if $val and     $val =~ /["']/;
         rm_quotes(\$val)           if $val and     $val =~ /["']/;
         solidus_as_division(\$val) if $val and     $val =~ /\//;
-        
+
         #+++++debugging+++++#
 #        say "\$line: |$line|";
 #        say "\$key: |$key|";
 #        say "\$val: |$val|";
         #-------------------#
-        
+
         #
         # 1. Controls
         #
-        
+
         # Switches
         if ($key =~ /^\w+(?:$obj_attr_delim)(\w+$obj_attr_delim)*switch/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)switch//i;
-            
+
             # For those with subkeys (i.e. having more than one $obj_attr_delim)
             if ($key =~ /$obj_attr_delim/) {
                 ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
@@ -1770,30 +1770,30 @@ sub parse_inp {
                 $_switch_holders{$key}->Ctrls->set_switch($val);
             }
         }
-        
+
         # PWM switch for the $yield_<..> objects
         if ($key =~ /^yield_.*(?:$obj_attr_delim)pwm_switch/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)pwm_switch//i;
             $_switch_holders{$key}->Ctrls->set_pwm_switch($val);
         }
-        
+
         # Error switches for T-Track and T-Heat
         if ($key =~ /^t_.*(?:$obj_attr_delim)err_switch/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)err_switch//i;
             $_switch_holders{$key}->Ctrls->set_err_switch($val);
         }
-        
-        # Switch for front matter writing 
+
+        # Switch for front matter writing
         if ($key =~ /^\w+(?:$obj_attr_delim)(\w+$obj_attr_delim)*write_fm/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)write_fm//i;
             $_switch_holders{$key}->Ctrls->set_write_fm($val);
         }
-        
+
         # Switch-like setter $phits
         if ($key =~ /^phits(?:$obj_attr_delim)o(?:pen)?mp/i) {
             $phits->Ctrls->set_openmp($val);
         }
-        
+
         # Switch-like setter of $angel
         if ($key =~ /^angel(?:$obj_attr_delim)annot_type/i) {
             $angel->Cmt->set_annot_type($val);
@@ -1816,12 +1816,12 @@ sub parse_inp {
         if ($key =~ /^angel(?:$obj_attr_delim)cmax_heat/i) {
             $angel->set_cmax_heat($val);
         }
-        
+
         # Switch-like setter of $image
         if ($key =~ /^(?:image|img)(?:$obj_attr_delim)raster_dpi/i) {
             $image->Ctrls->set_raster_dpi($val);
         }
-        
+
         # Switch-like setters of $animate
         if ($key =~ /^animate(?:$obj_attr_delim)/i) {
             # Raster format to be animated
@@ -1841,14 +1841,14 @@ sub parse_inp {
                 $animate->Ctrls->set_mp4_crf($val);
             }
         }
-        
+
         # Yield attributes
         if ($key =~ /^yield[\w]*(?:$obj_attr_delim)/i) {
-            
+
             #
             # Common
             #
-            
+
             # Average beam current in microampere
             if ($key =~ /yield(?:$obj_attr_delim)avg_beam_curr/i) {
                 $yield->set_avg_beam_curr($val);
@@ -1861,12 +1861,12 @@ sub parse_inp {
             if ($key =~ /yield(?:$obj_attr_delim)unit/i) {
                 $yield->set_unit($val);
             }
-            
+
             #
             # Radionuclides
             #
             (my $rn = $key) =~ s/^yield[\w]*\K(?:$obj_attr_delim).*//i;
-            
+
             # Reactant nuclide enrichment level
             if ($key =~ /(?:$obj_attr_delim)react_nucl_enri_lev/i) {
                 $_switch_holders{$rn}->set_react_nucl_enri_lev($val);
@@ -1888,7 +1888,7 @@ sub parse_inp {
                 $_switch_holders{$rn}->set_micro_xs_interp_algo($val);
             }
         }
-        
+
         #
         # 2. PHITS cells
         #
@@ -1898,7 +1898,7 @@ sub parse_inp {
             # $val      => 1
             # $_mc_cell => bconv
             $_mc_cell = (split $obj_attr_delim, $key)[0];
-            
+
             # Cell materials
             # > Bremsstrahlung converter
             # > Molybdenum target
@@ -1921,14 +1921,14 @@ sub parse_inp {
                 # Assign the material.
                 $_mc_cells{$_mc_cell}->set_cell_mat("\L$val");
             }
-            
+
             # Ratio between material density and theoretical density
             # > Or, dens_{mat} / dens_{theo}
             # > Necessary for real targets used in experiments
             if ($key =~ /dens_ratio/i) {
                 $_mc_cells{$_mc_cell}->set_dens_ratio($val);
             }
-            
+
             # Geometric parameters for inner iteration
             if ($key =~ /iteration_geoms/i) {
                 $_mc_cells{$_mc_cell}->set_iteration_geoms(
@@ -1936,24 +1936,24 @@ sub parse_inp {
                            undef # An empty arg is used for skipping iteration.
                 );
             }
-            
+
             # Fixed height
             if ($key =~ /height_fixed/i) {
                 $_mc_cells{$_mc_cell}->set_height_fixed($val);
             }
-            
+
             # Heights of interest
             if ($key =~ /heights_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $_mc_cells{$_mc_cell}->set_heights_of_int(
                     $parser->Data->list_val
                 );
             }
-            
+
             # Fixed radius
             if (
                 $_mc_cell =~ /bconv|motar_rcc|flux_mnt_(?:up|down)/i
@@ -1967,14 +1967,14 @@ sub parse_inp {
             elsif ($_mc_cell =~ /motar_trc/i and $key =~ /top_radius_fixed/i) {
                 $_mc_cells{$_mc_cell}->set_top_radius_fixed($val);
             }
-            
+
             # Radii of interest
             if ($key =~ /radii_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 if ($_mc_cell =~ /bconv|motar_rcc/i) {
                     $_mc_cells{$_mc_cell}->set_radii_of_int(
                         $parser->Data->list_val
@@ -1991,36 +1991,36 @@ sub parse_inp {
                     );
                 }
             }
-            
+
             # Fixed gap
             if ($_mc_cell =~ /bconv/i and $key =~ /gap_fixed/i) {
                 $_mc_cells{$_mc_cell}->set_gap_fixed($val);
             }
-            
+
             # Gaps of interest
             if ($_mc_cell =~ /bconv/i and $key =~ /gaps_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $_mc_cells{$_mc_cell}->set_gaps_of_int(
                     $parser->Data->list_val
                 );
             }
-            
+
             # (target wrap) Fixed thickness
             if ($_mc_cell =~ /tar_wrap/i and $key =~ /thickness_fixed/i) {
                 $_mc_cells{$_mc_cell}->set_thickness_fixed($val);
             }
         }
-        
+
         #
         # 3. PHITS source
         #
         if ($key =~ /^source$obj_attr_delim/i) {
             $key =~ s/source$obj_attr_delim//i;
-            
+
             # Shape
             if ($key =~ /shape/i) {
                 $phits->source->set_type_of_int(
@@ -2030,7 +2030,7 @@ sub parse_inp {
                         $phits->source->gaussian_xy # Default
                 );
             }
-            
+
             # Varying parameter
             if ($key =~ /varying_param/i) {
                 # cylindrical
@@ -2055,7 +2055,7 @@ sub parse_inp {
                     );
                 }
             }
-            
+
             # Source energy, shared by
             # - cylindrical
             # - gaussian_xyz
@@ -2066,14 +2066,14 @@ sub parse_inp {
             if ($key =~ /nrgs_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_nrg_vals_of_int(
                     $parser->Data->list_val
                 );
             }
-            
+
             # cylindrical: radius
             if ($key =~ /rad_fixed/i) {
                 $phits->source->set_rad_val_fixed($val);
@@ -2081,14 +2081,14 @@ sub parse_inp {
             if ($key =~ /radii_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_rad_vals_of_int(
                     $parser->Data->list_val
                 );
             }
-            
+
             # gaussian_xyz
             # x_fwhm
             if ($key =~ /x_fwhm_fixed/i) {
@@ -2097,9 +2097,9 @@ sub parse_inp {
             if ($key =~ /x_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_x_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
@@ -2111,9 +2111,9 @@ sub parse_inp {
             if ($key =~ /\by_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_y_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
@@ -2125,14 +2125,14 @@ sub parse_inp {
             if ($key =~ /z_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_z_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
             }
-            
+
             # gaussian_xy
             # xy_fwhms
             if ($key =~ /xy_fwhm_fixed/i) {
@@ -2141,21 +2141,21 @@ sub parse_inp {
             if ($key =~ /xy_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-                
+
                 construct_range($parser->Data->list_val, \$line);
-                
+
                 $phits->source->set_xy_fwhms_vals_of_int(
                     $parser->Data->list_val
                 );
             }
         }
-        
+
         #
         # 4. Linac
         #
         if ($key =~ /^linac$obj_attr_delim/i) {
             $key =~ s/linac$obj_attr_delim//i;
-            
+
             if ($key =~ /$obj_attr_delim/) { # for xband and sband
                 ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
                 $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
@@ -2170,10 +2170,10 @@ sub parse_inp {
                     $_linacs{$key}->$_subkey_setter($val);
                 }
             }
-            
+
             if ($key =~ /of_int/i) {
                 $elinac_of_int = $_linacs{$val};
-                
+
                 # Create a key-val pair for the tally
                 # factor setter in 5. PHITS tally.
                 #
@@ -2186,7 +2186,7 @@ sub parse_inp {
                 $_linacs{of_int} = $elinac_of_int;
             }
         }
-        
+
         #
         # 5. PHITS tally
         #
@@ -2194,12 +2194,12 @@ sub parse_inp {
             # Particles of interest
             if ($key =~ /particles_of_int/i) {
                 $key =~ s/$obj_attr_delim(?:particles_of_int)//i;
-                
+
                 $_tallies{$key}->set_particles_of_int(
                     $val ? (split $parser->Data->delims->{list_val}, $val) :
                            $phits->source->type_of_int->{name}{val} # electron
                 );
-                
+
                 # Run the particle_dependent_settings() subroutine,
                 # which contains "some" parameters of the section 6.
                 # These "some" parameters are the ones whose values
@@ -2237,15 +2237,15 @@ sub parse_inp {
                 #   the particles of interest of the tallies.
                 particle_dependent_settings();
             }
-            
+
             # Mesh sizes
             if ($key =~ /mesh_sizes/i) {
                 $key =~ s/$obj_attr_delim(?:mesh_sizes)//i;
-                
+
                 foreach (split $parser->Data->delims->{list_val}, $val) {
                     push @dict_val, split $parser->Data->delims->{dict_val};
                 }
-                
+
                 $_tallies{$key}->set_mesh_sizes(
                     @dict_val ? @dict_val : ( # Default values
                         'x' => 200, # t_track, t_heat, t_heat_mapdl
@@ -2256,7 +2256,7 @@ sub parse_inp {
                     )
                 );
             }
-            
+
             # Cell boundary resolution and width
             if ($key =~ /bnd_resol/i) {
                 $key =~ s/$obj_attr_delim(?:bnd_resol)//i;
@@ -2266,23 +2266,23 @@ sub parse_inp {
                 $key =~ s/$obj_attr_delim(?:bnd_width)//i;
                 $_tallies{$key}->cell_bnd->{width} = $val;
             }
-            
+
             # Units
             if ($key =~ /unit/i) {
                 $key =~ s/$obj_attr_delim(?:unit)//i;
                 $_tallies{$key}->set_unit($val);
             }
-            
+
             # Factors
             if ($key =~ /factor/i) {
                 next if not $val;
-                
+
                 $key =~ s/$obj_attr_delim(?:factor)//i;
                 # (i) Based on a linac average current
                 if ($val =~ /linac/i) {
                     $val =~ s/(?:linac)$obj_attr_delim//i;
                     $cmt = ($_linacs{$val}->avg_beam_curr * 1e+06).' uA';
-                    
+
                     $_tallies{$key}->set_factor(
                         val => (
                             $_linacs{$val}->avg_beam_curr          # C s^-1
@@ -2291,7 +2291,7 @@ sub parse_inp {
                         cmt => ' '.$phits->Cmt->symb.' '.$cmt
                     );
                 }
-                
+
                 # (ii) Based on a number
                 else {
                     # If a comment has also been given:
@@ -2299,27 +2299,27 @@ sub parse_inp {
                         # Split the value and the comment.
                         ($val, $cmt) =
                             split $parser->Data->delims->{dict_val}, $val;
-                        
+
                         # Assign the tally factor.
                         $_tallies{$key}->set_factor(
                             val => eval $val,
                             cmt => ' '.$phits->Cmt->symb.' '.$cmt
                         );
                     }
-                    
+
                     # If a comment has not been given:
                     else { $_tallies{$key}->set_factor(val => eval $val); }
                 }
             }
-            
+
             # Offsets: As of 2018-07-31, t_shared only.
             if ($key =~ /t_shared$obj_attr_delim(?:offsets)/i) {
                 $key =~ s/$obj_attr_delim(?:offsets)//i;
-                
+
                 foreach (split $parser->Data->delims->{list_val}, $val) {
                     push @dict_val, split $parser->Data->delims->{dict_val};
                 }
-                
+
                 $_tallies{$key}->set_offsets(
                     $val ? @dict_val : ( # Default values
                         x => 2,
@@ -2329,7 +2329,7 @@ sub parse_inp {
                 );
             }
         }
-        
+
         #
         # 6. PHITS parameters section
         #    Parameters depending on the particles of interest
@@ -2338,7 +2338,7 @@ sub parse_inp {
         #
         if ($key =~ /^params$obj_attr_delim/i) {
             $key =~ s/params$obj_attr_delim//i;
-            
+
             # For emin and dmax
             if ($key =~ /$obj_attr_delim/) {
                 ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
@@ -2352,19 +2352,19 @@ sub parse_inp {
         }
     }
     close $inp_fh;
-    
+
     #
     # Update the linac attributes that may have been modified by this parser.
     #
     $elinac_of_int->update_params();
-    
+
     return;
 }
 
 
 sub populate_mc_cell_props {
     # """ Populate MC cell properties."""
-    
+
     #
     # List of Monte Carlo cells
     #
@@ -2376,11 +2376,11 @@ sub populate_mc_cell_props {
     # (6) MC space: Inside
     # (7) MC space: Outside
     #
-    
+
     #
     # (1) Bremsstrahlung converter
     #
-    
+
     # Preprocessing
     $bconv->set_flag(
         $bconv->cell_mat.(
@@ -2388,7 +2388,7 @@ sub populate_mc_cell_props {
                 '' : $phits->FileIO->fname_space
         ).'rcc' # As of v1.01, only RCC is allowed.
     );
-    
+
     # Setter
     $bconv->set_cell_props(
         cell_id => 10,
@@ -2430,11 +2430,11 @@ sub populate_mc_cell_props {
         macrobody_id    => 100,
         cmt => $phits->Cmt->symb.' Bremsstrahlung converter',
     );
-    
+
     #
     # (2) Molybdenum target
     #
-    
+
     # Preprocessing
     my %_motar_common = (
         cell_id => 11,
@@ -2473,7 +2473,7 @@ sub populate_mc_cell_props {
         macrobody_id    => 105,
         cmt => $phits->Cmt->symb.' Molybdenum target',
     );
-    
+
     $motar->set_cell_props(%_motar_common);
     # Molybdenum target, RCC
     $motar_rcc->set_cell_props(%_motar_common);
@@ -2496,11 +2496,11 @@ sub populate_mc_cell_props {
                 '' : $phits->FileIO->fname_space
         ).$motar_trc->cell_props->{macrobody_str} # e.g. moo3_trc
     );
-    
+
     #
     # (3) Flux monitors
     #
-    
+
     # Flux monitor, upstream
     $flux_mnt_up->set_cell_props(
         cell_id => 20,
@@ -2546,7 +2546,7 @@ sub populate_mc_cell_props {
                 '' : $phits->FileIO->fname_space
         ).'rcc' # wrto Mo RCC
     );
-    
+
     # Flux monitor, downstream
     $flux_mnt_down->set_cell_props(
         cell_id => 21,
@@ -2602,7 +2602,7 @@ sub populate_mc_cell_props {
                 '' : $phits->FileIO->fname_space
         ).'rcc' # wrto Mo RCC
     );
-    
+
     #
     # (4) Target wrap
     #
@@ -2649,7 +2649,7 @@ sub populate_mc_cell_props {
         macrobody_id    => 130,
         cmt => $phits->Cmt->symb.' Target wrap',
     );
-    
+
     # (5) Molybdenum target entrance
     # Override the material using the material of MC space.
     $motar_ent->set_cell_mat($mc_space->cell_mat);
@@ -2683,7 +2683,7 @@ sub populate_mc_cell_props {
         macrobody_id    => 140,
         cmt => $phits->Cmt->symb.' Molybdenum target entrance',
     );
-    
+
     #
     # (6) MC space: Inside
     #
@@ -2718,7 +2718,7 @@ sub populate_mc_cell_props {
         cmt => $phits->Cmt->symb.' MC calculation space',
     );
     $mc_space->set_radius_fixed(50);
-    
+
     #
     # (7) MC space: Outside
     #
@@ -2731,7 +2731,7 @@ sub populate_mc_cell_props {
         # No density for void
         # No macrobody for void
     );
-    
+
     # Examine if a duplicate 'cell_id' and/or a 'macrobody_id' exists.
     my %_seen = ();
     foreach my $mc_cell (
@@ -2755,7 +2755,7 @@ sub populate_mc_cell_props {
                 "Look up 'sub populate_mc_cell_props' and fix it.\n"
             );
         }
-        
+
         if ($mc_cell->cell_props->{macrobody_id}) {
             $_seen{$mc_cell->cell_props->{macrobody_id}}++;
             if (
@@ -2770,21 +2770,21 @@ sub populate_mc_cell_props {
             }
         }
     }
-    
+
     return;
 }
 
 
 sub show_tar_geoms {
     # """Show target geometries."""
-    
+
     my $opt = shift if $_[0];
     my @target_geoms;
-    
+
     #
     # Unit: cm
     #
-    
+
     # Bremsstrahlung converter
     push @target_geoms,
         sprintf("\$bconv->$_ is [%s]", $bconv->$_) for qw (
@@ -2792,7 +2792,7 @@ sub show_tar_geoms {
             radius_fixed
             gap_fixed
         );
-    
+
     map {
         push @target_geoms, "\$bconv->$_ is [";
         $target_geoms[-1] .= $_ for join(', ', @{$bconv->$_});
@@ -2802,14 +2802,14 @@ sub show_tar_geoms {
         radii_of_int
         gaps_of_int
     );
-    
+
     # Molybdenum target, "R"CC
     push @target_geoms,
         sprintf("\$motar_rcc->$_ is [%s]", $motar_rcc->$_) for qw (
             height_fixed
             radius_fixed
         );
-    
+
     map {
         push @target_geoms, "\$motar_rcc->$_ is [";
         $target_geoms[-1] .= $_ for join(', ', @{$motar_rcc->$_});
@@ -2818,7 +2818,7 @@ sub show_tar_geoms {
         heights_of_int
         radii_of_int
     );
-    
+
     # Molybdenum target, "T"RC
     push @target_geoms, sprintf("\$motar_trc->$_ is [%s]", $motar_trc->$_)
         for qw (
@@ -2826,7 +2826,7 @@ sub show_tar_geoms {
             bot_radius_fixed
             top_radius_fixed
         );
-    
+
     map {
         push @target_geoms, "\$motar_trc->$_ is [";
         $target_geoms[-1] .= $_ for join(', ', @{$motar_trc->$_});
@@ -2836,21 +2836,21 @@ sub show_tar_geoms {
         bot_radii_of_int
         top_radii_of_int
     );
-    
+
     # Flux monitor, upstream
     push @target_geoms, sprintf("\$flux_mnt_up->$_ is [%s]", $flux_mnt_up->$_)
         for qw (
             height_fixed
             radius_fixed
         );
-    
+
     # Flux monitor, downstream
     push @target_geoms, sprintf("\$flux_mnt_down->$_ is [%s]", $flux_mnt_down->$_)
         for qw (
             height_fixed
             radius_fixed
         );
-    
+
     # Print or return the target geometries.
     if (not $opt) {
         say for @target_geoms;
@@ -2858,21 +2858,21 @@ sub show_tar_geoms {
     elsif ($opt and $opt =~ /copy/i) {
         return @target_geoms;
     }
-    
+
     return;
 }
 
 
 sub show_linac_params {
     # """Show linac parameters."""
-    
+
     my $opt = shift if $_[0];
     my @linac_settings;
-    
+
     #
     # Unit: s, eV, A, W
     #
-    
+
     # Klystron info
     push @linac_settings, sprintf(
         "\$elinac_of_int->rf_power_source->$_ is [%s]",
@@ -2884,7 +2884,7 @@ sub show_linac_params {
         rf_pulse_per_sec
         duty_cycle
     );
-    
+
     # Beam parameters
     push @linac_settings, sprintf(
         "\$elinac_of_int->$_ is [%s]",
@@ -2897,7 +2897,7 @@ sub show_linac_params {
         avg_beam_curr
         avg_beam_power
     );
-    
+
     # Print or return the linac settings.
     if (not $opt) {
         say for @linac_settings;
@@ -2905,7 +2905,7 @@ sub show_linac_params {
     elsif ($opt and $opt =~ /copy/i) {
         return @linac_settings;
     }
-    
+
     return;
 }
 
@@ -2913,18 +2913,18 @@ sub show_linac_params {
 sub outer_iterator {
     # """Iterate over target materials with varying source energies
     # or varying radii."""
-    
+
     my(
         $prog_info_href,
         $run_opts_href,
     ) = @_;
-    
+
     # Fill in an array with the varying source parameters.
     my @varying_source_params = @{
         $phits->source->type_of_int->{$phits->source->varying_param}
                                      {vals_of_int}
     };
-    
+
     # Memorize the name, value, and unit of the varying parameter - (1/2)
     # They will be used for the notification of the foreach loop below, and
     # will also be used in reduce_data(... %hash_max_flues ...).
@@ -2936,10 +2936,10 @@ sub outer_iterator {
             'MeV' :
             'cm',
     );
-    
+
     # Iterate over the varying source parameters.
     my($src_nrg, $src_size, $src_size_str);
-    
+
     # Conversion for annotations
     my %_dim_val_conv;
     $_dim_val_conv{dec_places_len} = 0;
@@ -2961,18 +2961,18 @@ sub outer_iterator {
         );
     }
     $_dim_val_conv{the_conv} = '%.'.$_dim_val_conv{dec_places_len}.'f';
-    
+
     # The real outer iteration
     foreach my $v_source_param (@varying_source_params) {
         #
         # Initializations: Must be performed
         #
-        
+
         # Varying/fixed source parameters (1/2): Source energy
         if ($phits->source->varying_param =~ /nrg|energy/i) {
             # Source energy: varying
             $src_nrg = $v_source_param;
-            
+
             # Source size: fixed
             if ($phits->source->type_of_int->{type}{val} == 1) {
                 $src_size = $phits->source->type_of_int->{rad}{val_fixed};
@@ -2991,16 +2991,16 @@ sub outer_iterator {
                 $src_size = $phits->source->type_of_int->{xy_fwhms}{val_fixed};
             }
         }
-        
+
         # Varying/fixed source parameters (2/3): Source size
         else {
             # Source energy: fixed
             $src_nrg  = $phits->source->type_of_int->{nrg}{val_fixed};
-            
+
             # Source size: varying
             $src_size = $v_source_param;
         }
-        
+
         # Varying/fixed source parameters (3/3): Show the beam parameters.
         print "^" x 70, "\n\n";
         printf(
@@ -3014,16 +3014,16 @@ sub outer_iterator {
         print $src_size;
         print "]<--Unit: cm\n";
         print "\n", "^" x 70, "\n";
-        
+
         # . --> p in source size strings
         ($src_size_str = $src_size) =~ s/[.]/p/;
-        
+
         # Initialize animation raster subdir names used in the previous run
         $animate->clear_examined_dirs();
-        
+
         # Memorize the name, value, and unit of the varying parameter - (2/2)
         $phits->set_curr_v_source_param(val => $v_source_param);
-        
+
         # (conditional) Populate the annot attribute - outer (beam).
         # > Look up "Populate the annot attribute - inner (geom)".
         if ($angel->Cmt->annot_type =~ /beam/i) {
@@ -3056,7 +3056,7 @@ sub outer_iterator {
                 );
             }
         }
-        
+
         # Notify the beginning of the iteration.
         say "";
         say $phits->Cmt->borders->{'*'};
@@ -3071,7 +3071,7 @@ sub outer_iterator {
             $phits->curr_v_source_param->{unit},
         );
         say $phits->Cmt->borders->{'*'};
-        
+
         # Make a subdirectory wrto the varying source parameter
         # and move to that subdirectory to work on.
         chdir $phits->cwd; # Start from the parent dir.
@@ -3086,14 +3086,14 @@ sub outer_iterator {
         );
         if (not -e $phits->FileIO->subdir) {
             mkdir $phits->FileIO->subdir;
-            
+
             say "";
             say "[".$phits->FileIO->subdir."] mkdir-ed.";
             say " ".('^' x length($phits->FileIO->subdir));
         }
         chdir $phits->FileIO->subdir;
         printf("CWD: [%s]\n", getcwd());
-        
+
         # Invoke the inner iterator for a range of varying geometric parameter
         # of a target material, with the set of source parameters specified
         # at the beginning of this outer iterator.
@@ -3122,14 +3122,14 @@ sub outer_iterator {
             $_,
         ) for @{$motar_trc->iteration_geoms};
     }
-    
+
     return;
 }
 
 
 sub inner_iterator {
     # """Inner: Iterate over geometric parameters."""
-    
+
     my(
         $prog_info_href,
         $run_opts_href,
@@ -3138,12 +3138,12 @@ sub inner_iterator {
         $tar_of_int,
         $varying,
     ) = @_;
-    
+
     my @varying_vals;
     state $tot_flues_hash_ref = {};
     my %tot_flues = %$tot_flues_hash_ref;
-    
-    
+
+
     #
     # Validate the 4th subroutine argument.
     #
@@ -3159,8 +3159,8 @@ sub inner_iterator {
             )."]\n"
         );
     }
-    
-    
+
+
     #
     # Initializations
     #
@@ -3168,16 +3168,16 @@ sub inner_iterator {
     #     the varying params of the inner iterator.
     # (2) Initializations
     #
-    
+
     # (1)
     # Electron linac parameters
     $elinac_of_int->update_params(peak_beam_nrg => $source_nrg * 1e+06);
-    
+
     #+++++debugging+++++#
 #    show_tar_geoms();
 #    show_linac_params();
     #+++++++++++++++++++#
-    
+
     # MC calculation space
     if ($mc_space->cell_mat !~ /vac/i) {
         #
@@ -3248,13 +3248,13 @@ sub inner_iterator {
                     ' '.$flux_mnt_down->cell_props->{mat_id} : ''
             ),
         );
-        
+
         $t_heat->set_material($_mats_of_int);
         $t_heat_mapdl->set_material($_mats_of_int);
         $t_3dshow->set_material($_mats_of_int);
         $t_3dshow->set_material_cutaway($_mats_of_int_cutaway);
     }
-    
+
     #
     # Turn off neutron data options for Ir and Pt converters.
     # > Otherwise, the following fatal errors occur:
@@ -3284,7 +3284,7 @@ sub inner_iterator {
         # if $phits->params->{dmax}{neut}{val} is undefined.
         $phits->params->{dmax}{neut}{val} = undef;
     }
-    
+
     # (2) Initializations
     $yield_mo99_for_specific_source->clear_columnar_arr();
     $pwm_mo99_for_specific_source->clear_columnar_arr();
@@ -3297,7 +3297,7 @@ sub inner_iterator {
     $mapdl_of_macs->FileIO->clear_macs();
     # Used for notification
     $t_tot_fluence->Ctrls->init_is_first_run();
-    
+
     #
     # Construct flag strings that will be used for naming files and subsubdirs.
     #
@@ -3322,7 +3322,7 @@ sub inner_iterator {
     #     > Macro filenames
     #     > Gross fluence retrieval
     #
-    
+
     # (1)
     my @abbr_hgt = (
         $phits->Cmt->abbrs->{height}[0],
@@ -3351,7 +3351,7 @@ sub inner_iterator {
     $varying =~ s/\b$abbr_bot_rad[0]/$abbr_bot_rad[1]/gi;
     $varying =~ s/\b$abbr_top_rad[0]/$abbr_top_rad[1]/gi;
     $varying =~ s/\b$abbr_gap[0]/$abbr_gap[1]/gi;
-    
+
     # (2)
     my $_varying_str = $phits->FileIO->varying_str.(
         $t_shared->Ctrls->shortname =~ /on/i ?
@@ -3497,16 +3497,16 @@ sub inner_iterator {
             ),
         },
     );
-    
+
     # (3)
     @varying_vals = @{$functs_of_varying_geom{$varying}{varying_vals}};
-    
+
     # (4)
     (
         my $fixed_flags_and_vals =
             $functs_of_varying_geom{$varying}{fixed_flags_and_vals}
     ) =~ s/[.]/p/g;
-    
+
     # (5)
     (
         my $fixed_flags =
@@ -3515,11 +3515,11 @@ sub inner_iterator {
     $fixed_flags =~ s/_-/-/g; # For $t_shared->Ctrls->shortname =~ /off/i
     $fixed_flags =~ s/--/-/g; # For $t_shared->Ctrls->shortname =~ /off/i
     $fixed_flags =~ s/[\-_]$//;
-    
+
     # (6)
     $phits->FileIO->set_varying_flag($_varying_str.$varying); # e.g. vhgt
     $phits->FileIO->set_fixed_flag($fixed_flags);             # e.g. frad-fgap
-    
+
     #
     # Set the xyze mesh ranges.
     #
@@ -3547,7 +3547,7 @@ sub inner_iterator {
                 # Add the z-offset.
                 + $t_shared->offsets->{z},
     );
-    
+
     # If a bremsstrahlung converter is the target of interest and
     # its radius is to be varied, overwrite the xy mesh ranges
     # using the "largest" radius of the converter.
@@ -3562,7 +3562,7 @@ sub inner_iterator {
             ymax =>  ($bconv->radii_of_int->[-1] + $t_shared->offsets->{y}),
         );
     }
-    
+
     # If a bremsstrahlung converter is the target of interest and
     # its distance to the molybdenum target (refer to as 'gap') is to be varied,
     # extend the z-max mesh using the "largest" gap.
@@ -3578,7 +3578,7 @@ sub inner_iterator {
                     + $bconv->gaps_of_int->[-1]
         );
     }
-    
+
     # If a molybdenum target is the target of interest and
     # its height is to be varied, extend the z-max mesh
     # using the "largest" height of the molybdenum target.
@@ -3597,7 +3597,7 @@ sub inner_iterator {
                     + $tar_of_int->heights_of_int->[-1]
         );
     }
-    
+
     # Determine emin of effective energy ranges using xs files
     # which will be used for yield calculations (look up 'step 6-1').
     my $_micro_xs_dat_mo99 = sprintf(
@@ -3642,7 +3642,7 @@ sub inner_iterator {
         }
     }
     close $_micro_xs_dat_au196_fh;
-    
+
     # Set the energy mesh ranges.
     $t_track->set_mesh_ranges(
         emin => {
@@ -3705,8 +3705,8 @@ sub inner_iterator {
         emax     => $source_nrg,
         emax_cmt => ' '.$phits->Cmt->symb.' e0',
     );
-    
-    
+
+
     #
     # Make a subsubdirectory wrto the varying geometric parameter
     # and move to that subsubdirectory to work on.
@@ -3728,14 +3728,14 @@ sub inner_iterator {
     );
     if (not -e $phits->FileIO->subsubdir) {
         mkdir $phits->FileIO->subsubdir;
-        
+
         say "";
         say "[".$phits->FileIO->subsubdir."] mkdir-ed.";
         say " ".('^' x length($phits->FileIO->subsubdir));
     }
     chdir $phits->FileIO->subsubdir;
-    
-    
+
+
     #
     # Inner iteration
     #
@@ -3759,7 +3759,7 @@ sub inner_iterator {
     # Step 8. Generate MAPDL macro-of-macro files (.mac).
     # Step 9. Retrieve max total fluences from the tally files (.ang).
     #
-    
+
     # Conversion for annotations
     my %_dim_val_conv;
     $_dim_val_conv{dec_places_len} = 0;
@@ -3775,7 +3775,7 @@ sub inner_iterator {
         );
     }
     $_dim_val_conv{the_conv} = '%.'.$_dim_val_conv{dec_places_len}.'f';
-    
+
     # The real inner iteration
     foreach my $varying_val (@varying_vals) {
         # Initializations
@@ -3792,7 +3792,7 @@ sub inner_iterator {
         $angel->Ctrls->init_is_first_run();
         $angel->clear_ang_fnames(); # Prevents rerunning ANGEL on previous val.
         $image->Ctrls->init_is_first_run();
-        
+
         # (conditional) Populate the annot attribute - inner (geom).
         # > Look up "Populate the annot attribute - outer (beam)".
         if ($angel->Cmt->annot_type =~ /geom/i) {
@@ -3810,7 +3810,7 @@ sub inner_iterator {
                 )
             );
         }
-        
+
         # Notify the beginning of the iteration.
         say "";
         say $phits->Cmt->borders->{'*'};
@@ -3822,13 +3822,13 @@ sub inner_iterator {
         );
         say $phits->Cmt->borders->{'*'};
         printf("CWD: [%s]\n", getcwd());
-        
+
         #-----------------------------------------------------------
         # Step 1
         # Generate a PHITS input (.inp) and an MAPDL macro (.mac)
         # with respect to the varying geometric parameter.
         #-----------------------------------------------------------
-        
+
         #
         # Assign varying or fixed values to the radii and heights
         # of the macrobodies "and" calculate their volumes.
@@ -3838,7 +3838,7 @@ sub inner_iterator {
         # The values of these dimensional parameters will also be used for
         # constructing the names of the PHITS input files.
         #
-        
+
         # Bremsstrahlung converter
         $bconv->set_height(
             (
@@ -4035,11 +4035,11 @@ sub inner_iterator {
             $motar_ent->cell_props->{dens} ?
                 $motar_ent->vol * $motar_ent->cell_props->{dens} : 0
         );
-        
+
         #
         # angel: 'p:' parameters
         #
-        
+
         # cmmm/cmum for axis=xyz
         my $_t_track_xyz_angel = $angel->orientation;
         $_t_track_xyz_angel .= " nofr"
@@ -4064,7 +4064,7 @@ sub inner_iterator {
         $t_gshow->xy_motar->set_angel_mo($_t_track_xyz_angel);
         $t_3dshow->polar1->set_angel($_t_track_xyz_angel);
         $t_3dshow->polar2->set_angel($_t_track_xyz_angel);
-        
+
         # ymin, ymax for axis=eng, t_track
         my $_t_track_nrg_angel = sprintf(
             "%s ymin(%s) ymax(%s)",
@@ -4082,7 +4082,7 @@ sub inner_iterator {
         $t_track->nrg_motar_low_emax->set_angel($_t_track_nrg_angel);
         $t_track->nrg_flux_mnt_up->set_angel($_t_track_nrg_angel);
         $t_track->nrg_flux_mnt_down->set_angel($_t_track_nrg_angel);
-        
+
         # ymin, ymax for axis=eng, t_cross
         my $_t_cross_nrg_angel = sprintf(
             "%s ymin(%s) ymax(%s)",
@@ -4104,7 +4104,7 @@ sub inner_iterator {
         $t_cross->nrg_motar_ent_low_emax->set_angel($_t_cross_nrg_angel);
         $t_cross->nrg_motar_exit->set_angel($_t_cross_nrg_angel);
         $t_cross->nrg_motar_exit_low_emax->set_angel($_t_cross_nrg_angel);
-        
+
         #
         # sangel: Annotations for MC cell materials
         #
@@ -4118,7 +4118,7 @@ sub inner_iterator {
             %_src_w,
             %_unit_w,
         );
-        
+
         # Bremsstrahlung converter
         $_bconv_aw{mat} = $bconv->cell_props->{mat_lab_name} ?
             $bconv->cell_props->{mat_lab_name} : '',
@@ -4189,7 +4189,7 @@ sub inner_iterator {
         $_unit_w{x}   = 0.15;
         $_unit_w{y}   = 0.7;
         $_unit_w{s}   = 1.3;
-        
+
         # sangel strings depending on the number of active MC cells
         my @_cells = (
             [
@@ -4245,7 +4245,7 @@ sub inner_iterator {
                 @{$_->[1]}{'mat', 'x', 'y', 'ax', 'ay'},
             );
         }
-        
+
         # sangel setters
         $t_track->xz->set_sangel($format_str);
         $t_track->yz->set_sangel($t_track->xz->sangel);
@@ -4275,7 +4275,7 @@ sub inner_iterator {
         $t_track->nrg_motar_low_emax->set_sangel($format_str_title_only);
         $t_track->nrg_flux_mnt_up->set_sangel($format_str_title_only);
         $t_track->nrg_flux_mnt_down->set_sangel($format_str_title_only);
-        
+
         $t_cross->nrg_bconv_ent->set_sangel($format_str_title_only);
         $t_cross->nrg_bconv_ent_low_emax->set_sangel($format_str_title_only);
         $t_cross->nrg_bconv_exit->set_sangel($format_str_title_only);
@@ -4284,7 +4284,7 @@ sub inner_iterator {
         $t_cross->nrg_motar_ent_low_emax->set_sangel($format_str_title_only);
         $t_cross->nrg_motar_exit->set_sangel($format_str_title_only);
         $t_cross->nrg_motar_exit_low_emax->set_sangel($format_str_title_only);
-        
+
         $t_heat->xz->set_sangel($t_track->xz->sangel);
         $t_heat->yz->set_sangel($t_track->yz->sangel);
         $t_heat->xy->set_sangel($t_track->xy->sangel);
@@ -4292,7 +4292,7 @@ sub inner_iterator {
         $t_heat->xy->set_sangel_mo($t_track->xy->sangel_mo);
         $t_heat->xy_motar->set_sangel_mo($t_heat->xy->sangel_mo);
         $t_heat->rz_bconv->set_sangel($format_str_title_only);
-        
+
         $num_cells += 2;
         $format_str =~ s/^\s*[0-9]/$num_cells/;
         $format_str .= sprintf(
@@ -4307,7 +4307,7 @@ sub inner_iterator {
         $t_gshow->xy_bconv->set_sangel($t_gshow->xy->sangel);
         $t_gshow->xy->set_sangel_mo($t_track->xy->sangel_mo);
         $t_gshow->xy_motar->set_sangel_mo($t_gshow->xy->sangel_mo);
-        
+
         # Overriding
         $_src_ab{x}   = $t_3dshow->frame->{width} / 2 - (
             $bconv->radius > 1.80 ? 2.37 :
@@ -4355,13 +4355,13 @@ sub inner_iterator {
                 ' ', @_src_w{'cmt', 'x', 'y', 'size', 'col'},
             )
         );
-        
+
         #
         # Define a filename wrto the varying parameter.
         # (1) Construct a backbone.
         # (2) Define filenames based on the backbone.
         #
-        
+
         # (1)
         (my $_varying_val = $varying_val) =~ s/[.]/p/;
         # Changed at each iteration are:
@@ -4377,7 +4377,7 @@ sub inner_iterator {
             $fixed_flags_and_vals         # frad1p00_fgap0p15
                                           # || f_rad_1p00_f_gap_0p15
         );
-        
+
         # (2)
         # e.g.
         # wrcc-vhgt0p10-frad1p00-fgap0p15.inp <= Input file; for running PHITS
@@ -4388,21 +4388,21 @@ sub inner_iterator {
             $phits->FileIO->fname_ext_delim.
             $phits->FileIO->fname_exts->{inp}
         );
-        
+
         $phits->FileIO->set_inp_dmp( # Input file generating a dump file
             $backbone.
             $t_cross_dump->dump->{suffix}.
             $phits->FileIO->fname_ext_delim.
             $phits->FileIO->fname_exts->{inp}
         );
-        
+
         $phits->params->{file}{summary_out_fname}{val} = sprintf( # file(6)
             "%s%s%s",
             $backbone,
             $phits->FileIO->fname_ext_delim,
             $phits->FileIO->fname_exts->{out}
         );
-        
+
         $phits->params->{file}{$_.'_out_fname'}{val} = sprintf(
             "%s%s%s%s%s",
             $backbone,
@@ -4418,7 +4418,7 @@ sub inner_iterator {
             bat
             pegs5
         ); # file(x): 11, 12, 13, 10, 22, 23
-        
+
         my @_args = ( # e.g. wrcc-vhgt0p10-frad1p00-fgap0p15
             $bconv->cell_mat,
             $motar->cell_mat,
@@ -4435,7 +4435,7 @@ sub inner_iterator {
         $t_gshow->set_fnames(@_args);      # -gshow-xz
         $t_3dshow->set_fnames(@_args);     # -3dshow
                                            # .ang
-        
+
         $mapdl->FileIO->set_inp(
             $backbone.
             $mapdl->FileIO->fname_ext_delim.
@@ -4455,12 +4455,12 @@ sub inner_iterator {
             $phits->FileIO->path_delim.   # \
             $backbone                  # wrcc-vhgt0p10-frad1p00-fgap0p15 <= .mac
         );
-        
-        
+
+
         #
         # PHITS input file writing
         #
-        
+
         #
         # Shared-memory parallel computing
         #
@@ -4470,7 +4470,7 @@ sub inner_iterator {
                 $phits->Ctrls->openmp,
             ),
             ""; # End
-        
+
         #
         # List of abbreviations
         #
@@ -4491,7 +4491,7 @@ sub inner_iterator {
             height
         );
         push @{$phits->sects->{abbr}}, ""; # End
-        
+
         #
         # Title section: phitar front matter
         #
@@ -4511,12 +4511,12 @@ sub inner_iterator {
                     ) : ""
             ),
             ""; # End
-        
+
         #
         # Parameters section
         #
         my @_parameters_sect = ();
-        
+
         # Common parameters
         push @_parameters_sect, map {
             $phits->params->{$_}
@@ -4529,7 +4529,7 @@ sub inner_iterator {
             'negs',    # EGS5
             'nucdata', # Neutron data emin and dmax
         );
-        
+
         # Cutoff energies: Conditional
         # The author has deactivated the use of proton nuclear data option
         # (that is, dmax--not emin, which is not related to nuclear data
@@ -4568,7 +4568,7 @@ sub inner_iterator {
             incut
             igcut
         );
-        
+
         # File I/O: Conditional
         my @_file_types = ();
         # file(1)
@@ -4605,18 +4605,18 @@ sub inner_iterator {
         push @_parameters_sect, map {
             $phits->params->{file}{$_}
         } @_file_types;
-        
+
         # Fill in the section array.
         push @{$phits->sects->{parameters}}, "[Parameters]";
         push @{$phits->sects->{parameters}}, map {
             sprintf("%-8s = %6s %s", @{$_}{'key', 'val', 'cmt'})
         } @_parameters_sect;
         push @{$phits->sects->{parameters}}, ""; # End
-        
+
         #
         # Source section
         #
-        
+
         # Shared parameters
         my @_source_sect_shared = (
             [
@@ -4804,7 +4804,7 @@ sub inner_iterator {
                 @_source_sect_nonshared,
             );
         push @{$phits->sects->{source}}, ""; # End
-        
+
         #
         # "Dump" source section
         #
@@ -4837,7 +4837,7 @@ sub inner_iterator {
                 $t_cross_dump->dump->{dat}
             ),
             ""; # End
-        
+
         #
         # Material section
         #
@@ -4864,7 +4864,7 @@ sub inner_iterator {
         rm_duplicates($phits->sects->{material});
         rm_empty($phits->sects->{material});
         push @{$phits->sects->{material}}, ""; # End
-        
+
         #
         # Mat Name Color section for T-Gshow and T-3Dshow
         #
@@ -4888,11 +4888,11 @@ sub inner_iterator {
         }
         # Remove duplicate mat_name_color designations.
         # > Optional (unlike the material section, no fatal error occurs
-        #   even if duplicate material IDs are designated 
+        #   even if duplicate material IDs are designated
         #   in the mat_name_color section)
         rm_duplicates($phits->sects->{mat_name_color});
         push @{$phits->sects->{mat_name_color}}, ""; # End
-        
+
         #
         # Surface section
         #
@@ -5039,7 +5039,7 @@ sub inner_iterator {
                     $mc_space->cell_props->{cmt},
                 ),
                 ""; # End
-        
+
         # Cell section
         my %_excluded = ( # Must also be initialized
             bconv     => '',
@@ -5087,7 +5087,7 @@ sub inner_iterator {
             if ($flux_mnt_up->height > 0) {
                 $_excluded{flux_mnt} =
                     ' #'.$flux_mnt_up->cell_props->{cell_id};
-                
+
                 push @{$phits->sects->{cell}},
                     sprintf(
                         "%-2s %3s %-9s -%s",
@@ -5104,7 +5104,7 @@ sub inner_iterator {
             if ($flux_mnt_down->height > 0) {
                 $_excluded{flux_mnt} .=
                     ' #'.$flux_mnt_down->cell_props->{cell_id};
-                
+
                 push @{$phits->sects->{cell}},
                     sprintf(
                         "%-2s %3s %-9s -%s",
@@ -5121,7 +5121,7 @@ sub inner_iterator {
             if ($tar_wrap->thickness > 0) {
                 $_excluded{tar_wrap} =
                     ' #'.$tar_wrap->cell_props->{cell_id};
-                
+
                 push @{$phits->sects->{cell}},
                 sprintf(
                     "%-2s %3s %-9s -%s #%s #%s%s",
@@ -5179,7 +5179,7 @@ sub inner_iterator {
                     $mc_space->cell_props->{macrobody_id}
                 ),
                 ""; # End
-        
+
         # Volume section
         my @_volume_sect = ();
         push @_volume_sect, $bconv if $bconv->flag !~ /none/i;
@@ -5199,7 +5199,7 @@ sub inner_iterator {
             );
         } @_volume_sect;
         push @{$phits->sects->{volume}}, ""; # End
-        
+
         # T-Track 1
         # > Mesh: xyz
         # > Axis: xz
@@ -5267,7 +5267,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             ""; # End
-        
+
         # T-Track 2
         # > Mesh: xyz
         # > Axis: yz
@@ -5334,7 +5334,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             ""; # End
-        
+
         # T-Track 3
         # > Mesh: xyz
         # > Axis: xy
@@ -5404,7 +5404,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             ""; # End
-        
+
         # T-Track 4
         # > Mesh: xyz
         # > Axis: xy
@@ -5483,7 +5483,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_track->epsout             ),
             sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout             ),
             ""; # End
-        
+
         # T-Track 5
         # > Mesh: reg
         # > Axis: eng
@@ -5568,7 +5568,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Track 6
         # > Mesh: reg
         # > Axis: eng
@@ -5671,7 +5671,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Track 7
         # > Mesh: reg
         # > Axis: eng
@@ -5773,7 +5773,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Track 8
         # > Mesh: reg
         # > Axis: eng
@@ -5802,7 +5802,7 @@ sub inner_iterator {
             ),
             sprintf(
                 "%-6s = %4s",
-                'reg', 
+                'reg',
                 $tar_of_int->flag eq $motar_trc->flag ?
                     $motar_trc->cell_props->{cell_id} :
                     $motar_rcc->cell_props->{cell_id}
@@ -5876,7 +5876,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Track 9
         # > Mesh: reg
         # > Axis: eng
@@ -5978,7 +5978,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Track 10
         # > Mesh: reg
         # > Axis: eng
@@ -6080,7 +6080,7 @@ sub inner_iterator {
                 $t_track->epsout
             ),
             ""; # End
-        
+
         # T-Cross 1
         # > Mesh: r-z
         # > Axis: eng
@@ -6142,7 +6142,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'output', $t_cross->output               ),
             sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
             ""; # End
-        
+
         # T-Cross 2
         # > Mesh: r-z
         # > Axis: eng
@@ -6285,7 +6285,7 @@ sub inner_iterator {
                 $t_cross->epsout
             ),
             ""; # End
-        
+
         # T-Cross 3
         # > Mesh: r-z
         # > Axis: eng
@@ -6398,7 +6398,7 @@ sub inner_iterator {
                 $t_cross->epsout
             ),
             ""; # End
-        
+
         # T-Cross 4
         # > Mesh: r-z
         # > Axis: eng
@@ -6541,7 +6541,7 @@ sub inner_iterator {
                 $t_cross->epsout
             ),
             ""; # End
-        
+
         # T-Cross 5
         # > Mesh: r-z
         # > Axis: eng
@@ -6617,7 +6617,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'output', $t_cross->output               ),
             sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
             ""; # End
-        
+
         # T-Cross 6
         # > Mesh: r-z
         # > Axis: eng
@@ -6747,7 +6747,7 @@ sub inner_iterator {
                 $t_cross->epsout
             ),
             ""; # End
-        
+
         # T-Cross dump
         # > Generates a dump source entering the molybdenum target.
         push @{$phits->sects->{t_cross_motar_ent_dump}},
@@ -6840,7 +6840,7 @@ sub inner_iterator {
                 $t_cross_dump->dump->{dat}
             ),
             ""; # End
-        
+
         # T-Cross 7
         # > Mesh: r-z
         # > Axis: eng
@@ -6917,7 +6917,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'output', $t_cross->output                ),
             sprintf("%-6s = %4s", 'epsout', $t_cross->epsout                ),
             ""; # End
-        
+
         # T-Cross 8
         # > Mesh: r-z
         # > Axis: eng
@@ -7048,7 +7048,7 @@ sub inner_iterator {
                 $t_cross->epsout
             ),
             ""; # End
-        
+
         # T-Heat 1
         # > Mesh: xyz
         # > Axis: xz
@@ -7102,7 +7102,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
             ""; # End
-        
+
         # T-Heat 2
         # > Mesh: xyz
         # > Axis: yz
@@ -7127,7 +7127,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'xmin',   $t_shared->mesh_ranges->{xmin}),
             sprintf("%-8s = %4s", 'xmax',   $t_shared->mesh_ranges->{xmax}),
             sprintf("%-8s = %4s", 'y-type', $t_heat->mesh_types->{y}      ),
-            sprintf("%-8s = %4s", 'ny',     $t_heat->mesh_sizes->{y}      ), 
+            sprintf("%-8s = %4s", 'ny',     $t_heat->mesh_sizes->{y}      ),
             sprintf("%-8s = %4s", 'ymin',   $t_shared->mesh_ranges->{ymin}),
             sprintf("%-8s = %4s", 'ymax',   $t_shared->mesh_ranges->{ymax}),
             sprintf("%-8s = %4s", 'z-type', $t_heat->mesh_types->{z}      ),
@@ -7156,7 +7156,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
             ""; # End
-        
+
         # T-Heat 3
         # > Mesh: xyz
         # > Axis: xy
@@ -7213,7 +7213,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
             ""; # End
-        
+
         # T-Heat 4
         # > Mesh: xyz
         # > Axis: xy
@@ -7300,7 +7300,7 @@ sub inner_iterator {
                 $t_heat_mapdl->electron
             ),
             ""; # End
-        
+
         # T-Heat 5
         # > Mesh: xyz
         # > Axis: xy
@@ -7365,7 +7365,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material           ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron           ),
             ""; # End
-        
+
         # T-Heat 6
         # > Mesh: xyz
         # > Axis: xy
@@ -7460,7 +7460,7 @@ sub inner_iterator {
                 $t_heat_mapdl->electron
             ),
             ""; # End
-        
+
         # T-Heat 7
         # > Mesh: r-z
         # > Axis: rz
@@ -7513,7 +7513,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
             ""; # End
-        
+
         # T-Heat 8
         # > Mesh: reg
         # > Axis: reg
@@ -7552,7 +7552,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material        ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron        ),
             ""; # End
-        
+
         # T-Heat 9
         # > Mesh: reg
         # > Axis: reg
@@ -7574,7 +7574,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'mesh', $t_heat->mesh_shape->{reg}),
             sprintf(
                 "%-8s = %4s",
-                'reg', 
+                'reg',
                 $tar_of_int->flag eq $motar_trc->flag ?
                     $motar_trc->cell_props->{cell_id} :
                     $motar_rcc->cell_props->{cell_id}
@@ -7595,7 +7595,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'material', $t_heat->material        ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron        ),
             ""; # End
-        
+
         # T-Gshow 1
         # > Mesh: xyz
         # > Axis: xz
@@ -7639,7 +7639,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
             ""; # End
-        
+
         # T-Gshow 2
         # > Mesh: xyz
         # > Axis: yz
@@ -7683,7 +7683,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
             ""; # End
-        
+
         # T-Gshow 3
         # > Mesh: xyz
         # > Axis: yz
@@ -7729,7 +7729,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
             ""; # End
-        
+
         # T-Gshow 4
         # > Mesh: xyz
         # > Axis: yz
@@ -7785,7 +7785,7 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout             ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout             ),
             ""; # End
-        
+
         # T-3Dshow 1
         # > Left-to-right beam view
         push @{$phits->sects->{t_3dshow}},
@@ -7832,7 +7832,7 @@ sub inner_iterator {
             sprintf("%-8s = %s",  'file',    $t_3dshow->polar1a->fname        ),
             sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
             ""; # End
-        
+
         # T-3Dshow 2
         # > Left-to-right beam view
         # > Cutaway
@@ -7880,7 +7880,7 @@ sub inner_iterator {
             sprintf("%-8s = %s",  'file',    $t_3dshow->polar1b->fname        ),
             sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
             ""; # End
-        
+
         # T-3Dshow 3
         # > Right-to-left beam view
         push @{$phits->sects->{t_3dshow}},
@@ -7927,7 +7927,7 @@ sub inner_iterator {
             sprintf("%-8s = %s",  'file',    $t_3dshow->polar2a->fname        ),
             sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
             ""; # End
-        
+
         # T-3Dshow 4
         # > Right-to-left beam view
         # > Cutaway
@@ -7975,12 +7975,12 @@ sub inner_iterator {
             sprintf("%-8s = %s",  'file',    $t_3dshow->polar2b->fname        ),
             sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
             ""; # End
-        
+
         # End section
         push @{$phits->sects->{end}},
             "[End]",
             "";
-        
+
         # Note (optional)
         push @{$phits->sects->{note}},
             "",
@@ -8006,7 +8006,7 @@ sub inner_iterator {
             for @{$phits->sects->{note}};
         push @{$phits->sects->{note}},
             ""; # End
-        
+
         #
         # Write to the PHITS input file.
         #
@@ -8080,33 +8080,33 @@ sub inner_iterator {
             next if $t_heat->Ctrls->switch   =~ /off/i and $t =~ /heat/i;
             next if $t_gshow->Ctrls->switch  =~ /off/i and $t =~ /gshow/i;
             next if $t_3dshow->Ctrls->switch =~ /off/i and $t =~ /3dshow/i;
-            
+
             # To be suppressed depending on simulation parameters
             next if $bconv->flag =~ /none/i     and $t =~ /bconv/i;
             next if $flux_mnt_up->height   <= 0 and $t =~ /flux_mnt_up/i;
             next if $flux_mnt_down->height <= 0 and $t =~ /flux_mnt_down/i;
-            
+
             # Low emax
             next if not $t_track->is_neut_of_int and $t =~ /t_track.*low_emax/i;
             next if not $t_cross->is_neut_of_int and $t =~ /t_cross.*low_emax/i;
-            
+
             # None of the above apply
             push @the_inp_sects, $t;
         }
-        
+
         # Input file generating a dump file
         if ($phits->source->mode =~ /du?mp/i) {
             open my $phi_inp_dmp_fh,
                 '>:encoding(UTF-8)',
                 $phits->FileIO->inp_dmp;
             select($phi_inp_dmp_fh);
-            
+
             map { say for @{$phits->sects->{$_}} } @_inp_dmp_sects;
             print $phits->Data->eof;
-            
+
             select(STDOUT);
             close $phi_inp_dmp_fh;
-            
+
             # Notify the file generation.
             say "";
             say $phits->Cmt->borders->{'='};
@@ -8117,23 +8117,23 @@ sub inner_iterator {
             say $phits->Cmt->borders->{'='};
             printf("[%s] generated.\n", $phits->FileIO->inp_dmp);
         }
-        
+
         # Input file performing the simulation
         if ($phits->Ctrls->switch =~ /on/i) {
             # Use 'source_dump' for dump mode.
             if ($phits->source->mode =~ /du?mp/i) {
                 s/source/source_dump/ for @the_inp_sects;
             }
-            
+
             open my $phi_inp_fh, '>:encoding(UTF-8)', $phits->FileIO->inp;
             select($phi_inp_fh);
-            
+
             map { say for @{$phits->sects->{$_}} } @the_inp_sects;
             print $phits->Data->eof;
-            
+
             select(STDOUT);
             close $phi_inp_fh;
-            
+
             # Notify the file generation.
             say "";
             say $phits->Cmt->borders->{'='};
@@ -8144,14 +8144,14 @@ sub inner_iterator {
             say $phits->Cmt->borders->{'='};
             printf("[%s] generated.\n", $phits->FileIO->inp);
         }
-        
+
         #
         # MAPDL macro file writing
         #
-        
+
         # Initialization
         $mapdl->clear_sects();
-        
+
         # List of abbreviations used
         push @{$mapdl->sects->{abbr}},
             $mapdl->Cmt->borders->{'='},
@@ -8189,7 +8189,7 @@ sub inner_iterator {
             ),
             $mapdl->Cmt->borders->{'='},
             "\n"; # End
-        
+
         # Set entity indices.
         $mapdl->entities->set_area(
             # e.g. $mapdl->entities->area->{gconv}[0]
@@ -8221,7 +8221,7 @@ sub inner_iterator {
                 2,
             ],
         );
-        
+
         # Parameters
         # Caution: A parameter name must be no more than 32 chars.
         $mapdl->set_params(
@@ -8253,7 +8253,7 @@ sub inner_iterator {
                 motar => ['bulk_temperature_'.$motar->cell_mat, 25],
             },
         );
-        
+
         # Shared settings
         my $_conv = $tar_of_int->flag eq $bconv->flag ? "%-21s" : "%-22s";
         push @{$mapdl->sects->{parameters}},
@@ -8304,7 +8304,7 @@ sub inner_iterator {
                 $mapdl->params->{bulk_temperature}{gconv}[0],
                 $mapdl->params->{bulk_temperature}{gconv}[1]
             );
-            
+
             # Mo-specific settings
             if ($tar_of_int->flag ne $bconv->flag) {
                 push @{$mapdl->sects->{parameters}},
@@ -8327,7 +8327,7 @@ sub inner_iterator {
             }
             push @{$mapdl->sects->{parameters}},
                 "\n"; # End
-        
+
         # Title section:
         # > Defined after the parameter section as the setter method
         #   $mapdl->commands->set_title uses some values
@@ -8363,7 +8363,7 @@ sub inner_iterator {
                 $mapdl->commands->title->{title}
             ),
             "\n"; # End
-        
+
         # [1/3] Preprocessor
         # Begin: Preprocessor
         push @{$mapdl->sects->{preproc_begin}},
@@ -8372,7 +8372,7 @@ sub inner_iterator {
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->pre->{begin},
             ""; # End
-        
+
         # Primitives (Units in MKS, Kelvin and degree)
         # Bremsstrahlung converter
         $mapdl->primitives->set_cylinder(
@@ -8440,7 +8440,7 @@ sub inner_iterator {
             }
             push @{$mapdl->sects->{primitives}},
             ""; # End
-        
+
         # Material properties
         # Bremsstrahlung converter
         $mapdl->materials->set_mptemp(
@@ -8516,7 +8516,7 @@ sub inner_iterator {
             }
             push @{$mapdl->sects->{mat_props}},
             ""; # End
-        
+
         # Meshing
         $mapdl->meshing->set_et(
             itype => 1,
@@ -8642,12 +8642,12 @@ sub inner_iterator {
             }
             push @{$mapdl->sects->{meshing}},
                 ""; # End
-        
+
         # End: Preprocessor
         push @{$mapdl->sects->{preproc_end}},
             $mapdl->processors->pre->{end},
             "\n"; # End
-        
+
         # [2/3] Solution processor
         # Begin: Solution processor
         push @{$mapdl->sects->{solproc_begin}},
@@ -8656,7 +8656,7 @@ sub inner_iterator {
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->sol->{begin},
             ""; # End
-        
+
         # Loads
         $mapdl->set_params(
             heat_gen_rate => {
@@ -8839,7 +8839,7 @@ sub inner_iterator {
             }
             push @{$mapdl->sects->{loads}},
                 ""; # End
-        
+
         # Solver
         push @{$mapdl->sects->{solver}},
             $mapdl->Cmt->borders->{'='},
@@ -8847,12 +8847,12 @@ sub inner_iterator {
             $mapdl->Cmt->borders->{'='},
             $mapdl->commands->solve->{cmd},
             ""; # End
-        
+
         # End: Solution processor
         push @{$mapdl->sects->{solproc_end}},
             $mapdl->processors->sol->{end},
             "\n"; # End
-        
+
         # [3/3] General postprocessor
         # Begin: General postprocessor
         push @{$mapdl->sects->{gen_postproc_begin}},
@@ -8861,7 +8861,7 @@ sub inner_iterator {
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->gen_post->{begin},
             ""; # End
-        
+
         # Viewing direction and angle
         push @{$mapdl->sects->{viewpoint}},
             $mapdl->Cmt->borders->{'='},
@@ -8871,7 +8871,7 @@ sub inner_iterator {
             sprintf("%s,%s,%s", '/VUP', 1, 'X'                  ),
             sprintf("%s,%s", '/REPLOT', 'FAST',                 ),
             ""; # End
-        
+
         # Contours
         push @{$mapdl->sects->{contours}},
             $mapdl->Cmt->borders->{'='},
@@ -8889,13 +8889,13 @@ sub inner_iterator {
                 0
             ),
             ""; # End
-        
+
         # Generate image files
         push @{$mapdl->sects->{image_files}},
             $mapdl->Cmt->borders->{'='},
             sprintf("%s Generate image files", $mapdl->Cmt->symb),
             $mapdl->Cmt->borders->{'='}; # End
-        
+
         # PostScript
         $mapdl->commands->set_get(
             par    => $mapdl->params->{job_name}[0],
@@ -8912,7 +8912,7 @@ sub inner_iterator {
                 "%s000", '%'.$mapdl->params->{job_name}[0].'%'
             ),
             ext1   => '%'.$mapdl->params->{eps_ext}[0].'%',
-            
+
             # New fname
             fname2 => '%'.(
                 $tar_of_int->flag eq $bconv->flag ?
@@ -8968,12 +8968,12 @@ sub inner_iterator {
                 $mapdl->commands->rename->{distkey},
             ),
             ""; # End
-        
+
         # End: General postprocessor
         push @{$mapdl->sects->{gen_postproc_end}},
             $mapdl->processors->gen_post->{end},
             "\n"; # End
-        
+
         # Write to the MAPDL macro file
         if ($mapdl->Ctrls->switch =~ /on/i) {
             open my $mapdl_fh, '>:encoding(UTF-8)', $mapdl->FileIO->inp;
@@ -8982,18 +8982,18 @@ sub inner_iterator {
                 title
                 abbr
                 parameters
-                
+
                 preproc_begin
                 primitives
                 mat_props
                 meshing
                 preproc_end
-                
+
                 solproc_begin
                 loads
                 solver
                 solproc_end
-                
+
                 gen_postproc_begin
                 viewpoint
                 contours
@@ -9001,14 +9001,14 @@ sub inner_iterator {
                 postscript
             );
             print $mapdl->Data->eof;
-            
+
             select(STDOUT);
             close $mapdl_fh;
-            
+
             # Notify the file generation.
             printf("[%s] generated.\n", $mapdl->FileIO->inp);
         }
-        
+
         #-----------------------------------------------------------
         # Step 2
         # > Run phits.bat:            .inp --> .ang
@@ -9042,10 +9042,10 @@ sub inner_iterator {
                     $phits->Cmt->symb, $phits->FileIO->inp_dmp, $phits->exe
                 );
                 say $phits->Cmt->borders->{'='};
-                
+
                 system sprintf("%s %s", $phits->exe, $phits->FileIO->inp_dmp);
             }
-            
+
             #
             # If the T-Gshow tally switch has been turned on, temporarily
             # modify the icntl of PHITS input file to 7 and run it.
@@ -9061,7 +9061,7 @@ sub inner_iterator {
                 }
                 close $t_gshow_tmp_fh;
                 close $phits_inp_fh;
-                
+
                 # Run PHITS with icntl = 7.
                 say "";
                 say $phits->Cmt->borders->{'='};
@@ -9072,10 +9072,10 @@ sub inner_iterator {
                     $phits->Cmt->symb, $t_gshow_tmp, $phits->exe
                 );
                 say $phits->Cmt->borders->{'='};
-                
+
                 system sprintf("%s %s", $phits->exe, $t_gshow_tmp);
             }
-            
+
             #
             # If the T-3Dshow tally switch has been turned on, temporarily
             # modify the icntl of PHITS input file to 11 and run it.
@@ -9091,7 +9091,7 @@ sub inner_iterator {
                 }
                 close $t_3dshow_tmp_fh;
                 close $phits_inp_fh;
-                
+
                 # Run PHITS with icntl = 11.
                 say "";
                 say $phits->Cmt->borders->{'='};
@@ -9102,10 +9102,10 @@ sub inner_iterator {
                     $phits->Cmt->symb, $t_3dshow_tmp, $phits->exe
                 );
                 say $phits->Cmt->borders->{'='};
-                
+
                 system sprintf("%s %s", $phits->exe, $t_3dshow_tmp);
             }
-            
+
             #
             # Run PHITS with icntl = 0.
             #
@@ -9118,10 +9118,10 @@ sub inner_iterator {
                 $phits->Cmt->symb, $phits->FileIO->inp, $phits->exe
             );
             say $phits->Cmt->borders->{'='};
-            
+
             system sprintf("%s %s", $phits->exe, $phits->FileIO->inp);
         }
-        
+
         #
         # Modify tally file strings and memorize their filenames
         # for later ANGEL running.
@@ -9150,7 +9150,7 @@ sub inner_iterator {
                 $t_track->Ctrls->err_switch =~ /on/i ?
                     $t_track->xy_motar->err_fname : '',
             );
-            
+
             # T-Track "energy spectra"
             if ($phits->params->{icntl}{val} eq 0) {
                 $angel->modify_and_or_memorize_ang_files(
@@ -9168,7 +9168,7 @@ sub inner_iterator {
                         '' : $t_track->nrg_flux_mnt_down->fname,
                 );
             }
-            
+
             # T-Cross
             if ($phits->params->{icntl}{val} eq 0) {
                 $angel->modify_and_or_memorize_ang_files(
@@ -9186,7 +9186,7 @@ sub inner_iterator {
                     $t_cross->nrg_motar_exit_low_emax->fname
                 );
             }
-            
+
             # T-Heat
             if (
                 $phits->params->{icntl}{val} eq 0 and
@@ -9217,7 +9217,7 @@ sub inner_iterator {
 #                    $t_heat->reg_motar->fname,
                 );
             }
-            
+
             # T-Gshow
             $angel->modify_and_or_memorize_ang_files(
                 $phits->source->type_of_int->{name}{val},
@@ -9227,7 +9227,7 @@ sub inner_iterator {
                 $bconv->flag !~ /none/i ? $t_gshow->xy_bconv->fname : '',
                 $t_gshow->xy_motar->fname,
             );
-            
+
             # T-3Dshow
             $angel->modify_and_or_memorize_ang_files(
                 $phits->source->type_of_int->{name}{val},
@@ -9238,7 +9238,7 @@ sub inner_iterator {
                 $t_3dshow->polar2b->fname,
             );
         }
-        
+
         #
         # Memorize nps.
         #
@@ -9251,7 +9251,7 @@ sub inner_iterator {
                 // 'Not found',
         );
         close $smr_fh;
-        
+
         #-----------------------------------------------------------
         # Step 3
         # Generate MAPDL tab files: .ang --> .tab
@@ -9266,7 +9266,7 @@ sub inner_iterator {
                 $t_heat->xy_motar_mapdl->fname,
             );
         }
-        
+
         #-----------------------------------------------------------
         # Step 4
         # Run angel.bat: .ang --> .eps
@@ -9284,7 +9284,7 @@ sub inner_iterator {
                 $angel->Cmt->symb, (caller(0))[3], $angel->exe
             );
             say $angel->Cmt->borders->{'='};
-            
+
             # @{$self->ang_fnames}:
             # Filled by $angel->modify_and_or_memorize_ang_files,
             # performed in the step 2 above.
@@ -9297,7 +9297,7 @@ sub inner_iterator {
                     $angel->exe
                 );
                 say $angel->Cmt->borders->{'-'};
-                
+
                 system sprintf("%s %s", $angel->exe, $_);
             }
         }
@@ -9307,7 +9307,7 @@ sub inner_iterator {
                 $angel->dim_unit,
             );
         }
-        
+
         #-----------------------------------------------------------
         # Step 5
         # > Run gs.exe (or Win ver) : .eps --> .pdf, .png, .jpg
@@ -9360,7 +9360,7 @@ sub inner_iterator {
                     and $image->Ctrls->jpg_switch     =~ /off/i
                 )
             );
-            
+
             # T-Track "particle distributions"
             $image->convert(
                 [
@@ -9411,7 +9411,7 @@ sub inner_iterator {
                     orientation => $angel->orientation,
                 },
             );
-            
+
             # T-Track "energy spectra"
             if ($phits->params->{icntl}{val} eq 0) {
                 $image->convert(
@@ -9458,7 +9458,7 @@ sub inner_iterator {
                     },
                 );
             }
-            
+
             # T-Cross
             if ($phits->params->{icntl}{val} eq 0) {
                 $image->convert(
@@ -9515,7 +9515,7 @@ sub inner_iterator {
                     },
                 );
             }
-            
+
             # T-Heat
             if (
                 $phits->params->{icntl}{val} eq 0
@@ -9588,7 +9588,7 @@ sub inner_iterator {
                     },
                 );
             }
-            
+
             # T-Gshow
             $image->convert(
                 [
@@ -9617,7 +9617,7 @@ sub inner_iterator {
                     orientation => $angel->orientation,
                 },
             );
-            
+
             # T-3Dshow
             $image->convert(
                 [$t_3dshow->polar1a->fname, $t_3dshow->polar1a->flag],
@@ -9632,7 +9632,7 @@ sub inner_iterator {
                 },
             );
         }
-        
+
         #-----------------------------------------------------------
         # Step 6-1 (a)
         # Calculate yield and specific yield of Mo-99
@@ -9669,17 +9669,17 @@ sub inner_iterator {
                         'ascend',
                     is_verbose =>
                         0,
-                    
+
                     #
                     # For yield calculation
                     #
-                    
+
                     # Irradiation conditions
                     avg_beam_curr =>
                         $yield->avg_beam_curr, # uA
                     end_of_irr =>
                         $yield->end_of_irr,    # Hour
-                    
+
                     # Particle fluence data
                     mc_flue_dir => (
                         $phits->FileIO->subdir.
@@ -9690,7 +9690,7 @@ sub inner_iterator {
                         $t_track->nrg_motar->fname,
                     mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
                         4 : 2, # Column number for the reaction projectile
-                    
+
                     # Microscopic xs data
                     micro_xs_dir => (
                         $phits->cwd.
@@ -9714,7 +9714,7 @@ sub inner_iterator {
                     # so that the same number of energy bins is used.
                     micro_xs_ne =>
                         $yield_mo99->num_of_nrg_bins,
-                    
+
                     # precision_href: Overwrite the local %fmt_specifiers.
                     precision_href => {
                         avg_beam_curr => '%.2f',
@@ -9722,14 +9722,14 @@ sub inner_iterator {
                         yield         => '%.2f',
                         sp_yield      => '%.2f',
                     },
-                    
+
                     # Yield and specific yield units
                     yield_unit =>
                         $yield->unit, # If omitted, 'Bq' is used.
                 },
             );
             $yield_mo99->set_calc_rn_yield(%$yield_mo99_href);
-            
+
             # Fill in the columnar array ref for the step 6-2.
             $_->add_columnar_arr(
                 $phits->curr_v_source_param->{val}, # Varying source param value
@@ -9739,7 +9739,7 @@ sub inner_iterator {
                 $yield_mo99->calc_rn_yield->{prod_nucl_sp_yield},
                 $yield_mo99->calc_rn_yield->{prod_nucl_sp_yield_per_microamp},
             ) for ($yield_mo99, $yield_mo99_for_specific_source);
-            
+
             # PWM
             if ($yield_mo99->Ctrls->pwm_switch =~ /on/i) {
                 # Write data over the photon energy range.
@@ -9767,7 +9767,7 @@ sub inner_iterator {
                         $yield_mo99->calc_rn_yield->{react_rate}[$i],
                     );
                 }
-                
+
                 # Append the sums of pointwise multiplication products.
                 $pwm_mo99_for_specific_source->add_columnar_arr(
                     $phits->curr_v_source_param->{val},
@@ -9826,17 +9826,17 @@ sub inner_iterator {
                         'ascend',
                     is_verbose =>
                         0,
-                    
+
                     #
                     # For yield calculation
                     #
-                    
+
                     # Irradiation conditions
                     avg_beam_curr =>
                         $yield->avg_beam_curr,
                     end_of_irr =>
                         $yield->end_of_irr,
-                    
+
                     # Particle fluence data
                     mc_flue_dir => (
                         $phits->FileIO->subdir.
@@ -9847,7 +9847,7 @@ sub inner_iterator {
                         $t_track->nrg_flux_mnt_up->fname,
                     mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
                         4 : 2, # Column number for the reaction projectile
-                    
+
                     # Microscopic xs data
                     micro_xs_dir => (
                         $phits->cwd.
@@ -9871,7 +9871,7 @@ sub inner_iterator {
                     # so that the same number of energy bins is used.
                     micro_xs_ne =>
                         $yield_au196->num_of_nrg_bins,
-                    
+
                     # precision_href: Overwrite the local %fmt_specifiers.
                     precision_href => {
                         avg_beam_curr => '%.2f',
@@ -9879,14 +9879,14 @@ sub inner_iterator {
                         yield         => '%.2f',
                         sp_yield      => '%.2f',
                     },
-                    
+
                     # Yield and specific yield units
                     yield_unit =>
                         $yield->unit, # If omitted, 'Bq' is used.
                 },
             );
             $yield_au196_1->set_calc_rn_yield(%$yield_au196_1_href);
-            
+
             # Fill in the columnar array ref for the step 6-2.
             $_->add_columnar_arr(
                 $phits->curr_v_source_param->{val}, # Varying source param value
@@ -9900,7 +9900,7 @@ sub inner_iterator {
                 $yield_au196_1->calc_rn_yield->
                     {prod_nucl_sp_yield_per_microamp},
             ) for ($yield_au196_1, $yield_au196_1_for_specific_source);
-            
+
             # PWM
             if ($yield_au196->Ctrls->pwm_switch =~ /on/i) {
                 for (
@@ -9930,7 +9930,7 @@ sub inner_iterator {
                         $yield_au196_1->calc_rn_yield->{react_rate}[$i],
                     );
                 }
-                
+
                 # Append the sums of pointwise multiplication products.
                 $pwm_au196_1_for_specific_source->add_columnar_arr(
                     $phits->curr_v_source_param->{val},
@@ -9984,17 +9984,17 @@ sub inner_iterator {
                         'ascend',
                     is_verbose =>
                         0,
-                    
+
                     #
                     # For yield calculation
                     #
-                    
+
                     # Irradiation conditions
                     avg_beam_curr =>
                         $yield->avg_beam_curr,
                     end_of_irr =>
                         $yield->end_of_irr,
-                    
+
                     # Particle fluence data
                     mc_flue_dir => (
                         $phits->FileIO->subdir.
@@ -10005,7 +10005,7 @@ sub inner_iterator {
                         $t_track->nrg_flux_mnt_down->fname,
                     mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
                         4 : 2, # Column number for the reaction projectile
-                    
+
                     # Microscopic xs data
                     micro_xs_dir => (
                         $phits->cwd.
@@ -10029,7 +10029,7 @@ sub inner_iterator {
                     # so that the same number of energy bins is used.
                     micro_xs_ne =>
                         $yield_au196->num_of_nrg_bins,
-                    
+
                     # precision_href: Overwrite the local %fmt_specifiers.
                     precision_href => {
                         avg_beam_curr => '%.2f',
@@ -10037,14 +10037,14 @@ sub inner_iterator {
                         yield         => '%.2f',
                         sp_yield      => '%.2f',
                     },
-                    
+
                     # Yield and specific yield units
                     yield_unit =>
                         $yield->unit, # If omitted, 'Bq' is used.
                 },
             );
             $yield_au196_2->set_calc_rn_yield(%$yield_au196_2_href);
-            
+
             # Fill in the columnar array ref for the step 6-2.
             $_->add_columnar_arr(
                 $phits->curr_v_source_param->{val}, # Varying source param value
@@ -10058,7 +10058,7 @@ sub inner_iterator {
                 $yield_au196_2->calc_rn_yield->
                     {prod_nucl_sp_yield_per_microamp},
             ) for ($yield_au196_2, $yield_au196_2_for_specific_source);
-            
+
             # PWM
             if ($yield_au196->Ctrls->pwm_switch =~ /on/i) {
                 for (
@@ -10088,7 +10088,7 @@ sub inner_iterator {
                         $yield_au196_2->calc_rn_yield->{react_rate}[$i],
                     );
                 }
-                
+
                 # Append the sums of pointwise multiplication products.
                 $pwm_au196_2_for_specific_source->add_columnar_arr(
                     $phits->curr_v_source_param->{val},
@@ -10111,13 +10111,13 @@ sub inner_iterator {
             }
         }
     }
-    
+
     #-----------------------------------------------------------
     # Step 6-2
     # Generate data files of the yields and specific yields
     # calculated and filled in the step 6-1.
     #-----------------------------------------------------------
-    
+
     # (a) Mo-99
     if (@{$yield_mo99->columnar_arr}) {
         # Heads and subheads 1
@@ -10241,7 +10241,7 @@ sub inner_iterator {
             "(cm^{3})",
             "(s^{-1} or Bq)",
         ];
-        
+
         (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
             s/[.]/p/;
         (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
@@ -10323,7 +10323,7 @@ sub inner_iterator {
                 exists $yield_objs{$k}{switch}
                 and $yield_objs{$k}{switch} =~ /off/i
             );
-            
+
             my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
             reduce_data(
                 { # Settings
@@ -10872,7 +10872,7 @@ sub inner_iterator {
             );
         }
     }
-    
+
     # (b) Au-196, upstream
     if (@{$yield_au196_1->columnar_arr}) {
         # Heads and subheads 1
@@ -10996,7 +10996,7 @@ sub inner_iterator {
             "(cm^{3})",
             "(s^{-1} or Bq)",
         ];
-        
+
         (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
             s/[.]/p/;
         (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
@@ -11074,13 +11074,13 @@ sub inner_iterator {
                 switch       => $yield_au196->Ctrls->pwm_switch,
             },
         );
-        
+
         foreach my $k (sort keys %yield_objs) {
             next if (
                 exists $yield_objs{$k}{switch}
                 and $yield_objs{$k}{switch} =~ /off/i
             );
-            
+
             my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
             reduce_data(
                 { # Settings
@@ -11494,7 +11494,7 @@ sub inner_iterator {
             );
         }
     }
-    
+
     # (c) Au-196, downstream
     if (@{$yield_au196_2->columnar_arr}) {
         # Heads and subheads 1
@@ -11618,7 +11618,7 @@ sub inner_iterator {
             "(cm^{3})",
             "(s^{-1} or Bq)",
         ];
-        
+
         (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
             s/[.]/p/;
         (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
@@ -11701,7 +11701,7 @@ sub inner_iterator {
                 exists $yield_objs{$k}{switch}
                 and $yield_objs{$k}{switch} =~ /off/i
             );
-            
+
             my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
             reduce_data(
                 { # Settings
@@ -12115,7 +12115,7 @@ sub inner_iterator {
             );
         }
     }
-    
+
     #-----------------------------------------------------------
     # Step 7
     # Run magick.exe: .png/.jpg --> .gif
@@ -12136,7 +12136,7 @@ sub inner_iterator {
             $animate->Ctrls->raster_format,
         );
     }
-    
+
     #-----------------------------------------------------------
     # Step 8
     # Generate MAPDL macro-of-macro files (.mac).
@@ -12150,7 +12150,7 @@ sub inner_iterator {
         #
         # Define filenames.
         #
-        
+
         # Target-specific
         # e.g. wrcc-vrad-fhgt.mac
         $mapdl_of_macs->FileIO->set_inp(
@@ -12164,7 +12164,7 @@ sub inner_iterator {
             $mapdl_of_macs->FileIO->fname_ext_delim.
             $mapdl_of_macs->FileIO->fname_exts->{mac}
         );
-        
+
         # Target-independent
         # e.g. 20180730\beam_fwhm_0p3\phitar.mac
         $mapdl_of_macs_all->FileIO->set_inp(
@@ -12174,11 +12174,11 @@ sub inner_iterator {
             $mapdl_of_macs->FileIO->fname_ext_delim.
             $mapdl_of_macs->FileIO->fname_exts->{mac}
         );
-        
+
         #
         # Write to the macro-of-macros.
         #
-        
+
         # Notify the beginning of macro-of-macro file generation.
         say "";
         say $mapdl->Cmt->borders->{'='};
@@ -12187,7 +12187,7 @@ sub inner_iterator {
             $mapdl->Cmt->symb, (caller(0))[3]
         );
         say $mapdl->Cmt->borders->{'='};
-        
+
         # Target-specific: Contents are initialized at each inner iterator.
         open my $mapdl_of_macros_fh,
             '>:encoding(UTF-8)',
@@ -12206,7 +12206,7 @@ sub inner_iterator {
         }
         select(STDOUT);
         close $mapdl_of_macros_fh;
-        
+
         # Target-independent: Contents are not initialized.
         if ($mapdl_of_macs_all->Ctrls->switch =~ /on/i) {
             open my $mapdl_of_macros_all_fh,
@@ -12227,7 +12227,7 @@ sub inner_iterator {
             select(STDOUT);
             close $mapdl_of_macros_all_fh;
         }
-        
+
         # Notify the generation of the files.
         printf(
             "Target-specific: [%s] generated.\n",
@@ -12241,7 +12241,7 @@ sub inner_iterator {
         }
         say "";
     }
-    
+
     #-----------------------------------------------------------
     # Step 9
     # Retrieve maximum total fluences from the tally files.
@@ -12251,7 +12251,7 @@ sub inner_iterator {
     #-----------------------------------------------------------
     state %hash_max_flues;
     my @retrieve_tot_flues_from;
-    
+
     #
     # Fill in a buffer: Bremsstrahlung converter
     #
@@ -12269,7 +12269,7 @@ sub inner_iterator {
             $t_cross->nrg_bconv_exit_low_emax->flag, # cross-eng-w_exit_low_emax
         ) if $t_cross->is_neut_of_int;
     }
-    
+
     #
     # Fill in the buffer: Molybdenum target
     #
@@ -12285,7 +12285,7 @@ sub inner_iterator {
         $t_cross->nrg_motar_ent_low_emax->flag,  # cross-eng-mo_ent_low_emax
         $t_cross->nrg_motar_exit_low_emax->flag, # cross-eng-mo_exit_low_emax
     ) if $t_cross->is_neut_of_int;
-    
+
     #
     # Fill in a buffer: Flux monitors
     #
@@ -12295,13 +12295,13 @@ sub inner_iterator {
     push @retrieve_tot_flues_from,
         $t_track->nrg_flux_mnt_down->flag # track-eng-au_down
             if $flux_mnt_down->height > 0;
-    
+
     #
     # Flush the buffer, and
     # > Run retrieve_tot_fluences() to obtain the maximum total fluences.
     # > Run reduce_data() for data reduction.
     #
-    
+
     # Run retrieve_tot_fluences() and reduce_data().
     if ($t_tot_fluence->Ctrls->switch =~ /on/i) {
         my($dir, $sub, $subsub) = (split /\/|\\/, getcwd())[-3, -2, -1];
@@ -12337,10 +12337,10 @@ sub inner_iterator {
                     {$tally_flag} =
                         [];
             }
-            
+
             #
             # Memorize the return values of retrieve_tot_fluences().
-            # 
+            #
             # Content of @return_vals
             #               Namespace
             #    phitar.pl             Tally.pm
@@ -12368,12 +12368,12 @@ sub inner_iterator {
                     $phits->Cmt->abbrs,                 # Hash ref for abbrs
                     [$prog_info_href, \&show_front_matter],
                 );
-            
+
             # For $arr_ref_to_cpu_times
             $_total_cpu_times_sums{sec}  = $return_vals[0] if $return_vals[0];
             $_total_cpu_times_sums{hour} = $return_vals[1] if $return_vals[1];
             $_total_cpu_times_sums{day}  = $return_vals[2] if $return_vals[2];
-            
+
             # For $hash_max_flues
             #         {$tar_of_int->flag}
             #         {$phits->FileIO->varying_flag}
@@ -12385,7 +12385,7 @@ sub inner_iterator {
                     {$return_vals[$i]}        # [3] Tally-specific data filename
                     {'emin_emax'}             # Key of the particle hash
                         = $return_vals[$i+1]; # [4] emin and emax
-                
+
                 # Assign the maximum total fluence value to the particle hash
                 $tot_flues
                     {$phits->FileIO->subdir}  # Subdir name
@@ -12393,7 +12393,7 @@ sub inner_iterator {
                     {$return_vals[$i+2]}      # [5] Particle name
                     {'tot_flue'}              # Key of the particle hash
                         = $return_vals[$i+3]; # [6] Maximum total fluence: Value
-                
+
                 # Assign the dimension value to the particle hash
                 $tot_flues
                     {$phits->FileIO->subdir}  # Subdir name
@@ -12402,7 +12402,7 @@ sub inner_iterator {
                     {$return_vals[$i+4]}      # Key of the particle hash ([7])
                         = $return_vals[$i+5]; # [8] Value of varying dim
             }
-            
+
             # Fill in the array of maximum total fluences.
             push @{
                 $hash_max_flues
@@ -12454,7 +12454,7 @@ sub inner_iterator {
 #            dump(\%tot_flues);
 #            pause_shell(); If on, the next iter doesn't work owing to its STDIN
             #+++++++++++++++++++#
-            
+
             #
             # Write the maximum total fluences and
             # the corresponding varying geometry
@@ -12518,7 +12518,7 @@ sub inner_iterator {
                 }
             );
         }
-        
+
         #
         # Write the currently known CPU times to data reduction report files.
         #
@@ -12574,14 +12574,14 @@ sub inner_iterator {
             }
         );
     }
-    
+
     return;
 }
 
 
 sub phitar {
     # """phitar main routine"""
-    
+
     if (@ARGV) {
         my %prog_info = (
             titl       => basename($0, '.pl'),
@@ -12591,8 +12591,8 @@ sub phitar {
             date_first => $FIRST,
             auth       => {
                 name => 'Jaewoong Jang',
-                posi => 'PhD student',
-                affi => 'University of Tokyo',
+#                posi => '',
+#                affi => '',
                 mail => 'jangj@korea.ac.kr',
             },
         );
@@ -12614,11 +12614,11 @@ sub phitar {
             is_nofm         => 0,
             is_nopause      => 0,
         );
-        
+
         # ARGV validation and parsing
         validate_argv(\@ARGV, \%cmd_opts);
         parse_argv(\@ARGV, \%cmd_opts, \%run_opts);
-        
+
         # Notification - beginning
         show_front_matter(\%prog_info, 'prog', 'auth')
             unless $run_opts{is_nofm};
@@ -12634,11 +12634,11 @@ sub phitar {
             $My::Nuclear::VERSION,
             $My::Nuclear::LAST,
         );
-        
+
         #
         # Preprocessing
         #
-        
+
         # > Sets up parameters that are not directly related to
         #   simulation runs but must be correctly set.
         #   Examples include:
@@ -12649,36 +12649,36 @@ sub phitar {
         #   > Registration of PHITS input file keywords
         #   > Comment symbols of different simulation platforms
         init();
-        
+
         # > Sets up the default simulation parameters.
         # > Overridden in parse_inp() via the user input.
         # > MUST be called as it sets some parameters that are not specified
         #   elsewhere including the user input.
         default_run_settings();
-        
+
         # > Parse the user input.
         # > Must come AFTER default_run_settings() as the user input is intended
         #   to override default parameters according to user specifications.
         parse_inp(\%run_opts) if $run_opts{inp} and not $run_opts{is_default};
-        
+
         # > Populate Monte Carlo cell properties.
         # > The cell materials designated by the user-input file
         #   are applied in this routine.
         populate_mc_cell_props();
-        
+
         #
         # Main
         #
         outer_iterator(\%prog_info, \%run_opts);
-        
+
         # Notification - end
         show_elapsed_real_time("\n");
         pause_shell()
             unless $run_opts{is_nopause};
     }
-    
+
     system("perldoc \"$0\"") if not @ARGV;
-    
+
     return;
 }
 
