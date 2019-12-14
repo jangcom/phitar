@@ -1,0 +1,4 @@
+2019-12-08 (v1.00)
+- PHITS::Ctrls->nolegend_switch has been added.
+- The default value of PHITS::Ctrls->modify_switch has been changed to 'on'
+  in accordance with phitar.pl.

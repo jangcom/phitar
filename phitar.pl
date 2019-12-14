@@ -78,7 +78,7 @@ my $pwm_au196_2_for_specific_source    = Yield->new();
 
 
 our $VERSION = '1.04';
-our $LAST    = '2019-10-27';
+our $LAST    = '2019-12-08';
 our $FIRST   = '2018-04-23';
 
 
@@ -880,6 +880,7 @@ sub default_run_settings {
     $angel->Ctrls->set_modify_switch('on');
     $angel->Ctrls->set_noframe_switch('on');
     $angel->Ctrls->set_nomessage_switch('on');
+    $angel->Ctrls->set_nolegend_switch('off');
     $angel->Cmt->set_annot_type('none'); # none, beam, geom
     $angel->set_orientation('land');
     $angel->set_dim_unit('cm'); # um, mm, cm
@@ -1727,8 +1728,11 @@ sub parse_inp {
                     if ($subkey =~ /nofr(?:ame)?\b/i) {
                         $angel->Ctrls->set_noframe_switch($val);
                     }
-                    if ($subkey =~ /no(?:message|msg)\b/i) {
+                    if ($subkey =~ /no(?:message|ms(?:g)?)\b/i) {
                         $angel->Ctrls->set_nomessage_switch($val);
+                    }
+                    if ($subkey =~ /no(?:legend|lg)\b/i) {
+                        $angel->Ctrls->set_nolegend_switch($val);
                     }
                 }
                 # $image only
@@ -4048,6 +4052,9 @@ sub inner_iterator {
             if $angel->Ctrls->nomessage_switch =~ /on/i;
         $_t_track_xyz_angel .= sprintf(" cm%s", $angel->dim_unit)
             if $angel->dim_unit !~ /cm/i;
+        my $_t_3dshow_polar_angel = $_t_track_xyz_angel;
+        $_t_track_xyz_angel .= " nolg"
+            if $angel->Ctrls->nolegend_switch =~ /on/i;
         $t_track->xz->set_angel($_t_track_xyz_angel);
         $t_track->yz->set_angel($_t_track_xyz_angel);
         $t_track->xy_bconv->set_angel($_t_track_xyz_angel);
@@ -4062,8 +4069,8 @@ sub inner_iterator {
         $t_gshow->yz->set_angel($_t_track_xyz_angel);
         $t_gshow->xy_bconv->set_angel($_t_track_xyz_angel);
         $t_gshow->xy_motar->set_angel_mo($_t_track_xyz_angel);
-        $t_3dshow->polar1->set_angel($_t_track_xyz_angel);
-        $t_3dshow->polar2->set_angel($_t_track_xyz_angel);
+        $t_3dshow->polar1->set_angel($_t_3dshow_polar_angel);
+        $t_3dshow->polar2->set_angel($_t_3dshow_polar_angel);
 
         # ymin, ymax for axis=eng, t_track
         my $_t_track_nrg_angel = sprintf(

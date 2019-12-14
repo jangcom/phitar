@@ -17,7 +17,7 @@ use File::Copy qw(copy);
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-05-20';
+our $LAST     = '2019-12-08';
 our $FIRST    = '2018-08-19';
 
 has 'Cmt' => (
@@ -1380,9 +1380,10 @@ with 'My::Moose::Ctrls';
 
 # Additional switches
 my %_additional_switches = (
-    modify_switch    => 'off',
+    modify_switch    => 'on',
     noframe_switch   => 'on',
     nomessage_switch => 'on',
+    nolegend_switch  => 'off',
 );
 
 has $_ => (
