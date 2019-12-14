@@ -4,7 +4,7 @@
 # Jaewoong Jang
 # jangj@korea.ac.kr
 #
-# date_last  = 2019-05-23
+# date_last  = 2019-12-08
 # date_first = 2018-07-14
 #
 
@@ -90,6 +90,7 @@ angel.modify.switch       = on
 angel.mute.switch         = 'on'  # off: modifications printed on the shell
 angel.noframe.switch      = 'on'
 angel.nomessage.switch    = 'on'
+angel.nolegend.switch     = 'off' # Applied only to the legend of axis=xyz tallies
 angel.annot_type          = beam  # none (d), beam, geom
 angel.orientation         = land  # land (d), port, slnd
 angel.dim_unit            = mm    # cm (d), mm, um
