@@ -3,6 +3,13 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3344971.svg)](https://doi.org/10.5281/zenodo.3229179)
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-https%3A%2F%2Fjangcom.github.io%2Fphitar-brightgreen)](https://jangcom.github.io/phitar/)
 
+# Jupyter Notebooks
+
+## Related to phitar v1.04
+* [phitar: Testing of the e-type = 2 source subsection](https://nbviewer.jupyter.org/github/jangcom/phitar/blob/master/docs/testing_results/etype2.ipynb)
+* [phitar: Testing of the e-type = 22 source subsection](https://nbviewer.jupyter.org/github/jangcom/phitar/blob/master/docs/testing_results/etype22.ipynb)
+* [phitar: Energy bin synchronization between tallies and cross sections](https://nbviewer.jupyter.org/github/jangcom/phitar/blob/master/docs/testing_results/sync_nrg.ipynb)
+
 # Cotents
 
 <?xml version="1.0" ?>
