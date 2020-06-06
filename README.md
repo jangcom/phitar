@@ -1,6 +1,6 @@
 # phitar
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3344971.svg)](https://doi.org/10.5281/zenodo.3229179)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3229179.svg)](https://doi.org/10.5281/zenodo.3229179)
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-https%3A%2F%2Fjangcom.github.io%2Fphitar-brightgreen)](https://jangcom.github.io/phitar/)
 
 # Jupyter Notebooks
