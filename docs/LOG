@@ -1,6 +1,15 @@
 2020-06-06 (v1.04)
 - v1.04 released on GitHub and Zenodo.
 
+2020-05-11 (v1.04)
+- Utility programs 'xsaug' written in Python has been added to './utils/'.
+
+2020-05-10 (v1.04)
+- Utility programs 'xsconv' written in Python has been added to './utils/'.
+
+2020-05-09 (v1.04)
+- Utility programs 'excel2etype22' written in Python has been added to './utils/'.
+
 2020-05-10 (v1.04)
 - Methods '<..>_of_int' in default_run_settings() have been fixed.
 
@@ -85,7 +94,7 @@
   - Mo target rz 2d-type:4
 
 2020-01-19 (v1.04)
-- Utility programs 'joinyld' and 'yld2datagen' were written in Python and
+- Utility programs 'joinyld' and 'yld2datagen' written in Python
   added to './utils/'.
 
 2019-12-08 (v1.04)
