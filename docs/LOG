@@ -14,7 +14,7 @@
 - Methods '<..>_of_int' in default_run_settings() have been fixed.
 
 2020-05-06 (v1.04)
-- Free-form energy distribution setter (e-type = 22 subsection) has been added.
+- The free-form energy distribution setter (e-type = 22 subsection) has been added.
   Steps
   1. Prepare a space- or tab-separated e-lower, e-upper, and intensity.
      Example:
@@ -46,18 +46,19 @@
 2020-05-04 (v1.04)
 - The step 6 has been replaced by a routine called run_and_rpt_calc_rn_yield().
 - Names of yield result files of varying source parameters corrected:
-  e.g. (old) yields_mo99-veg0-wrcc-vhgt0p20to0p30.dat
-       (new) yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat
-       which, for example, prevents overwriting 
-       'yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat' by
-       'yields_mo99-veg0_40to50-wrcc-vhgt0p20to0p30.dat'.
+      Example
+      (old) yields_mo99-veg0-wrcc-vhgt0p20to0p30.dat
+      (new) yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat
+      which, for example, prevents overwriting 
+      'yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat' by
+      'yields_mo99-veg0_40to50-wrcc-vhgt0p20to0p30.dat'.
 
 2020-05-03 (v1.04)
 - .svg conversion commands added.
 - particles_of_int string validation added to parse_inp().
 
 2020-05-02 (v1.04)
-- Gaussian energy distribution setter (e-type = 2 subsection) has been added
+- The Gaussian energy distribution setter (e-type = 2 subsection) has been added
   and replaced the previous monoenergetic energy setter (e0). The new keys in
   the user input file are eg0, eg0s_of_int, fwhm, lt_from_eg0, and rt_from_eg0.
 - Monoenergetic sources can still be simulated by setting
