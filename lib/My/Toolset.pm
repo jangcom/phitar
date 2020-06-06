@@ -69,20 +69,19 @@ our %EXPORT_TAGS = (
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.02';
-our $LAST     = '2019-10-26';
+our $LAST     = '2020-05-04';
 our $FIRST    = '2018-08-19';
 
 
 sub show_front_matter {
     # """Display the front matter."""
-    
     my $prog_info_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $prog_info_href eq HASH;
-    
+
     # Subroutine optional arguments
-    my(
+    my (
         $is_prog,
         $is_auth,
         $is_usage,
@@ -104,7 +103,7 @@ sub show_front_matter {
         $lead_symb              = $_ if /^[^a-zA-Z0-9]$/;
     }
     my $newline = $is_no_newline ? "" : "\n";
-    
+
     #
     # Fill in the front matter array.
     #
@@ -115,12 +114,12 @@ sub show_front_matter {
         '+' => $lead_symb.('+' x $border_len).$newline,
         '*' => $lead_symb.('*' x $border_len).$newline,
     );
-    
+
     # Top rule
     if ($is_prog or $is_auth) {
         $fm[$k++] = $borders{'+'};
     }
-    
+
     # Program info, except the usage
     if ($is_prog) {
         $fm[$k++] = sprintf(
@@ -145,7 +144,7 @@ sub show_front_matter {
             $newline,
         );
     }
-    
+
     # Timestamp
     if ($is_timestamp) {
         my %datetimes = construct_timestamps('-');
@@ -156,7 +155,7 @@ sub show_front_matter {
             $newline,
         );
     }
-    
+
     # Author info
     if ($is_auth) {
         $fm[$k++] = $lead_symb.$newline if $is_prog;
@@ -172,23 +171,23 @@ sub show_front_matter {
             'mail',
         );
     }
-    
+
     # Bottom rule
     if ($is_prog or $is_auth) {
         $fm[$k++] = $borders{'+'};
     }
-    
+
     # Program usage: Leading symbols are not used.
     if ($is_usage) {
         $fm[$k++] = $newline if $is_prog or $is_auth;
         $fm[$k++] = $prog_info_href->{usage};
     }
-    
+
     # Feed a blank line at the end of the front matter.
     if (not $is_no_trailing_blkline) {
         $fm[$k++] = $newline;
     }
-    
+
     #
     # Print the front matter.
     #
@@ -204,7 +203,6 @@ sub show_front_matter {
 
 sub validate_argv {
     # """Validate @ARGV against %cmd_opts."""
-    
     my $argv_aref     = shift;
     my $cmd_opts_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
@@ -212,12 +210,12 @@ sub validate_argv {
         unless ref $argv_aref eq ARRAY;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
         unless ref $cmd_opts_href eq HASH;
-    
+
     # For yn prompts
     my $the_prog = (caller(0))[1];
     my $yn;
     my $yn_msg = "    | Want to see the usage of $the_prog? [y/n]> ";
-    
+
     #
     # Terminate the program if the number of required arguments passed
     # is not sufficient.
@@ -240,11 +238,11 @@ sub validate_argv {
             }
         }
     }
-    
+
     #
     # Count the number of correctly passed command-line options.
     #
-    
+
     # Non-fnames
     my $num_corr_cmd_opts = 0;
     foreach my $arg (@$argv_aref) {
@@ -255,12 +253,12 @@ sub validate_argv {
             }
         }
     }
-    
+
     # Fname-likes
     my $num_corr_fnames = 0;
     $num_corr_fnames = grep $_ !~ /^-/, @$argv_aref;
     $num_corr_cmd_opts += $num_corr_fnames;
-    
+
     # Warn if "no" correct command-line options have been passed.
     if (not $num_corr_cmd_opts) {
         print "\n    | None of the command-line options was correct.\n";
@@ -271,7 +269,7 @@ sub validate_argv {
             print $yn_msg;
         }
     }
-    
+
     return;
 }
 
@@ -281,34 +279,33 @@ sub validate_argv {
     # eval '' executed within a subroutine defined in the DB package
     # sees the caller's (the first non-DB namespace) lexical scope.
     package DB;
-    
+
     sub My::Toolset::include {
         # """Include Perl code to another."""
         # Reference:
         # https://www.perlmonks.org/?node_id=393426
-        
+
         my $file = shift; # File containing Perl code
-        
+
         my $caller = join(' line ', (caller(0))[1, 2]);
         if (not -e $file) {
             print "$caller: [$file] not found.\n";
             return;
         }
-        
+
         my $code = qq[#line 1 "$file"\n].File::Slurp::read_file($file);
         eval $code;
         warn $@ if $@;
-        
+
         return print "[$file]---included--->[$caller]\n";
     }
-    
+
     1;
 }
 
 
 sub reduce_data {
     # """Reduce data and generate reporting files."""
-    
     my $sets_href = shift;
     my $cols_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
@@ -316,7 +313,7 @@ sub reduce_data {
         unless ref $sets_href eq HASH;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
         unless ref $cols_href eq HASH;
-    
+
     #
     # Available formats
     # [1] dat
@@ -343,7 +340,7 @@ sub reduce_data {
     # > [3] and [4] are essentially their modules' interfaces.
     # > [5] and [6] are a simple chunk of their modules' data dumping commands.
     #
-    
+
     #
     # Default attributes
     #
@@ -405,7 +402,7 @@ sub reduce_data {
     # (CAUTION: Not the whole hashes!)
     $sets{$_} = $sets_href->{$_} for keys %$sets_href;
     $cols{$_} = $cols_href->{$_} for keys %$cols_href;
-    
+
     #
     # Data format validation
     #
@@ -418,7 +415,7 @@ sub reduce_data {
               "Available formats are: ".
               join(", ", sort keys %flags)."\n";
     }
-    
+
     #
     # Column size validation
     #
@@ -434,7 +431,7 @@ sub reduce_data {
                 "It must be [$cols{size}] or its integer multiple!";
         }
     }
-    
+
     #
     # Create some default key-val pairs.
     #
@@ -464,7 +461,7 @@ sub reduce_data {
     #   but are not surrounded by any space characters.
     # > XLSX, as written in binaries, has nothing to do here.
     #
-    
+
     # dat
     $cols{space_bef}{dat} = " " unless exists $cols{space_bef}{dat};
     $cols{heads_sep}{dat} = "|" unless exists $cols{heads_sep}{dat};
@@ -488,7 +485,7 @@ sub reduce_data {
 #    dump(\%cols);
 #    pause_shell();
     #+++++++++++++++++++#
-    
+
     #
     # Convert the data array into a "rowwise" columnar structure.
     #
@@ -501,13 +498,13 @@ sub reduce_data {
         #+++++++++++++++++++#
         $i++ if ($j + 1) % $cols{size} == 0;
     }
-    
+
     #
     # Define row and column indices to be used for iteration controls.
     #
     $rows{idx_last}     = $#{$cols{data_rowwise}};
     $cols{idx_multiple} = $cols{size} - 1;
-    
+
     # Obtain columnar data sums.
     if ($cols{sum_idx_multiples} and @{$cols{sum_idx_multiples}}) {
         for (my $i=0; $i<=$rows{idx_last}; $i++) {
@@ -523,21 +520,21 @@ sub reduce_data {
 #    dump(\%cols);
 #    pause_shell();
     #+++++++++++++++++++#
-    
+
     #
     # Notify the beginning of the routine.
     #
     say "\n#".('=' x 69);
     say "#"." [$sub_name] $sets{begin_msg}";
     say "#".('=' x 69);
-    
+
     #
     # Multiplex outputting
     # IO::Tee intentionally not used for avoiding its additional installation
     #
-    
+
     # Define filehandle refs and corresponding filenames.
-    my($dat_fh, $tex_fh, $csv_fh, $xlsx_fh);
+    my ($dat_fh, $tex_fh, $csv_fh, $xlsx_fh);
     my %rpt_formats = (
         dat  => {fh => $dat_fh,  fname => $sets{rpt_bname}.".dat" },
         tex  => {fh => $tex_fh,  fname => $sets{rpt_bname}.".tex" },
@@ -546,13 +543,15 @@ sub reduce_data {
         json => {fh => $xlsx_fh, fname => $sets{rpt_bname}.".json"},
         yaml => {fh => $xlsx_fh, fname => $sets{rpt_bname}.".yaml"},
     );
-    
+
     # Multiple invocations of the writing routine
     my $cwd = getcwd();
     mkdir $sets{rpt_path} if not -e $sets{rpt_path};
     chdir $sets{rpt_path};
     foreach (@{$sets{rpt_formats}}) {
-        open $rpt_formats{$_}{fh}, '>:encoding(UTF-8)', $rpt_formats{$_}{fname};
+        open($rpt_formats{$_}{fh},
+             '>:encoding(UTF-8)',
+             $rpt_formats{$_}{fname});
         reduce_data_writing_part(
             $rpt_formats{$_}{fh},
             $_, # Flag
@@ -570,7 +569,7 @@ sub reduce_data {
         );
     }
     chdir $cwd;
-    
+
     #
     # The writing routine (nested)
     #
@@ -582,24 +581,26 @@ sub reduce_data {
         my %_strs  = %{$_[4]};
         my %_cols  = %{$_[5]};
         my %_rows  = %{$_[6]};
-        
+
         #
         # [CSV][XLSX] Load modules and instantiate classes.
         #
-        
+
         # [CSV]
         my $csv;
         if ($_flag =~ $_flags{csv}) {
             require Text::CSV; # vendor lib || cpanm
-            $csv = Text::CSV->new( { binary => 1 } )
-                or die "Cannot instantiate Text::CSV! ".Text::CSV->error_diag();
-            
+            $csv = (
+                Text::CSV->new( { binary => 1 } )
+                or die "Cannot instantiate Text::CSV! ".Text::CSV->error_diag()
+            );
+
             $csv->eol($_strs{newlines}{$_flag});
         }
-        
+
         # [XLSX]
-        my($workbook, $worksheet, %xlsx_formats);
-        my($xlsx_row, $xlsx_col, $xlsx_col_init, $xlsx_col_scale_factor);
+        my ($workbook, $worksheet, %xlsx_formats);
+        my ($xlsx_row, $xlsx_col, $xlsx_col_init, $xlsx_col_scale_factor);
         $xlsx_row                  = 1;   # Starting row number
         $xlsx_col = $xlsx_col_init = 1;   # Starting col number
         $xlsx_col_scale_factor     = 1.2; # Empirically determined
@@ -607,7 +608,7 @@ sub reduce_data {
             require Excel::Writer::XLSX; # vendor lib || cpanm
             binmode($_fh); # fh can now be R/W in binary as well as in text
             $workbook = Excel::Writer::XLSX->new($_fh);
-            
+
             # Define the worksheet name using the bare filename of the report.
             # If the bare filename contains a character that is invalid
             # as an Excel worksheet name or lengthier than 32 characters,
@@ -618,7 +619,7 @@ sub reduce_data {
                 )
             };
             $worksheet = $workbook->add_worksheet() if $@;
-            
+
             # As of Excel::Writer::XLSX v0.98, a format property
             # can be added in the middle, but cannot be overridden.
             # The author of this routine therefore uses cellwise formats
@@ -638,39 +639,42 @@ sub reduce_data {
 #            dump(\%xlsx_formats);
 #            pause_shell();
             #+++++++++++++++++++#
-            
+
             # Panes freezing
             # Added on 2018-11-23
             if ($_cols{freeze_panes}) {
                 $worksheet->freeze_panes(
                     ref $_cols{freeze_panes} eq HASH ?
-                        ($_cols{freeze_panes}{row}, $_cols{freeze_panes}{col}) :
+                        ($_cols{freeze_panes}{row},
+                         $_cols{freeze_panes}{col}) :
                         $_cols{freeze_panes}
                 );
             }
         }
-        
+
         #
         # Data construction
         #
-        
+
         # [DAT] Prepend comment symbols to the first headings.
         if ($_flag =~ $_flags{dat}) {
-            $_cols{heads}[0]    = $_strs{symbs}{$_flag}." ".$_cols{heads}[0];
-            $_cols{subheads}[0] = $_strs{symbs}{$_flag}." ".$_cols{subheads}[0];
+            $_cols{heads}[0] =
+                $_strs{symbs}{$_flag}." ".$_cols{heads}[0];
+            $_cols{subheads}[0] =
+                $_strs{symbs}{$_flag}." ".$_cols{subheads}[0];
         }
         if ($_flag !~ $_flags{dat}) { # Make it unaffected by the prev dat call
             $_cols{heads}[0]    =~ s/^[^\w] //;
             $_cols{subheads}[0] =~ s/^[^\w] //;
         }
-        
+
         #
         # Define widths for columnar alignment.
         # (1) Take the lengthier one between headings and subheadings.
         # (2) Take the lengthier one between (1) and the data.
         # (3) Take the lengthier one between (2) and the data sum.
         #
-        
+
         # (1)
         for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
             $_cols{widths}[$j] =
@@ -695,7 +699,7 @@ sub reduce_data {
                     length($_cols{data_sums}[$j]) : $_cols{widths}[$j];
             }
         }
-        
+
         #
         # [DAT] Border construction
         #
@@ -735,33 +739,33 @@ sub reduce_data {
             $_strs{rules}{$_flag}{bot} =
                 $_strs{symbs}{$_flag}.('-' x $_cols{border_widths}[0]);
         }
-        
+
         #
         # Begin writing.
         # [JSON][YAML]: Via their dumping commands.
         # [DAT][TeX]:   Via the output filehandle.
         # [CSV][XLSX]:  Via their output methods.
         #
-        
+
         # [JSON][YAML][DAT][TeX] Change the output filehandle from STDOUT.
         select($_fh);
-        
+
         #
         # [JSON][YAML] Load modules and dump the data.
         #
-        
+
         # [JSON]
         if ($_flag =~ $_flags{json}) {
             use JSON; # vendor lib || cpanm
             print to_json(\%_cols, { pretty => 1 });
         }
-        
+
         # [YAML]
         if ($_flag =~ $_flags{yaml}) {
             use YAML; # vendor lib || cpanm
             print Dump(\%_cols);
         }
-        
+
         # [DAT][TeX] OPTIONAL blocks
         if ($_flag =~ /$_flags{dat}|$_flags{tex}/) {
             # Prepend the program information, if given.
@@ -774,7 +778,7 @@ sub reduce_data {
                     ($_strs{symbs}{$_flag} // $_strs{symbs}{dat}),
                 );
             }
-            
+
             # Prepend comments, if given.
             if ($_sets{cmt_arr}) {
                 if (@{$_sets{cmt_arr}}) {
@@ -783,12 +787,12 @@ sub reduce_data {
                 }
             }
         }
-        
+
         # [TeX] Wrapping up - begin
         if ($_flag =~ $_flags{tex}) {
             # Document class
             say "\\documentclass{article}";
-            
+
             # Package loading with kind notice
             say "%";
             say "% (1) The \...rule commands are defined by".
@@ -797,12 +801,12 @@ sub reduce_data {
             say "%     you may want to use the underscore package.";
             say "%";
             say "\\usepackage{booktabs,underscore}";
-            
+
             # document env - begin
             print "\n";
             say "\\begin{document}";
             print "\n";
-            
+
             # tabular env - begin
             print "\\begin{tabular}{";
             for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
@@ -813,15 +817,15 @@ sub reduce_data {
             }
             print "}\n";
         }
-        
+
         # [DAT][TeX] Top rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{top}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Headings and subheadings
         #
-        
+
         # [DAT][TeX]
         for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
             if ($_flag =~ /$_flags{dat}|$_flags{tex}/) {
@@ -831,14 +835,16 @@ sub reduce_data {
                     printf(
                         "$_cols{conv}%s",
                         $_cols{heads}[$j],
-                        $j == $#{$_cols{heads}} ? '' : $_cols{heads_sep}{$_flag}
+                        $j == $#{$_cols{heads}} ?
+                            '' : $_cols{heads_sep}{$_flag}
                     );
                 }
                 elsif ($_cols{heads_sep}{$_flag} =~ /\t/) {
                     printf(
                         "%s%s",
                         $_cols{heads}[$j],
-                        $j == $#{$_cols{heads}} ? '' : $_cols{heads_sep}{$_flag}
+                        $j == $#{$_cols{heads}} ?
+                            '' : $_cols{heads_sep}{$_flag}
                     );
                 }
                 print $_strs{newlines}{$_flag} if $j == $#{$_cols{heads}};
@@ -867,7 +873,7 @@ sub reduce_data {
                 print $_strs{newlines}{$_flag} if $j == $#{$_cols{subheads}};
             }
         }
-        
+
         # [CSV][XLSX]
         if ($_flag =~ $_flags{csv}) {
             $csv->sep_char($_cols{heads_sep}{$_flag});
@@ -888,11 +894,11 @@ sub reduce_data {
                 $xlsx_formats{none}{none}
             );
         }
-        
+
         # [DAT][TeX] Middle rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{mid}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Data
         #
@@ -950,29 +956,34 @@ sub reduce_data {
                             + length($_cols{space_bef}{$_flag})
                         ).
                         's';
-                    
+
                     # Conversion (ii): "Ragged left"
                     # > length($_cols{space_bef}{$_flag})
                     #   is "appended" to the conversion.
-                    if (first { $j == $_ } @{$_cols{ragged_left_idx_multiples}})
-                    {
+                    if (
+                        first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
+                    ) {
                         $_cols{conv} =
                             '%'.
                             $_cols{widths}[$j].
                             's'.
                             (
                                 $j == $_cols{idx_multiple} ?
-                                    '' : ' ' x length($_cols{space_bef}{$_flag})
+                                    '' :
+                                    ' ' x length($_cols{space_bef}{$_flag})
                             );
                     }
-                    
+
                     # Columns
                     print $_strs{indents}{$_flag} if $j == 0;
                     if ($_cols{data_sep}{$_flag} !~ /\t/) {
                         printf(
                             "%s$_cols{conv}%s",
                             ($j == 0 ? '' : $_cols{space_aft}{$_flag}),
-                            $_cols{data_rowwise}[$i][$j] // $_strs{nan}{$_flag},
+                            (
+                                $_cols{data_rowwise}[$i][$j]
+                                // $_strs{nan}{$_flag}
+                            ),
                             (
                                 $j == $_cols{idx_multiple} ?
                                     '' : $_cols{data_sep}{$_flag}
@@ -982,7 +993,10 @@ sub reduce_data {
                     elsif ($_cols{data_sep}{$_flag} =~ /\t/) {
                         printf(
                             "%s%s",
-                            $_cols{data_rowwise}[$i][$j] // $_strs{nan}{$_flag},
+                            (
+                                $_cols{data_rowwise}[$i][$j]
+                                // $_strs{nan}{$_flag}
+                            ),
                             (
                                 $j == $_cols{idx_multiple} ?
                                     '' : $_cols{data_sep}{$_flag}
@@ -1000,7 +1014,7 @@ sub reduce_data {
                         $xlsx_col,
                         $_cols{widths}[$j] * $xlsx_col_scale_factor
                     );
-                    
+
                     my $_align = (
                         first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
                     ) ? 'right' : 'left';
@@ -1009,7 +1023,7 @@ sub reduce_data {
                         $xlsx_col,
                         $_cols{data_rowwise}[$i][$j] // $_strs{nan}{$_flag},
                         ($i == 0 and $i == $_rows{idx_last}) ?
-                            $xlsx_formats{mid_bot}{$_align} : # For single-rowed
+                            $xlsx_formats{mid_bot}{$_align} : # For single-row
                         $i == 0 ?
                             $xlsx_formats{mid}{$_align} : # mid rule formatted
                         $i == $_rows{idx_last} ?
@@ -1021,11 +1035,11 @@ sub reduce_data {
                 }
             }
         }
-        
+
         # [DAT][TeX] Bottom rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{bot}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Append the data sums.
         #
@@ -1044,11 +1058,11 @@ sub reduce_data {
                 );
                 print $sum_lab_aligned;
             }
-            
+
             #
             # Columns "for" the data sums
             #
-            
+
             # [DAT][TeX][XLSX]
             my $the_beginning = $_flag !~ $_flags{dat} ?
                 0 : $_cols{sum_idx_multiples}[0];
@@ -1068,22 +1082,24 @@ sub reduce_data {
                             + length($_cols{space_bef}{$_flag})
                         ).
                         's';
-                    
+
                     # Conversion (ii): "Ragged left"
                     # > length($_cols{space_bef}{$_flag})
                     #   is "appended" to the conversion.
-                    if (first { $j == $_ } @{$_cols{ragged_left_idx_multiples}})
-                    {
+                    if (
+                        first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
+                    ) {
                         $_cols{conv} =
                             '%'.
                             $_cols{widths}[$j].
                             's'.
                             (
                                 $j == $_cols{idx_multiple} ?
-                                    '' : ' ' x length($_cols{space_bef}{$_flag})
+                                    '' :
+                                    ' ' x length($_cols{space_bef}{$_flag})
                             );
                     }
-                    
+
                     # Columns
                     print $_strs{indents}{$_flag} if $j == 0;
                     if ($_cols{data_sep}{$_flag} !~ /\t/) {
@@ -1115,19 +1131,19 @@ sub reduce_data {
                     my $_align = (
                         first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
                     ) ? 'right' : 'left';
-                    
+
                     $worksheet->write(
                         $xlsx_row,
                         $xlsx_col,
                         $_cols{data_sums}[$j] // $_strs{nan}{$_flag},
                         $xlsx_formats{none}{$_align}
                     );
-                    
+
                     $xlsx_col++;
                     $xlsx_row++ if $j == $_cols{sum_idx_multiples}[-1];
                 }
             }
-            
+
             # [CSV]
             if ($_flag =~ $_flags{csv}) {
                 $csv->print(
@@ -1136,38 +1152,37 @@ sub reduce_data {
                 );
             }
         }
-        
+
         # [TeX] Wrapping up - end
         if ($_flag =~ $_flags{tex}) {
             # tabular env - end
             say '\\end{tabular}';
-            
+
             # document env - end
             print "\n";
             say "\\end{document}";
         }
-        
+
         # [DAT][TeX] EOF
         print $_strs{eofs}{$_flag} if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         # [JSON][YAML][DAT][TeX] Restore the output filehandle to STDOUT.
         select(STDOUT);
-        
+
         # Close the filehandle.
         # the XLSX filehandle must be closed via its close method!
         close $_fh         if $_flag !~ $_flags{xlsx};
         $workbook->close() if $_flag =~ $_flags{xlsx};
     }
-    
+
     return;
 }
 
 
 sub show_elapsed_real_time {
     # """Show the elapsed real time."""
-    
     my @opts = @_ if @_;
-    
+
     # Parse optional arguments.
     my $is_return_copy = 0;
     my @del; # Garbage can
@@ -1181,13 +1196,13 @@ sub show_elapsed_real_time {
     }
     my %dels = map { $_ => 1 } @del;
     @opts = grep !$dels{$_}, @opts;
-    
+
     # Optional strings printing
     print for @opts;
-    
+
     # Elapsed real time printing
     my $elapsed_real_time = sprintf("Elapsed real time: [%s s]", time - $^T);
-    
+
     # Return values
     if ($is_return_copy) {
         return $elapsed_real_time;
@@ -1201,19 +1216,17 @@ sub show_elapsed_real_time {
 
 sub pause_shell {
     # """Pause the shell."""
-    
     my $notif = $_[0] ? $_[0] : "Press enter to exit...";
-    
+
     print $notif;
     while (<STDIN>) { last; }
-    
+
     return;
 }
 
 
 sub yn_prompt {
     # """Invoke a y/n prompt."""
-    
     my $yn;
     my $yn_msg = $_[0] ? $_[0] : "Run? (y/n)> ";
     print $yn_msg;
@@ -1222,17 +1235,17 @@ sub yn_prompt {
         return 0 if $yn =~ /\bn\b/i;
         print $yn_msg;
     }
-    
+
     return;
 }
 
 
 sub construct_timestamps {
     # """Construct timestamps."""
-    
+
     # Optional setting for the date component separator
     my $date_sep  = '';
-    
+
     # Terminate the program if the argument passed
     # is not allowed to be a delimiter.
     my @delims = ('-', '_');
@@ -1242,13 +1255,13 @@ sub construct_timestamps {
         croak "The date delimiter must be one of: [".join(', ', @delims)."]"
             unless $is_correct_delim;
     }
-    
+
     # Construct and return a datetime hash.
     my $dt  = DateTime->now(time_zone => 'local');
     my $ymd = $dt->ymd($date_sep);
     my $hms = $dt->hms($date_sep ? ':' : '');
     (my $hm = $hms) =~ s/[0-9]{2}$//;
-    
+
     my %datetimes = (
         none   => '', # Used for timestamp suppressing
         ymd    => $ymd,
@@ -1257,7 +1270,7 @@ sub construct_timestamps {
         ymdhms => sprintf("%s%s%s", $ymd, ($date_sep ? ' ' : '_'), $hms),
         ymdhm  => sprintf("%s%s%s", $ymd, ($date_sep ? ' ' : '_'), $hm),
     );
-    
+
     return %datetimes;
 }
 
@@ -1265,19 +1278,18 @@ sub construct_timestamps {
 sub construct_range {
     # """Construct a range for both a list of decimals
     # and a list of integers."""
-    
     my $range_aref = shift;
     my $line_sref  = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $range_aref eq ARRAY;
-    
+
     my $line;
     if ($line_sref and $$line_sref) {
         croak "The 2nd arg of [$sub_name] must be a scalar ref!"
             unless ref $line_sref eq SCALAR;
     }
-    
+
     #
     # Terminate the program if more than one decimal point
     # has been passed for a single number.
@@ -1288,13 +1300,13 @@ sub construct_range {
             croak "More than one decimal point! Terminating";
         }
     }
-    
+
     #
     # Check if the given list of numbers contains a decimal.
     # This affects many of the following statements.
     #
     my @num_of_decimals = grep /[.]/, @$range_aref;
-    
+
     #
     # Pad "integer" 0 to the omitted for correct range construction.
     #
@@ -1303,14 +1315,14 @@ sub construct_range {
             s/(^[.][0-9]+)/0$1/ if /^[.][0-9]+/;
         }
     }
-    
+
     #
     # Populate min, max, (and optionally) incre.
     # (Dependent on whether a decimal is involved)
     #
     my $range_num_input = @$range_aref;
-    my($min, $incre, $max);
-    
+    my ($min, $incre, $max);
+
     if ($range_num_input == 3) {
         ($min, $incre, $max) = @$range_aref;
         #
@@ -1320,7 +1332,7 @@ sub construct_range {
             print $$line_sref ? "=> [$$line_sref]" : "";
             croak "The max entry must be \"nonzero\"! Terminating";
         }
-        
+
         # Hooks to jump to the next conditional: For empty and zero $incre
         $incre = -1 if (
             not $incre               # For empty and 0
@@ -1333,7 +1345,7 @@ sub construct_range {
     }
     if ($range_num_input == 2 or $incre == -1) {
         ($min, $max) = @$range_aref[0, -1]; # Slicing for empty $incre
-        
+
         # Define the increment.
         # (i)  For decimals, the longest decimal places are used.
         #      e.g. 0.1,  0.20 --> Increment: 0.01
@@ -1343,7 +1355,7 @@ sub construct_range {
         if (@num_of_decimals) {
             my $power_of_ten;
             my $power_of_ten_largest = 0;
-            
+
             foreach (@$range_aref) {
                 $power_of_ten = index((reverse $_), '.');
                 $power_of_ten_largest = $power_of_ten > $power_of_ten_largest ?
@@ -1359,7 +1371,7 @@ sub construct_range {
         print $$line_sref ? "=> [$$line_sref]" : "";
         croak "We need 2 or 3 numbers to construct a range! Terminating";
     }
-    
+
     #
     # Terminate the program if the number passed as the min
     # is bigger than the number passed as the max.
@@ -1368,7 +1380,7 @@ sub construct_range {
         print $$line_sref ? "=> [$$line_sref]" : "";
         croak "$min is bigger than $max! Terminating";
     }
-    
+
     #
     # Find the lengthiest number to construct a convert.
     # (Dependent on whether a decimal is involved)
@@ -1377,23 +1389,23 @@ sub construct_range {
     foreach (@$range_aref) {
         # If a decimal is contained, compare only the decimal places.
         s/[0-9]+[.]([0-9]+)/$1/ if @num_of_decimals;
-        
+
         $lengthiest = $_ if length($_) > length($lengthiest);
     }
-    
+
     #
     # Construct a zero-padded convert (in case the ranged numbers
     # are used as part of filenames).
     #
     my $conv = @num_of_decimals ? '%.'.length($lengthiest).'f' :
                                   '%0'.length($lengthiest).'d';
-    
+
     #
     # Construct a range.
     #
     # > If a decimal is involved, increase the powers of 10 of the list of
-    #   numbers by a equal factor such that the decimal with the largest decimal
-    #   places becomes an integer.
+    #   numbers by a equal factor such that the decimal having
+    #   the largest decimal places becomes an integer.
     #   e.g. 0.10,0.001,0.11 => 100, 1, 110
     # > Also, make sure that the number becomes an integer.
     #   Just multiplying the power of 10 does not make the float
@@ -1408,7 +1420,7 @@ sub construct_range {
             $_ = int $_;
         }
     }
-    
+
     @$range_aref = (); # Empty the range array ref before its refilling.
     for (my $i=$min; $i<=$max; $i+=$incre) {
         push @$range_aref, sprintf(
@@ -1420,102 +1432,95 @@ sub construct_range {
             )
         );
     }
-    
+
     return;
 }
 
 
 sub rm_duplicates {
     # """Remove duplicate items from an array."""
-    
     my $aref = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $aref eq ARRAY;
-    
-    my(%seen, @uniqued);
+
+    my (%seen, @uniqued);
     @uniqued = grep !$seen{$_}++, @$aref;
     @$aref = @uniqued;
-    
+
     return;
 }
 
 
 sub rm_empty {
     # """Remove empty items from an array."""
-    
     my $aref = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $aref eq ARRAY;
-    
+
     my @nonempty = grep { !/^$/ } @$aref;
     @$aref = @nonempty;
-    
+
     return;
 }
 
 
 sub rm_space {
     # """Remove whitespace from a given string."""
-    
     my $ref_to_str = shift if $_[0];
     my $opt        = shift if $_[0];
-    
+
     if ($ref_to_str) {
         $$ref_to_str =~ s/\s+//g if not $opt;
         $$ref_to_str =~ s/^\s*// if $opt and $opt =~ /surr/i;
     }
-    
+
     return;
 }
 
 
 sub rm_quotes {
     # """Remove quotes from a given string."""
-    
     ${$_[0]} =~ s/["']//g if $_[0];
-    
+
     return;
 }
 
 
 sub solidus_as_division {
     # """Recognize a solidus as a division operator."""
-    
     ${$_[0]} = (split(/\//, ${$_[0]}))[0] / (split(/\//, ${$_[0]}))[1];
-    
+
     return;
 }
 
 
 sub make_tex_compilable {
     # """Prepend backslashes to symbols for LaTeX compilation."""
-    
     if ($_[0]) {
         my @bef = @{$_[0]};
         my @aft = map {
             local $_ = $_;
-            s/([\$_\\])/\\$1/g; # Returns a boolean; shouldn't be the last expr.
+            s/([\$_\\])/\\$1/g; # Return a boolean; shouldn't be the last expr.
             s/([<>])/\$$1\$/g;
             s/$/ \\\\/;
             $_                  # Return val to @aft: The last expr evaluated
         } @bef;
         @{$_[0]} = @aft;
     }
-    
+
     return;
 }
 
 
 sub calc_area {
     # """Calculate an area."""
-    
     my $anonym_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $anonym_href eq HASH;
-    
+
     my %shapes = (
         # Circular
         circ => {
@@ -1524,34 +1529,35 @@ sub calc_area {
             # Below will be 'eval'ed; see below to see what %dims contains.
             eq   => 'PI * $dims{radius}**2',
         },
-        
+
         # Rectangular
         rect => {
             dims => { map { $_ => undef } qw(length width) },
             eq   => '$dims{length} * $dims{width}',
         },
     );
-    
+
     #
     # Argument validation
     #
-    
+
     # (1) Key "shape" exists?
     croak "\nPlease specify [shape] key!" unless exists $anonym_href->{shape};
     my $shape = $anonym_href->{shape};
-    
+
     # (2) Can I understand the value corresponding to the key "shape"?
     #     e.g. shape => 'circ'
     unless (grep { /\b$shape\b/i } sort keys %shapes) {
         croak "\nUnknown shape [$shape];".
               " available shapes are: [".(join ", ", sort keys %shapes)."]";
     }
-    
+
     # (3) The value corresponding to the key "shape" exists?
     #     e.g. Key "circ" for shape => 'circ'
-    croak "\nPlease specify [$shape] key!" unless exists $anonym_href->{$shape};
+    croak "\nPlease specify [$shape] key!"
+        unless exists $anonym_href->{$shape};
     my %dims = %{$anonym_href->{$shape}}; # e.g. %{$anonym_href->{circ}}
-    
+
     # (4) All the necessary dimensions have been input?
     foreach my $dim (sort keys %{$shapes{$shape}{dims}}) {
         if (not exists $dims{$dim}) {
@@ -1559,19 +1565,18 @@ sub calc_area {
                   " [".(join ", ", sort keys %{$shapes{$shape}{dims}})."]";
         }
     }
-    
+
     return eval $shapes{$shape}{eq}; # cm^2
 }
 
 
 sub calc_vol {
     # """Calculate a volume."""
-    
     my $anonym_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $anonym_href eq HASH;
-    
+
     # Register new shapes, if necessary, to the hash below.
     my %shapes = (
         # Rectangular cuboid
@@ -1585,21 +1590,21 @@ sub calc_vol {
                     '* abs($dims{ymax} - $dims{ymin})'.
                     '* abs($dims{zmax} - $dims{zmin})',
         },
-        
+
         # Sphere
         # > Macrobody mnemonic: SPH
         sph => {
             dims => { map { $_ => undef } qw(radius) },
             eq   => '4 / 3 * PI * $dims{radius}**3',
         },
-        
+
         # Right circular cylinder
         # > Macrobody mnemonic: RCC
         rcc => {
             dims => { map { $_ => undef } qw(radius height) },
             eq   => 'PI * $dims{radius}**2 * $dims{height}',
         },
-        
+
         # Truncated right circular cylinder cone
         # > aka conical frustum
         # > Macrobody mnemonic: TRC
@@ -1612,27 +1617,28 @@ sub calc_vol {
                     ') * $dims{height}',
         },
     );
-    
+
     #
     # Argument validation
     #
-    
+
     # (1) Key "shape" exists?
     croak "\nPlease specify [shape] key!" unless exists $anonym_href->{shape};
     my $shape = $anonym_href->{shape};
-    
+
     # (2) Can I understand the value corresponding to the key "shape"?
     #     e.g. shape => 'rcc'
     unless (grep { /\b$shape\b/i } sort keys %shapes) {
         croak "\nUnknown shape [$shape];".
               " available shapes are: [".(join ", ", sort keys %shapes)."]";
     }
-    
+
     # (3) The value corresponding to the key "shape" exists?
     #     e.g. Key "rcc" for shape => 'rcc'
-    croak "\nPlease specify [$shape] key!" unless exists $anonym_href->{$shape};
+    croak "\nPlease specify [$shape] key!"
+        unless exists $anonym_href->{$shape};
     my %dims = %{$anonym_href->{$shape}}; # e.g. %{$anonym_href->{rcc}}
-    
+
     # (4) All the necessary dimensions have been input?
     foreach my $dim (sort keys %{$shapes{$shape}{dims}}) {
         if (not exists $dims{$dim}) {
@@ -1640,7 +1646,7 @@ sub calc_vol {
                   " [".(join ", ", sort keys %{$shapes{$shape}{dims}})."]";
         }
     }
-    
+
     return eval $shapes{$shape}{eq}; # cm^3
 }
 

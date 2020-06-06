@@ -1,0 +1,3 @@
+2020-05-05 (v1.00)
+- Attribute name changed:
+  - iteration_geoms --> iter_geoms

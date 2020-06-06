@@ -1,7 +1,7 @@
 #
 # Moose class for PHITS cells
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -13,7 +13,7 @@ use namespace::autoclean;
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-04-18';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2018-08-18';
 
 # Cell identification items
@@ -55,8 +55,8 @@ has 'dens_ratio' => (
 );
 
 my %_cell_storages = (
-    cell_mats_list => sub { {} }, # List of available materials
-    cell_props     => sub { {} }, # Storage for MC cell properties
+    cell_mats_list => sub { {} },  # List of available materials
+    cell_props     => sub { {} },  # Storage for MC cell properties
 );
 
 has $_ => (
@@ -70,26 +70,24 @@ has $_ => (
 ) for keys %_cell_storages;
 
 # Geometries to be iterated
-has 'iteration_geoms' => (
+has 'iter_geoms' => (
     is  => 'rw',
     isa => 'ArrayRef',
 );
-sub set_iteration_geoms {
+sub set_iter_geoms {
     my $self = shift;
-    
-    $self->iteration_geoms(\@_);
-    
+    $self->iter_geoms(\@_);
     return;
 }
 
 #
 # Storages for fixed geometries
 #
-my %_geoms = ( # (key) attribute => (val) default
-    mass             => 0,   # g
-    vol              => 0,   # cm^3
-    area             => 0,   # cm^2
-    beam_ent         => 0.0, # cm
+my %_geoms = (  # (key) attribute => (val) default
+    mass             => 0,    # g
+    vol              => 0,    # cm^3
+    area             => 0,    # cm^2
+    beam_ent         => 0.0,  # cm
     height_fixed     => 0.1,
     radius_fixed     => 1.0,
     bot_radius_fixed => 0.15,
@@ -102,7 +100,7 @@ my %_geoms = ( # (key) attribute => (val) default
     top_radius       => 0.60,
     gap              => 0.15,
     # Only for aluminum wrap
-    thickness_fixed  => 0.0012, # 12 um
+    thickness_fixed  => 0.0012,  # 12 um
     thickness        => 0.0012,
 );
 has $_ => (
@@ -134,37 +132,27 @@ has $_ => (
 # Setters
 sub set_heights_of_int {
     my $self = shift;
-    
     @{$self->heights_of_int} = @{$_[0]} if defined $_[0];
-    
     return;
 }
 sub set_radii_of_int {
     my $self = shift;
-    
     @{$self->radii_of_int} = @{$_[0]} if defined $_[0];
-    
     return;
 }
 sub set_bot_radii_of_int {
     my $self = shift;
-    
     @{$self->bot_radii_of_int} = @{$_[0]} if defined $_[0];
-    
     return;
 }
 sub set_top_radii_of_int {
     my $self = shift;
-    
     @{$self->top_radii_of_int} = @{$_[0]} if defined $_[0];
-    
     return;
 }
 sub set_gaps_of_int {
     my $self = shift;
-    
     @{$self->gaps_of_int} = @{$_[0]} if defined $_[0];
-    
     return;
 }
 

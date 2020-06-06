@@ -1,7 +1,7 @@
 #
 # Moose class for physical and physico-chemical constants
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -12,7 +12,7 @@ use namespace::autoclean;
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-01-01';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2018-08-18';
 
 has 'constants' => (
@@ -24,7 +24,7 @@ has 'constants' => (
 
 sub _build_constants {
     return {
-        avogadro         => 6.022e+23, # mol^-1
+        avogadro         => 6.022e+23,  # mol^-1
         coulomb_per_elec => 1.602e-19,
     };
 }

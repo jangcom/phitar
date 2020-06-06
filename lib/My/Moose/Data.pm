@@ -1,7 +1,7 @@
 #
 # Moose role for data reduction
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -12,7 +12,7 @@ use namespace::autoclean;
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-01-18';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2018-08-18';
 
 #
@@ -34,13 +34,13 @@ has $_ => (
 );
 
 # Separators
-my %_seps = ( # (key) attribute => (val) default
+my %_seps = (  # (key) attribute => (val) default
     col_heads    => '|',
     col_subheads => '|',
     row          => "\n",
     col          => "\t",
     plane        => "\n\n",
-    dataset      => "\n\n", # gnuplot
+    dataset      => "\n\n",  # gnuplot
 );
 
 has $_.'_sep' => (

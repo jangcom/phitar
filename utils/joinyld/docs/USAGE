@@ -1,0 +1,46 @@
+NAME
+    joinyld - Join phitar yield files
+
+SYNOPSIS
+        python joinyld.py [-h] -o OUT
+                          file [file ...]
+
+DESCRIPTION
+        Join phitar yield files having different parametric increments.
+        For instance, yield files called
+        'yields_mo99-vnrg20-wrcc-vhgt0p0001to0p0500.dat' and
+        'yields_mo99-vnrg20-wrcc-vhgt0p10to0p70.dat' can be combined into
+        'yields_mo99-vnrg20-wrcc-vhgt0p0001to0p7000.dat'.
+
+OPTIONS
+        -h, --help
+            The argparse help message will be displayed.
+
+        -o OUT, --out OUT
+            Output yield file
+
+        file ...
+            Yield files to be joined;
+            2nd files onward will be appended to the 1st file.
+
+EXAMPLES
+        python joinyld.py --out yields_mo99-vnrg20-wrcc-vhgt0p0001to0p70.dat ^
+            yields_mo99-vnrg20-wrcc-vhgt0p0001to0p0500.dat ^
+            yields_mo99-vnrg20-wrcc-vhgt0p10to0p70.dat
+
+REQUIREMENTS
+    Python 3
+
+SEE ALSO
+    phitar <https://github.com/jangcom/phitar>
+
+AUTHOR
+    Jaewoong Jang <jangj@korea.ac.kr>
+
+COPYRIGHT
+    Copyright (c) 2020 Jaewoong Jang
+
+LICENSE
+    This software is available under the MIT license; the license
+    information is found in 'LICENSE'.
+

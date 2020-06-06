@@ -1,0 +1,30 @@
+#LIBRARY    TENDL-2019
+#REACTION   AU-197(G,INL)AU-197,SIG
+#NUCLEUS    Au-197
+#MF         3
+#MT         4
+#EN-MIN     8.07235e+06
+#EN-MAX     2e+08
+#E,eV        Sig,b        Interpolation
+ 8.07235E+06 0            Lin-Lin
+ 8.07883E+06 4.67827E-05  Lin-Lin
+ 9E+06       0.0641096    Lin-Lin
+ 1E+07       0.113183     Lin-Lin
+ 1.1E+07     0.192843     Lin-Lin
+ 1.2E+07     0.323191     Lin-Lin
+ 1.3E+07     0.476368     Lin-Lin
+ 1.4E+07     0.520096     Lin-Lin
+ 1.5E+07     0.406478     Lin-Lin
+ 1.6E+07     0.189661     Lin-Lin
+ 1.7E+07     0.0795372    Lin-Lin
+ 1.8E+07     0.0369264    Lin-Lin
+ 1.9E+07     0.0196323    Lin-Lin
+ 2E+07       0.0118086    Lin-Lin
+ 2.2E+07     0.00552771   Lin-Lin
+ 2.4E+07     0.00336238   Lin-Lin
+ 2.6E+07     0.00234029   Lin-Lin
+ 2.8E+07     0.00176872   Lin-Lin
+ 3E+07       0.00140455   Lin-Lin
+ 3E+07       0            Lin-Lin
+ 2E+08       0            Lin-Lin
+#END

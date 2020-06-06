@@ -1,0 +1,25 @@
+%YAML 1.2
+---
+out_path: ./samples
+excel_path: ./samples
+excel_fname: expt2_beam_nrg_dist.xlsx
+sheets_of_int:
+  - 20MeV
+  - 35MeV
+  - 50MeV
+20MeV:
+  xcol: 'x-axes [MeV]'
+  ycol: '8bit count'
+  lab: '20 MeV'
+  out_bname: expt2_nrg20
+35MeV:
+  xcol: 'x-axes [MeV]'
+  ycol: '8bit count'
+  lab: '35 MeV'
+  out_bname: expt2_nrg35
+50MeV:
+  xcol: 'x-axes [MeV]'
+  ycol: '8bit count'
+  lab: '50 MeV'
+  out_bname: expt2_nrg50
+...

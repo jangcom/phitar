@@ -1,0 +1,22 @@
+#SUBENT      L0057009
+#AUTHORS     B.L.Berman, R.E.Pywell, S.S.Dietrich, M.N.Thompson, 
+#+           K.G.Mcneil, J.W.Jury
+#REFERENCE   Physical Review, Part C, Nuclear Physics Vol.36, p.1286
+#YEAR        1987
+#TITLE       Absolute photoneutron cross sections for Zr, I, Pr,
+#+           Au, and Pb.
+#REACTION    (79-AU-197(G,N)79-AU-196,,SIG)+(79-AU-197(G,N+P)78-PT-195,,SIG)
+#QUANTITY    Cross section
+#SUBP       L0057009 
+# Energy (eV) Cross section (b)
+1.2069e+07 0.31824
+1.2548e+07 0.39898
+1.3026e+07 0.46569
+1.3504e+07 0.49415
+1.3982e+07 0.47865
+1.446e+07 0.4662
+1.4938e+07 0.40526
+1.5416e+07 0.32757
+1.5895e+07 0.25109
+1.6373e+07 0.14283
+1.6851e+07 0.09153

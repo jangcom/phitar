@@ -1,0 +1,37 @@
+NAME
+        excel2etype22 - Convert EXCEL-stored energy distribution data
+                        to PHITS e-type = 22 data
+
+SYNOPSIS
+        python excel2etype22.py [-h] file
+
+DESCRIPTION
+        Convert EXCEL-stored energy distribution data to PHITS e-type = 22 data.
+
+OPTIONS
+        -h, --help
+            The argparse help message will be displayed.
+
+        file
+            .yaml file describing conversion conditions
+
+EXAMPLES
+        python excel2etype22.py sample.yaml
+
+REQUIREMENTS
+        Python 3
+            PyYAML, pandas, Matplotlib
+
+SEE ALSO
+    phitar <https://github.com/jangcom/phitar>
+
+AUTHOR
+    Jaewoong Jang <jangj@korea.ac.kr>
+
+COPYRIGHT
+    Copyright (c) 2020 Jaewoong Jang
+
+LICENSE
+    This software is available under the MIT license; the license
+    information is found in 'LICENSE'.
+

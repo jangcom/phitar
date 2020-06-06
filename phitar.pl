@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
@@ -15,11 +15,11 @@ use constant PI    => 4 * atan2(1, 1);
 use constant ARRAY => ref [];
 use constant HASH  => ref {};
 
-BEGIN { unshift @INC, "./lib"; } # @INC's become dotless since v5.26000
+BEGIN { unshift @INC, "./lib"; }  # @INC's become dotless since v5.26000
 
 use My::Toolset qw(:coding :rm :mod :geom);
 use My::Nuclear qw(:yield);
-use My::Moose::Animate; # Moose.pm <= vendor lib || cpanm
+use My::Moose::Animate;  # Moose.pm <= vendor lib || cpanm
 use My::Moose::ANSYS;
 use My::Moose::Image;
 use My::Moose::Linac;
@@ -31,12 +31,12 @@ use My::Moose::Tally;
 use My::Moose::Yield;
 my $animate = Animate->new();
 my $mapdl             = ANSYS->new();
-my $mapdl_of_macs     = ANSYS->new(); # Target-specific
-my $mapdl_of_macs_all = ANSYS->new(); # For all targets
+my $mapdl_of_macs     = ANSYS->new();  # Target-specific
+my $mapdl_of_macs_all = ANSYS->new();  # For all targets
 my $image = Image->new();
-my $llinac = Linac->new(); # KURRI
-my $slinac = Linac->new(); # Being designed
-my $xlinac = Linac->new(); # PRAB (20) p. 104701
+my $llinac = Linac->new();
+my $slinac = Linac->new();
+my $xlinac = Linac->new();  # PRAB (20) p. 104701
 my $elinac_of_int;
 my $bconv         = MonteCarloCell->new();
 my $motar         = MonteCarloCell->new();
@@ -45,9 +45,9 @@ my $motar_trc     = MonteCarloCell->new();
 my $flux_mnt_up   = MonteCarloCell->new();
 my $flux_mnt_down = MonteCarloCell->new();
 my $tar_wrap      = MonteCarloCell->new();
-my $motar_ent     = MonteCarloCell->new(); # Ultrathin, nonmat layer
+my $motar_ent     = MonteCarloCell->new();  # Ultrathin, nonmat layer
 my $motar_ent_to;
-my $mc_space      = MonteCarloCell->new(); # MC calculation boundary
+my $mc_space      = MonteCarloCell->new();  # MC calculation boundary
 my $void          = MonteCarloCell->new();
 my $parser = Parser->new();
 my $phits = PHITS->new();
@@ -64,40 +64,39 @@ my $t_tot_fluence = Tally->new();
 my $t_subtotal    = Tally->new();
 my $t_total       = Tally->new();
 my $t_shared      = Tally->new();
-my $yield                              = Yield->new();
-my $yield_mo99                         = Yield->new();
-my $yield_mo99_for_specific_source     = Yield->new();
-my $pwm_mo99_for_specific_source       = Yield->new();
-my $yield_au196                        = Yield->new();
-my $yield_au196_1                      = Yield->new();
-my $yield_au196_1_for_specific_source  = Yield->new();
-my $pwm_au196_1_for_specific_source    = Yield->new();
-my $yield_au196_2                      = Yield->new();
-my $yield_au196_2_for_specific_source  = Yield->new();
-my $pwm_au196_2_for_specific_source    = Yield->new();
+my $yield                    = Yield->new();
+my $yield_mo99               = Yield->new();
+my $yield_mo99_for_sp_src    = Yield->new();
+my $pwm_mo99_for_sp_src      = Yield->new();
+my $yield_au196              = Yield->new();
+my $yield_au196_1            = Yield->new();
+my $yield_au196_1_for_sp_src = Yield->new();
+my $pwm_au196_1_for_sp_src   = Yield->new();
+my $yield_au196_2            = Yield->new();
+my $yield_au196_2_for_sp_src = Yield->new();
+my $pwm_au196_2_for_sp_src   = Yield->new();
 
 
 our $VERSION = '1.04';
-our $LAST    = '2019-12-08';
+our $LAST    = '2020-05-12';
 our $FIRST   = '2018-04-23';
 
 
 sub parse_argv {
     # """@ARGV parser"""
-
-    my(
+    my (
         $argv_aref,
         $cmd_opts_href,
         $run_opts_href,
     ) = @_;
-    my %cmd_opts = %$cmd_opts_href; # For regexes
+    my %cmd_opts = %$cmd_opts_href;  # For regexes
 
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
         # User input
         if (/[.]phi$/i) {
-            croak "\n[$_] NOT found; default params will be used\n" if not -e;
+            croak "\n[$_] NOT found; terminating.\n" if not -e;
             $run_opts_href->{inp} = $_;
         }
 
@@ -109,7 +108,7 @@ sub parse_argv {
                 $t_cross_dump->set_particles_of_int(
                     /phot/i ? 'photon'  :
                     /neut/i ? 'neutron' :
-                              'electron' # Default
+                              'electron'  # Default
                 );
                 $phits->source->set_mode('dump');
             }
@@ -143,11 +142,6 @@ sub parse_argv {
             $run_opts_href->{rpt_flag} = $_ if $_;
         }
 
-        # The front matter won't be displayed at the beginning of the program.
-        if (/$cmd_opts{nofm}/) {
-            $run_opts_href->{is_nofm} = 1;
-        }
-
         # The shell won't be paused at the end of the program.
         if (/$cmd_opts{nopause}/) {
             $run_opts_href->{is_nopause} = 1;
@@ -170,10 +164,10 @@ sub init {
         leading_symb => $mapdl->Cmt->symb,
         border_symbs => ['#', '=', '-']
     );
-    $mapdl->Data->set_eof('/eof'); # An MAPDL command
+    $mapdl->Data->set_eof('/eof');  # An MAPDL command
     $mapdl->set_params(
         # key-val pair for MAPDL
-        job_name => ['job_name',  'phitar'                       ],
+        job_name => ['job_name', 'phitar'                        ],
         tab_ext  => ['tab_ext', $mapdl->FileIO->fname_exts->{tab}],
         eps_ext  => ['eps_ext', $mapdl->FileIO->fname_exts->{eps}],
         # Target-dependent parameters are defined
@@ -187,7 +181,7 @@ sub init {
         obj_attr => qr/[.]/,
         key_val  => '=',
         list_val => ',',
-        dict_val => ':', # Like the Python's dictionary key-val delim
+        dict_val => ':',  # Like the Python's dictionary key-val delim
     );
 
     #
@@ -223,7 +217,7 @@ sub init {
         bot_rad => ['bot_radius' => 'brad'],
         top_rad => ['top_radius' => 'trad'],
     );
-    $phits->Cmt->set_full_names( # To be used in ANGEL
+    $phits->Cmt->set_full_names(  # To be used in ANGEL
         xfwhm   => '$x$-FWHM',
         yfwhm   => '$y$-FWHM',
         zfwhm   => '$z$-FWHM',
@@ -236,44 +230,95 @@ sub init {
     $phits->FileIO->set_fixed_str($phits->Cmt->abbrs->{fixed}[1]);
 
     # PHITS source
-    $phits->source->set_cylindrical(
-        # Parameters
+    # >> Energy distribution
+    $phits->source->set_gaussian_nrg(
+        type => {
+            key  => 'e-type',
+            val  => 2,
+            cmt  => $phits->Cmt->symb.' Gaussian energy distribution',
+            abbr => 'gaussian_nrg',
+        },
+        eg0 => {
+            key         => 'eg0',
+            flag        => 'eg0',
+            val_fixed   => 35,
+            vals_of_int => [30, 35, 40],
+            cmt         => $phits->Cmt->symb.' Center energy',
+        },
+        fwhm => {
+            key => 'eg1',
+            val => 1,
+            cmt => $phits->Cmt->symb.' FWHM',
+        },
+        lt_from_eg0 => 3,
+        cutoff_min => {  # Used for [source]
+            key => 'eg2',
+            val => 35 - 3,  # Calculated in populate_gaussian_nrg_cutoffs()
+            cmt => $phits->Cmt->symb.' Cutoff energy, min',
+        },
+        rt_from_eg0 => 3,
+        cutoff_max => {  # Used for [source] and "tally emax"
+            key => 'eg3',
+            val => 35 + 3,  # Calculated in populate_gaussian_nrg_cutoffs()
+            cmt => $phits->Cmt->symb.' Cutoff energy, max',
+        },
+    );
+    $phits->source->set_free_form_nrg(
+        type => {
+            key  => 'e-type',
+            val  => 22,
+            cmt  => $phits->Cmt->symb.' Free-form energy distribution',
+            abbr => 'free_form_nrg',
+        },
+        ne => {  # Used for [source]
+            key => 'ne',
+            val => 0,  # Calculated in populate_free_form_nrg_dist()
+            cmt => $phits->Cmt->symb.' Number of energy bins',
+        },
+        file => '',
+        cutoff_min => {  # Used as a comment
+            val => 0,  # Calculated in populate_free_form_nrg_dist()
+            cmt => $phits->Cmt->symb.' e-lower of first energy bin',
+        },
+        # cutoff_max: For key-accessing purposes,
+        # the same key as the gaussian_nrg was given.
+        cutoff_max => {  # Used for "tally emax"
+            val => 0,  # Calculated in populate_free_form_nrg_dist()
+            cmt => $phits->Cmt->symb.' e-upper of last energy bin',
+        },
+    );
+    # <<
+    # >> Spatial distribution
+    $phits->source->set_gaussian_xy(
         type => {
             key  => 's-type',
-            val  => 1,
-            cmt  => $phits->Cmt->symb.' Cylindrical',
-            abbr => 'cylind',
+            val  => 13,
+            cmt  => $phits->Cmt->symb.' Gaussian distribution on xy plane',
+            abbr => 'gaussian_xy',
         },
-        name => {
+        proj => {
             key => 'proj',
             val => 'electron',
             cmt => $phits->Cmt->symb.' Projectile',
         },
-        # Beam energies in MeV
-        nrg => {
-            key         => 'e0',
-            val_fixed   => 35,
-            vals_of_int => [20..70],
-            cmt         => $phits->Cmt->symb.' Monoenergetic',
-        },
-        # Beam distribution parameters in cm
-        # (Must be within the MC space macrobody)
+        # Spatial distribution parameters in cm
+        # > Must be within the MC space macrobody
         x_center => {
             key => 'x0',
             val => 0.0,
-            cmt => $phits->Cmt->symb.' x-center coordinate',
+            cmt => $phits->Cmt->symb.' x-center of Gaussian',
         },
         y_center => {
             key => 'y0',
             val => 0.0,
-            cmt => $phits->Cmt->symb.' y-center coordinate',
+            cmt => $phits->Cmt->symb.' y-center of Gaussian',
         },
-        rad => {
-            key         => 'r0',
-            flag        => 'rad',
+        xy_fwhms => {
+            key         => 'r1',
+            flag        => 'xyfwhms',
             val_fixed   => 0.3,
             vals_of_int => [map $_ /= 10, 1..5],
-            cmt         => $phits->Cmt->symb.' Radius',
+            cmt         => $phits->Cmt->symb.' x-FWHM and y-FWHM of Gaussian',
         },
         z_beg => {
             key => 'z0',
@@ -285,6 +330,10 @@ sub init {
             val => -5.0,
             cmt => $phits->Cmt->symb.' z-ending coordinate',
         },
+        t_cross_intact => {
+            z_beg => -5.0 + 1,  # Based on {z_beg}{val}
+            z_end => -5.0 + 1 + 1e-7,
+        },
         dir => {
             key => 'dir',
             val => 1.0,
@@ -295,19 +344,13 @@ sub init {
         type => {
             key  => 's-type',
             val  => 3,
-            cmt  => $phits->Cmt->symb.' Gaussian distribution in xyz directions',
+            cmt  => $phits->Cmt->symb.' Gaussian distribution in xyz dirs',
             abbr => 'gaussian_xyz',
         },
-        name => {
+        proj => {
             key => 'proj',
             val => 'electron',
             cmt => $phits->Cmt->symb.' Projectile',
-        },
-        nrg => {
-            key         => 'e0',
-            val_fixed   => 35,
-            vals_of_int => [20..70],
-            cmt         => $phits->Cmt->symb.' Monoenergetic',
         },
         xyz_sep => '_',
         x_center => {
@@ -346,46 +389,44 @@ sub init {
             vals_of_int => [0.0],
             cmt         => $phits->Cmt->symb.' z-FWHM of Gaussian',
         },
+        t_cross_intact => {
+            z_beg => -5.0 + 1,  # Based on {z_center}{val}
+            z_end => -5.0 + 1 + 1e-7,
+        },
         dir => {
             key => 'dir',
             val => 1.0,
             cmt => $phits->Cmt->symb.' z-axis angle in arccosine',
         },
     );
-    $phits->source->set_gaussian_xy(
+    $phits->source->set_cylindrical(
         type => {
             key  => 's-type',
-            val  => 13,
-            cmt  => $phits->Cmt->symb.' Gaussian distribution on xy plane',
-            abbr => 'gaussian_xy',
+            val  => 1,
+            cmt  => $phits->Cmt->symb.' Cylindrical',
+            abbr => 'cylind',
         },
-        name => {
+        proj => {
             key => 'proj',
             val => 'electron',
             cmt => $phits->Cmt->symb.' Projectile',
         },
-        nrg => {
-            key         => 'e0',
-            val_fixed   => 35,
-            vals_of_int => [20..70],
-            cmt         => $phits->Cmt->symb.' Monoenergetic',
-        },
         x_center => {
             key => 'x0',
             val => 0.0,
-            cmt => $phits->Cmt->symb.' x-center of Gaussian',
+            cmt => $phits->Cmt->symb.' x-center coordinate',
         },
         y_center => {
             key => 'y0',
             val => 0.0,
-            cmt => $phits->Cmt->symb.' y-center of Gaussian',
+            cmt => $phits->Cmt->symb.' y-center coordinate',
         },
-        xy_fwhms => {
-            key         => 'r1',
-            flag        => 'xyfwhms',
+        rad => {
+            key         => 'r0',
+            flag        => 'rad',
             val_fixed   => 0.3,
             vals_of_int => [map $_ /= 10, 1..5],
-            cmt         => $phits->Cmt->symb.' x-FWHM and y-FWHM of Gaussian',
+            cmt         => $phits->Cmt->symb.' Radius',
         },
         z_beg => {
             key => 'z0',
@@ -397,12 +438,18 @@ sub init {
             val => -5.0,
             cmt => $phits->Cmt->symb.' z-ending coordinate',
         },
+        t_cross_intact => {
+            z_beg => -5.0 + 1,  # Based on {z_beg}{val}
+            z_end => -5.0 + 1 + 1e-7,
+        },
         dir => {
             key => 'dir',
             val => 1.0,
             cmt => $phits->Cmt->symb.' z-axis angle in arccosine',
         },
     );
+    # <<
+    # >> Dump source
     # Effective only when the dump mode is turned on via cmd-line opt.
     $phits->source->set_dump(
         type => {
@@ -414,13 +461,15 @@ sub init {
         # Dump filename
         file => {
             key => 'file',
-            val => '', # To be defined
+            val => '',  # To be defined
         },
     );
+    # <<
     # PHITS cell materials
     # > To make new materials available, do:
-    #   (1) Check if the new material is registered in %_cell_mats_list below.
-    #       If not, add a key-val pair by referring to the other existing pairs.
+    #   (1) Check if the new material is already registered in
+    #       %_cell_mats_list below. If not, add a key-val pair
+    #       by referring to the other existing pairs.
     #   (2) Associate the new material to the set_cell_mats_list() method.
     my %_cell_mats_list = (
         # None (no cell at all)
@@ -438,12 +487,12 @@ sub init {
 
         # Vacuum
         vac => {
-            mat_id        => 0, # Predefined ID for the "inner void"
+            mat_id        => 0,  # Predefined ID for the "inner void"
             mat_comp      => undef,
             #---[mat name color] for T-Gshow and T-3Dshow tallies---#
             mat_lab_name  => 'Vacuum',
             mat_lab_size  => 1,
-            mat_lab_color => '{1.000 0.100 1.000}', # HSB color for light red
+            mat_lab_color => '{1.000 0.100 1.000}',  # HSB color for light red
             #-------------------------------------------------------#
             mass_dens     => undef,
             melt_pt       => undef,
@@ -452,13 +501,13 @@ sub init {
         },
 
         # Gas
-        air => { # Dry air
+        air => {  # Dry air
             mat_id        => 1,
-            mat_comp      => ' N 0.78 O 0.21 Ar 0.01', # Ignore CO2 (0.04%) etc.
+            mat_comp      => ' N 0.78 O 0.21 Ar 0.01',  # Ignore CO2 etc.
             mat_lab_name  => 'Air',
             mat_lab_size  => 1,
-            mat_lab_color => '{0.250 0.100 1.000}', # HSB color for light blue
-            mass_dens     => 1.225e-3, # g cm^-3
+            mat_lab_color => '{0.250 0.100 1.000}',  # HSB color for light blue
+            mass_dens     => 1.225e-3,  # g cm^-3
             melt_pt       => undef,
             boil_pt       => 78.8,
             thermal_cond  => 0.024,
@@ -470,9 +519,9 @@ sub init {
             mat_lab_size  => 1,
             mat_lab_color => '{1.000 0.100 1.000}',
             mass_dens     => 0.08988e-3,
-            melt_pt       => 13.99,  # K
-            boil_pt       => 20.271, # K
-            thermal_cond  => 0.1805, # W m^-1 K^-1; used for MAPDL
+            melt_pt       => 13.99,   # K
+            boil_pt       => 20.271,  # K
+            thermal_cond  => 0.1805,  # W m^-1 K^-1; used for MAPDL
         },
         he => {
             mat_id        => 20,
@@ -629,7 +678,7 @@ sub init {
     );
 
     # Examine if a duplicate 'mat_id' exists.
-    my %_seen = (); # Must be initialized to an empty hash
+    my %_seen = ();  # Must be initialized to an empty hash
     foreach my $mat (keys %_cell_mats_list) {
         $_seen{$_cell_mats_list{$mat}{mat_id}}++;
         if (
@@ -695,22 +744,21 @@ sub init {
         water => $_cell_mats_list{water},
     );
 
-    $motar_ent->set_cell_mats_list( # Nonmaterial space for dump file gen
+    $motar_ent->set_cell_mats_list(  # Nonmaterial space for dump file gen
         %{$mc_space->cell_mats_list}
     );
 
-    # Set constrained user-input argument names
-    # to prevent typos in the user input.
-    $phits->set_constrained_args(
-        # Allowed names for the iteration geometries
-        varying => [
-            'height',     'hgt',
-            'radius',     'rad',
+    # Set constraint user-input arguments.
+    $phits->set_constraint_args(
+        # Iteration geometries
+        v_geom => [
+            'height', 'hgt',
+            'radius', 'rad',
             'bot_radius', 'bot_rad', 'brad',
             'top_radius', 'top_rad', 'trad',
-            'gap', # Converter-to-target distance
+            'gap',  # Converter-to-target distance
         ],
-        # Allowed materials for MC cells
+        # MC cell materials
         bconv_cell_mat         => [keys %{$bconv->cell_mats_list}        ],
         motar_cell_mat         => [keys %{$motar->cell_mats_list}        ],
         flux_mnt_up_cell_mat   => [keys %{$flux_mnt_up->cell_mats_list}  ],
@@ -718,6 +766,12 @@ sub init {
         tar_wrap_cell_mat      => [keys %{$tar_wrap->cell_mats_list}     ],
         motar_ent_cell_mat     => [keys %{$motar_ent->cell_mats_list}    ],
         mc_space_cell_mat      => [keys %{$mc_space->cell_mats_list}     ],
+        # Tally particles
+        tally_particles => [
+            'electron',
+            'photon',
+            'neutron',
+        ],
     );
 
     # PHITS tallies
@@ -752,20 +806,20 @@ sub init {
     # > tetd_xband_e37113
     #
     $llinac->set_params(
-        name            => 'L-band electron linac: KURRI',
+        name            => 'L-band electron linac',
         # The following keys must be provided.
-        rf_power_source => 'thales_lband_tv2022b', # See the list above.
-        peak_beam_nrg   => 30e+06,  # In eV; updated in inner_iterator.
-                                    # Caution: This energy is used only for
-                                    # calculating the beam powers,
-                                    # but not used as the e0 value of PHITS.
-                                    # The e0 value is designated by the user.
-        peak_beam_curr  => 500e-03, # In A.
-                                    # This value, in contrast, is used as
-                                    # multiplication factors for tallies.
+        rf_power_source => 'thales_lband_tv2022b',  # See the list above.
+        peak_beam_nrg   => 30e+06,   # In eV; updated in inner_iterator.
+                                     # Caution: This energy is used only for
+                                     # calculating the beam powers,
+                                     # but not used as the eg0 value of PHITS.
+                                     # The eg0 value is designated by the user.
+        peak_beam_curr  => 500e-03,  # In A.
+                                     # This value, in contrast, is used as
+                                     # multiplication factors for tallies.
     );
     $slinac->set_params(
-        name            => 'S-band electron linac: Being Designed',
+        name            => 'S-band electron linac',
         rf_power_source => 'tetd_sband_e37307',
         peak_beam_nrg   => 35e+06,
         peak_beam_curr  => 340e-03,
@@ -782,7 +836,7 @@ sub init {
     # Animating programs
     #
     $animate->set_exes(
-        imagemagick => 'magick.exe', # Legacy: 'convert.exe'
+        imagemagick => 'magick.exe',  # Legacy: 'convert.exe'
         ffmpeg      => 'ffmpeg.exe',
     );
 
@@ -822,7 +876,8 @@ sub particle_dependent_settings {
                 $t_shared->is_phot_of_int
             ) ? 1 : 0,
             cmt => $phits->Cmt->symb.
-                   ' [0] Off [1] emin(12,13)=0.1,emin(14)=1e-3,dmax(12-14)=1e3',
+                   ' [0] Off '.
+                   '[1] emin(12,13)=0.1,emin(14)=1e-3,dmax(12-14)=1e3',
         },
         nucdata => {
             key => 'nucdata',
@@ -838,16 +893,16 @@ sub particle_dependent_settings {
 
 sub default_run_settings {
     # """Default run settings: Almost all of the attributes defined in here
-    # can be modified in parse_argv() via the input file."""
+    # can be modified in parse_argv() via the user input file."""
 
     #
     # TOC: In the order of independence (i.e. the latter depends on the former)
-    # 1. Controls                 <= Independent
-    # 2. PHITS cells              <= Independent
-    # 3. PHITS source             <= Independent
-    # 4. Linac                    <= Independent
-    # 5. PHITS tallies            <= Depends on 4. Linac
-    # 6. PHITS parameters section <= Depends on 5. Tally
+    # 1. Controls         <= Independent
+    # 2. PHITS cells      <= Independent
+    # 3. PHITS source     <= Independent
+    # 4. Linac            <= Independent
+    # 5. PHITS tallies    <= Depends on 4. Linac
+    # 6. PHITS parameters <= Depends on 5. Tally
     #
 
     #
@@ -860,68 +915,64 @@ sub default_run_settings {
     # 1. Controls
     #
     $phits->Ctrls->set_switch('on');
-    $phits->Ctrls->set_write_fm('on');
     $phits->Ctrls->set_openmp(0);
-    $mapdl->Ctrls->set_switch('on');
-    $mapdl->Ctrls->set_write_fm('on');
-    $mapdl_of_macs->Ctrls->set_switch('on');
+    $mapdl->Ctrls->set_switch('off');
+    $mapdl_of_macs->Ctrls->set_switch('off');
     $mapdl_of_macs_all->Ctrls->set_switch('off');
     $t_shared->Ctrls->set_shortname('on');
     $t_track->Ctrls->set_switch('on');
     $t_track->Ctrls->set_err_switch('off');
     $t_cross->Ctrls->set_switch('on');
-    $t_heat->Ctrls->set_switch('on');
+    $t_heat->Ctrls->set_switch('off');
     $t_heat->Ctrls->set_err_switch('off');
     $t_gshow->Ctrls->set_switch('on');
     $t_3dshow->Ctrls->set_switch('on');
-    $t_tot_fluence->Ctrls->set_switch('on');
-    $t_tot_fluence->Ctrls->set_write_fm('on');
+    $t_tot_fluence->Ctrls->set_switch('off');
+    $angel->Ctrls->set_mute('on');
     $angel->Ctrls->set_switch('on');
     $angel->Ctrls->set_modify_switch('on');
     $angel->Ctrls->set_noframe_switch('on');
     $angel->Ctrls->set_nomessage_switch('on');
     $angel->Ctrls->set_nolegend_switch('off');
-    $angel->Cmt->set_annot_type('none'); # none, beam, geom
+    $angel->Cmt->set_annot_type('geom');
     $angel->set_orientation('land');
-    $angel->set_dim_unit('cm'); # um, mm, cm
+    $angel->set_dim_unit('mm');
     $angel->set_cmin_track(1e-3);
     $angel->set_cmax_track(1e+0);
     $angel->set_cmin_heat(1e-1);
     $angel->set_cmax_heat(1e+2);
-    $angel->Ctrls->set_mute('on');
-    $image->Ctrls->set_raster_dpi(150);
-    $image->Ctrls->set_png_switch('on');
-    $image->Ctrls->set_png_trn_switch('on');
-    $image->Ctrls->set_jpg_switch('off');
+    $image->Ctrls->set_mute('on');
     $image->Ctrls->set_pdf_switch('on');
+    $image->Ctrls->set_svg_switch('off');
     $image->Ctrls->set_emf_switch('off');
     $image->Ctrls->set_wmf_switch('off');
-    $image->Ctrls->set_mute('on');
-    $animate->Ctrls->set_raster_format('png'); # Select one: png or jpg
-    $animate->Ctrls->set_duration(5); # In second
-    $animate->Ctrls->set_gif_switch('on');
-    $animate->Ctrls->set_avi_switch('on');
-    $animate->Ctrls->set_avi_kbps(1000); # Max 1000 at 4-kbps bitrate tolerance
-    $animate->Ctrls->set_mp4_switch('on');
-    $animate->Ctrls->set_mp4_crf(18); # 0 lossless, 51 worst. Choose 15--25.
-    $animate->Ctrls->set_mute('on');
-    $yield->set_avg_beam_curr(1.0); # uA
-    $yield->set_end_of_irr(10/60);  # Hour
-    $yield->set_unit('Bq');
+    $image->Ctrls->set_raster_dpi(150);
+    $image->Ctrls->set_png_switch('off');
+    $image->Ctrls->set_png_trn_switch('off');
+    $image->Ctrls->set_jpg_switch('off');
+    $animate->Ctrls->set_mute('off');
+    $animate->Ctrls->set_raster_format('png');
+    $animate->Ctrls->set_duration(5);
+    $animate->Ctrls->set_gif_switch('off');
+    $animate->Ctrls->set_mp4_switch('off');
+    $animate->Ctrls->set_mp4_crf(18);  # 0 lossless, 51 worst. Choose 15--25.
+    $animate->Ctrls->set_avi_switch('off');
+    $animate->Ctrls->set_avi_kbps(1000);  # Max 1e3 at 4-kbps bitrate tolerance
+    $yield->set_avg_beam_curr(15);  # uA
+    $yield->set_end_of_irr(5/60);  # h
+    $yield->set_unit('kBq');
     $yield_mo99->Ctrls->set_switch('on');
     $yield_mo99->Ctrls->set_pwm_switch('off');
-    $yield_mo99->Ctrls->set_write_fm('on');
-    $yield_mo99->set_react_nucl_enri_lev(0.09744); # Amount fraction
-    $yield_mo99->set_num_of_nrg_bins(1_000); # Energy bins of tally and xs
-    $yield_mo99->FileIO->set_micro_xs_dir('xs');
+    $yield_mo99->set_react_nucl_enri_lev(0.09744);  # Amount fraction
+    $yield_mo99->set_num_of_nrg_bins(1_000);  # Energy bins of tally and xs
+    $yield_mo99->FileIO->set_micro_xs_dir('./xs/endf');
     $yield_mo99->FileIO->set_micro_xs_dat('tendl2015_mo100_gn_mf3_t4.dat');
     $yield_mo99->set_micro_xs_interp_algo('csplines');
-    $yield_au196->Ctrls->set_switch('on');
+    $yield_au196->Ctrls->set_switch('off');
     $yield_au196->Ctrls->set_pwm_switch('off');
-    $yield_au196->Ctrls->set_write_fm('on');
     $yield_au196->set_react_nucl_enri_lev(1.0000);
     $yield_au196->set_num_of_nrg_bins(1_000);
-    $yield_au196->FileIO->set_micro_xs_dir('xs');
+    $yield_au196->FileIO->set_micro_xs_dir('./xs/endf');
     $yield_au196->FileIO->set_micro_xs_dat('tendl2015_au197_gn_mf3_t4.dat');
     $yield_au196->set_micro_xs_interp_algo('csplines');
 
@@ -933,91 +984,96 @@ sub default_run_settings {
     # 'ta', 'w', 'ir', 'pt', 'au', 'vac', 'air', 'mo', 'pb'
     $bconv->set_cell_mat('w');
     # Ratio of converter density to theoretical density
-    $bconv->set_dens_ratio(1.0000); # Range [0,1]
-    $bconv->set_iteration_geoms( # Geometric params for the inner iteration
+    $bconv->set_dens_ratio(1.0000);  # [0,1]
+    $bconv->set_iter_geoms(  # Geometric params for the inner iteration
         'height',
-        'radius',
-        'gap',
+#        'radius',
+#        'gap',
     );
-    $bconv->set_height_fixed(0.33); # z-vector
-    $bconv->set_heights_of_int([map sprintf("%.2f", $_ /= 100), 10..70]);
-    $bconv->set_radius_fixed(1.00);
-    $bconv->set_radii_of_int([1..5]);
-    $bconv->set_gap_fixed(0.15);
-    $bconv->set_gaps_of_int([map sprintf("%.2f", $_ /= 100), 10..30]);
+    $bconv->set_height_fixed(0.20);  # z-vector
+    $bconv->set_heights_of_int([map $_ /= 100, @{[20, 25, 30]}]);
+    $bconv->set_radius_fixed(1.25);
+    $bconv->set_radii_of_int([map $_ /= 100, @{[100, 125, 150]}]);
+    $bconv->set_gap_fixed(1.30);
+    $bconv->set_gaps_of_int([map $_ /= 100, @{[80, 105, 130]}]);
 
     # Molybdenum target
     # 'mo', 'moo2', 'moo3', 'vac', 'air', 'pb'
-    $motar->set_cell_mat('moo3');
+    $motar->set_cell_mat('mo');
     $motar->set_dens_ratio(1.0000);
     # Molybdenum target, RCC
-    $motar_rcc->set_iteration_geoms(
-        'height',
-        'radius',
+    $motar_rcc->set_iter_geoms(
+#        'height',
+#        'radius',
     );
-    $motar_rcc->set_height_fixed(1.00);
-    $motar_rcc->set_heights_of_int([map sprintf("%.2f", $_ /= 100), 100..200]);
+    $motar_rcc->set_height_fixed(0.50);
+    $motar_rcc->set_heights_of_int([map $_ /= 100, @{[50, 75, 100]}]);
     $motar_rcc->set_radius_fixed(0.50);
-    $motar_rcc->set_radii_of_int([map sprintf("%.2f", $_ /= 100), 50..100]);
+    $motar_rcc->set_radii_of_int([map $_ /= 100, @{[50, 75, 100]}]);
     # Molybdenum target, TRC
-    $motar_trc->set_iteration_geoms(
-        'height',
-        'bot_radius',
-        'top_radius',
+    $motar_trc->set_iter_geoms(
+#        'height',
+#        'bot_radius',
+#        'top_radius',
     );
-    $motar_trc->set_height_fixed(1.00);
-    $motar_trc->set_heights_of_int([map sprintf("%.2f", $_ /= 100), 100..130]);
-    $motar_trc->set_bot_radius_fixed(0.15);
-    $motar_trc->set_bot_radii_of_int([map sprintf("%.2f", $_ /= 100), 10..40]);
+    $motar_trc->set_height_fixed(0.50);
+    $motar_trc->set_heights_of_int([map $_ /= 100, @{[50, 75, 100]}]);
+    $motar_trc->set_bot_radius_fixed(0.10);
+    $motar_trc->set_bot_radii_of_int([map $_ /= 100, @{[10, 25, 40]}]);
     $motar_trc->set_top_radius_fixed(0.60);
-    $motar_trc->set_top_radii_of_int([map sprintf("%.2f", $_ /= 100), 50..80]);
+    $motar_trc->set_top_radii_of_int([map $_ /= 100, @{[50, 60, 70]}]);
 
     # Flux monitor, upstream
-    $flux_mnt_up->set_cell_mat('au');      # 'au', 'vac', 'air'
-    $flux_mnt_up->set_dens_ratio(1.0000);  # Range [0,1]
-    $flux_mnt_up->set_height_fixed(0.005); # 50 um
-    $flux_mnt_up->set_radius_fixed(0.500); # 5 mm
+    $flux_mnt_up->set_cell_mat('au');        # 'au', 'vac', 'air'
+    $flux_mnt_up->set_dens_ratio(1.0000);    # [0,1]
+    $flux_mnt_up->set_height_fixed(0.0000);  # 0:none
+    $flux_mnt_up->set_radius_fixed(0.5000);
 
     # Flux monitor, downstream
-    $flux_mnt_down->set_cell_mat('au');      # 'au', 'vac', 'air'
-    $flux_mnt_down->set_dens_ratio(1.0000);  # Range [0,1]
-    $flux_mnt_down->set_height_fixed(0.005); # 50 um
-    $flux_mnt_down->set_radius_fixed(0.500); # 5 mm
+    $flux_mnt_down->set_cell_mat('au');
+    $flux_mnt_down->set_dens_ratio(1.0000);
+    $flux_mnt_down->set_height_fixed(0.0000);
+    $flux_mnt_down->set_radius_fixed(0.5000);
 
     # Target wrap
-    $tar_wrap->set_cell_mat('al');          # 'al', 'vac', 'air'
-    $tar_wrap->set_dens_ratio(1.0000);      # Range [0,1]
-    $tar_wrap->set_thickness_fixed(0.0012); # 12 um
+    $tar_wrap->set_cell_mat('al');           # 'al', 'vac', 'air'
+    $tar_wrap->set_dens_ratio(1.0000);       # [0,1]
+    $tar_wrap->set_thickness_fixed(0.0012);  # 12 um
 
     # MC space
-    $mc_space->set_cell_mat('vac');    # 'vac', 'air', 'he', 'water'
-    $mc_space->set_dens_ratio(1.0000); # Range [0,1]
+    $mc_space->set_cell_mat('air');     # 'vac', 'air', 'h2', 'he', 'water'
+    $mc_space->set_dens_ratio(1.0000);  # [0,1]
 
     # Molybdenum target entrance; must be the same as $mc_space->cell_mat
     $motar_ent->set_cell_mat($mc_space->cell_mat);
     $motar_ent->set_dens_ratio($mc_space->dens_ratio);
-    $motar_ent->set_height_fixed(1e-7); # 1 nm
+    $motar_ent->set_height_fixed(1e-7);  # 1 nm
 
     #
     # 3. PHITS source
     #
-    $phits->source->set_type_of_int( # Choose only one.
-#        $phits->source->cylindrical
-#        $phits->source->gaussian_xyz
+    $phits->source->set_nrg_dist_of_int(  # Choose only one.
+        $phits->source->gaussian_nrg
+#        $phits->source->free_form_nrg
+    );
+    $phits->source->set_spat_dist_of_int(  # Choose only one.
         $phits->source->gaussian_xy
+#        $phits->source->gaussian_xyz
+#        $phits->source->cylindrical
     );
-    $phits->source->set_varying_param( # Choose only one.
-        'nrg'
-#        'rad'      # <= cylindrical
-#        'x_fwhm'   # <= gaussian_xyz
-#        'y_fwhm'   # <= gaussian_xyz
-#        'z_fwhm'   # <= gaussian_xyz
-#        'xy_fwhms' # <= For gaussian_xy
+    $phits->source->set_iter_param(  # Choose only one.
+        'eg0'       # gaussian_nrg
+#        'xy_fwhms'  # gaussian_xy
+#        'x_fwhm'    # gaussian_xyz
+#        'y_fwhm'    # gaussian_xyz
+#        'z_fwhm'    # gaussian_xyz
+#        'rad'       # cylindrical
     );
-    $phits->source->set_nrg_val_fixed(35);
-    $phits->source->set_nrg_vals_of_int([30..40]);
-    $phits->source->set_rad_val_fixed(0.3);
-    $phits->source->set_rad_vals_of_int([map $_ /= 10, 1..5]);
+    # Parameters corresponding to the default values chosen above
+    $phits->source->set_eg0_val_fixed(35);
+    $phits->source->set_eg0_vals_of_int([30, 35, 40]);
+    $phits->source->set_xy_fwhms_val_fixed(0.45);
+    $phits->source->set_xy_fwhms_vals_of_int([map $_ /= 100, @{[30, 45, 60]}]);
 
     #
     # 4. Linac
@@ -1097,15 +1153,15 @@ sub default_run_settings {
         1
     );
     $t_track->set_cell_bnd(
-        resol => 1.2, # Cell boundary resolution factor. PHITS default: 1
-        width => 1.0, # Cell boundary width.             PHITS default: 0.5
+        resol => 1.2,  # Cell boundary resolution factor. PHITS default: 1
+        width => 1.0,  # Cell boundary width.             PHITS default: 0.5
     );
     $t_track->set_epsout(
         # eps file generation
         # [0(d)] Off
         # [1]    On
         # [2]    On with error bars when: [axis != xy, yz, xz, rz]
-        0 # For phitar to modify ANGEL input files beforehand
+        0  # For phitar to modify ANGEL input files beforehand
     );
     $t_track->set_vtkout(
         # vtk file generation for ParaView
@@ -1128,8 +1184,8 @@ sub default_run_settings {
         e => 2,
     );
     $t_cross->set_mesh_sizes(
-        z => 1, # Must be 1; $t_cross->mesh_sizes->{1} is used instead.
-        r => 1, # Must be 1; $t_cross->mesh_sizes->{1} is used instead.
+        z => 1,  # Must be 1; $t_cross->mesh_sizes->{1} is used instead.
+        r => 1,  # Must be 1; $t_cross->mesh_sizes->{1} is used instead.
         e => 100,
     );
     $t_cross->set_unit(
@@ -1158,20 +1214,18 @@ sub default_run_settings {
     # Surface-crossing tally: "dump source"
     $t_cross_dump->set_particles_of_int(
         # Choose only one at a time
-        'electron' # 'photon', 'neutron'
+        'electron'  # 'photon', 'neutron'
     );
     $t_cross_dump->set_mesh_types(
-        e => 2
+        # Key-val pairs
+        e => 2,
     );
     $t_cross_dump->set_mesh_sizes(
+        # Key-val pairs
         e => 500,
     );
-    $t_cross_dump->set_unit(
-        1
-    );
-    $t_cross_dump->set_output(
-        'flux'
-    );
+    $t_cross_dump->set_unit(1);
+    $t_cross_dump->set_output('flux');
     $t_cross_dump->set_epsout(0);
 
     # Heat tallies
@@ -1192,11 +1246,23 @@ sub default_run_settings {
         # [0] Gy source^-1
         # [1] MeV cm^-3 source^-1
         # [2] MeV source^-1
-        1
+        2
     );
     $t_heat->set_factor(
-        val => 1.0,
-        cmt => '',
+        val => (
+            # MeV --> J
+            #
+            # 1 J == |-1 C| * 1 V == 6.242e+18  eV
+            #                     == 6.242e+12 MeV
+            #    1
+            # == 1          J / 6.242e+12 MeV
+            # == 1.602e-13  J / MeV
+            # == (1e+06 * 1.602e-19) J / MeV
+            (1e+06 * $phys->constants->{coulomb_per_elec})
+        ),
+        cmt => '  '.
+               $phits->Cmt->symb.
+               ' MeV --> J',
     );
     $t_heat->set_output(
         # Dependent on tallies.
@@ -1210,7 +1276,7 @@ sub default_run_settings {
     );
     $t_heat->set_epsout(0);
     $t_heat->set_vtkout(0);
-    $t_heat->set_material('all'); # Overridden at inner_iterator()
+    $t_heat->set_material('all');  # Overridden at inner_iterator()
     $t_heat->set_electron(
         # Energies transferred from electrons are calculated using:
         # [0(d)] Kerma factor of photons
@@ -1261,11 +1327,11 @@ sub default_run_settings {
 
             # (iii) Number of source particles per second
             * (
-                $elinac_of_int->avg_beam_curr          # C s^-1
-                / $phys->constants->{coulomb_per_elec} # C source^-1
+                $elinac_of_int->avg_beam_curr           # C s^-1
+                / $phys->constants->{coulomb_per_elec}  # C source^-1
             )
         ),
-        cmt => ' '.
+        cmt => '  '.
                $phits->Cmt->symb.
                ' W m^-3: MeV --> J, cm^-3 --> m^-3, source^-1 --> s^-1',
     );
@@ -1305,15 +1371,11 @@ sub default_run_settings {
         2
     );
     $t_gshow->set_cell_bnd(
-        resol => 1.2, # Cell boundary resolution factor. PHITS default: 1
-        width => 1.0, # Cell boundary width.             PHITS default: 0.5
+        resol => 1.2,  # Cell boundary resolution factor. PHITS default: 1
+        width => 1.0,  # Cell boundary width.             PHITS default: 0.5
     );
-    $t_gshow->set_epsout(
-        1
-    );
-    $t_gshow->set_vtkout(
-        0
-    );
+    $t_gshow->set_epsout(1);
+    $t_gshow->set_vtkout(0);
 
     # 3Dshow tallies
     $t_3dshow->set_output(
@@ -1324,16 +1386,16 @@ sub default_run_settings {
         # [3] Cell boundary + Color
         3
     );
-    $t_3dshow->set_material('all');         # Overridden at inner_iterator()
-    $t_3dshow->set_material_cutaway('all'); # Overridden at inner_iterator()
-    $t_3dshow->set_origin( # The origin of the object to be rendered
+    $t_3dshow->set_material('all');          # Overridden at inner_iterator()
+    $t_3dshow->set_material_cutaway('all');  # Overridden at inner_iterator()
+    $t_3dshow->set_origin(  # The origin of the object to be rendered
         x  => 0,
         y  => 0,
         # z corresponds to a polar angle.
-        z1 => 0.5, # Left-to-right beam view
-        z2 => 0.5, # Right-to-left beam view
+        z1 => 0.5,  # Left-to-right beam view
+        z2 => 0.5,  # Right-to-left beam view
     );
-    $t_3dshow->set_frame( # Referred to as a window in the PHITS manual
+    $t_3dshow->set_frame(  # Referred to as a window in the PHITS manual
         width          => 5,
         height         => 5,
         distance       => 5,
@@ -1342,13 +1404,13 @@ sub default_run_settings {
         hgt_num_meshes => 500,
         angle          => 0,
     );
-    $t_3dshow->set_eye( # The point of the observer
+    $t_3dshow->set_eye(  # The point of the observer
         polar_angle1  => 70,
         polar_angle2  => -70,
         azimuth_angle => 0,
-        distance      => $t_3dshow->frame->{distance} * 20, # PHITS dflt: *10
+        distance      => $t_3dshow->frame->{distance} * 20,  # PHITS dflt: *10
     );
-    $t_3dshow->set_light( # The point from which light is shone
+    $t_3dshow->set_light(  # The point from which light is shone
         polar_angle1  => $t_3dshow->eye->{polar_angle1},
         polar_angle2  => $t_3dshow->eye->{polar_angle2},
         azimuth_angle => $t_3dshow->eye->{azimuth_angle},
@@ -1375,19 +1437,17 @@ sub default_run_settings {
         # [1]    Material boundary + Surface boundary + Cell boundary
         line  => 0,
     );
-    $t_3dshow->set_epsout(
-        1
-    );
+    $t_3dshow->set_epsout(1);
 
     # Shared tally settings
-    $t_shared->set_offsets( # Figure range offsets
+    $t_shared->set_offsets(  # Figure range offsets
         x => 2,
         y => 2,
         z => 2,
     );
 
     #
-    # 6. PHITS parameters section
+    # 6. PHITS parameters
     #
 
     # Part of the PHITS parameters whose values are affected by
@@ -1411,7 +1471,7 @@ sub default_run_settings {
         },
         maxcas  => {
             key => 'maxcas',
-            val => 100,
+            val => 1000,
             cmt => $phits->Cmt->symb.
                    ' Number of histories per batch',
         },
@@ -1424,7 +1484,7 @@ sub default_run_settings {
         # Calculation cutoff minimum energies; must be >=esmin.
         emin => {
             prot => {
-                key => 'emin(1)', # esmin: 1.0000000e-03
+                key => 'emin(1)',  # esmin: 1.0000000e-03
                 cmt => $phits->Cmt->symb.
                        ' [D=1e+00   ] Cutoff: Proton',
             },
@@ -1434,12 +1494,12 @@ sub default_run_settings {
                        ' [D=1e+00   ] Cutoff: Neutron',
             },
             elec => {
-                key => 'emin(12)', # esmin: 5.4461935e-07
+                key => 'emin(12)',  # esmin: 5.4461935e-07
                 cmt => $phits->Cmt->symb.
                        ' [D=1e+09   ] Cutoff: Electron',
             },
             posi => {
-                key => 'emin(13)', # esmin: 5.4461935e-07
+                key => 'emin(13)',  # esmin: 5.4461935e-07
                 cmt => $phits->Cmt->symb.
                        ' [D=1e+09   ] Cutoff: Positron',
             },
@@ -1494,7 +1554,8 @@ sub default_run_settings {
             key => 'igcut',
             val => 0,
             cmt => $phits->Cmt->symb.
-                   ' [0] Off [1] Out [2] Out with time [3] Out gamma,elec,posi',
+                   ' [0] Off [1] Out '.
+                   '[2] Out with time [3] Out gamma,elec,posi',
         },
         file => {
             phits_dname => {
@@ -1514,7 +1575,7 @@ sub default_run_settings {
                 key => 'file(6)',
                 val => 'phits.out',
                 cmt => $phits->Cmt->symb.
-                       ' Summary output'
+                       ' Simulation summary'
             },
             xs_dname => {
                 key => 'file(7)',
@@ -1526,25 +1587,25 @@ sub default_run_settings {
                 key => 'file(11)',
                 val => 'nuclcal.out',
                 cmt => $phits->Cmt->symb.
-                       ' Nuclear reaction output'
+                       ' Nuclear reaction'
             },
             cut_neut_out_fname => {
                 key => 'file(12)',
                 val => 'fort.12',
                 cmt => $phits->Cmt->symb.
-                       ' Cut-offed neutrons output'
+                       ' Cut-offed neutrons'
             },
             cut_gamm_out_fname => {
                 key => 'file(13)',
                 val => 'fort.13',
                 cmt => $phits->Cmt->symb.
-                       ' Cut-offed gammas output'
+                       ' Cut-offed gammas'
             },
             cut_prot_out_fname => {
                 key => 'file(10)',
                 val => 'fort.10',
                 cmt => $phits->Cmt->symb.
-                       ' Cut-offed protons output'
+                       ' Cut-offed protons'
             },
             dumpall_fname => {
                 key => 'file(15)',
@@ -1582,7 +1643,7 @@ sub default_run_settings {
                 key => 'file(23)',
                 val => 'pegs5',
                 cmt => $phits->Cmt->symb.
-                       ' PEGS5 output'
+                       ' PEGS5'
             },
             decdc_dname => {
                 key => 'file(24)',
@@ -1605,10 +1666,9 @@ sub default_run_settings {
 
 sub parse_inp {
     # """Input file parser"""
-
     my $run_opts_href = shift;
 
-    # Below is preferred to using symbolic references
+    # Below is preferred to using symbolic references.
     my %_switch_holders = (
         # (key) Strings
         # (val) Moose objects
@@ -1625,18 +1685,18 @@ sub parse_inp {
         t_tot_fluence     => $t_tot_fluence,
         angel             => $angel,
         image             => $image,
-        img               => $image, # Alias of image
+        img               => $image,  # Alias of image
         animate           => $animate,
         yield             => $yield,
         yield_mo99        => $yield_mo99,
         yield_au196       => $yield_au196,
     );
     my %_mc_cells = (
-        bconv         => $bconv,     # Defines bremss conv mat and geom
-        motar         => $motar,     # Defines mo target mat
-        motar_rcc     => $motar_rcc, # Defines mo target geom
-        motar_trc     => $motar_trc, # Defines mo target geom
-        mc_space      => $mc_space,  # MC calculation space
+        bconv         => $bconv,      # Defines bremss conv mat and geom
+        motar         => $motar,      # Defines mo target mat
+        motar_rcc     => $motar_rcc,  # Defines mo target geom
+        motar_trc     => $motar_trc,  # Defines mo target geom
+        mc_space      => $mc_space,   # MC calculation space
         # Auxiliary materials for experiments
         flux_mnt_up   => $flux_mnt_up,
         flux_mnt_down => $flux_mnt_down,
@@ -1660,8 +1720,8 @@ sub parse_inp {
     );
 
     # Key-val holders
-    my($key, $subkey, $val, @dict_val, $cmt);
-    my $obj_attr_delim = $parser->Data->delims->{obj_attr}; # For regexes
+    my ($key, $subkey, $val, @dict_val, $cmt);
+    my $obj_attr_delim = $parser->Data->delims->{obj_attr};  # For regexes
 
     # Begin parsing the input file.
     open my $inp_fh, '<', $run_opts_href->{inp};
@@ -1669,19 +1729,19 @@ sub parse_inp {
         #
         # TOC ... the same as default_run_settings()
         # 1. Controls
-        # 2. PHITS targets
+        # 2. PHITS cells
         # 3. PHITS source
         # 4. Linac
-        # 5. PHITS tally
-        # 6. PHITS parameters section
+        # 5. PHITS tallies
+        # 6. PHITS parameters
         #
 
         # Initializations
         @{$parser->Data->list_val} = undef;
 
         chomp($line);
-        $line =~ s/\s*#.*//;       # Remove a comment.
-        next if $line =~ /^(#|$)/; # Skip comment or blank lines.
+        $line =~ s/\s*#.*//;        # Remove a comment.
+        next if $line =~ /^(#|$)/;  # Skip comment or blank lines.
 
         # Split the key and value.
         $key = (split $parser->Data->delims->{key_val}, $line)[0];
@@ -1690,9 +1750,11 @@ sub parse_inp {
         # Preprocess the lines.
         rm_space(\$key);
         rm_space(\$val)            if $val and not $val =~ /["']/;
-        rm_space(\$val, 'surr')    if $val and     $val =~ /["']/;
-        rm_quotes(\$val)           if $val and     $val =~ /["']/;
-        solidus_as_division(\$val) if $val and     $val =~ /\//;
+        rm_space(\$val, 'surr')    if $val and $val =~ /["']/;
+        rm_quotes(\$val)           if $val and $val =~ /["']/;
+        solidus_as_division(\$val) if $val and $val =~ /
+            \b [0-9.]+\s* \/ \s*[0-9.]+ \b
+        /x;
 
         #+++++debugging+++++#
 #        say "\$line: |$line|";
@@ -1708,7 +1770,7 @@ sub parse_inp {
         if ($key =~ /^\w+(?:$obj_attr_delim)(\w+$obj_attr_delim)*switch/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)switch//i;
 
-            # For those with subkeys (i.e. having more than one $obj_attr_delim)
+            # Keys having subkeys (i.e. having more than one $obj_attr_delim)
             if ($key =~ /$obj_attr_delim/) {
                 ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
                 $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
@@ -1737,6 +1799,18 @@ sub parse_inp {
                 }
                 # $image only
                 if ($key =~ /image|img/i) {
+                    if ($subkey =~ /pdf/i) {
+                        $image->Ctrls->set_pdf_switch($val);
+                    }
+                    if ($subkey =~ /svg/i) {
+                        $image->Ctrls->set_svg_switch($val);
+                    }
+                    if ($subkey =~ /emf/i) {
+                        $image->Ctrls->set_emf_switch($val);
+                    }
+                    if ($subkey =~ /wmf/i) {
+                        $image->Ctrls->set_wmf_switch($val);
+                    }
                     if ($subkey =~ /png\b/i) {
                         $image->Ctrls->set_png_switch($val);
                     }
@@ -1746,26 +1820,17 @@ sub parse_inp {
                     if ($subkey =~ /jpe?g/i) {
                         $image->Ctrls->set_jpg_switch($val);
                     }
-                    if ($subkey =~ /pdf/i) {
-                        $image->Ctrls->set_pdf_switch($val);
-                    }
-                    if ($subkey =~ /emf/i) {
-                        $image->Ctrls->set_emf_switch($val);
-                    }
-                    if ($subkey =~ /wmf/i) {
-                        $image->Ctrls->set_wmf_switch($val);
-                    }
                 }
                 # $animate only
                 if ($key =~ /animate/i) {
                     if ($subkey =~ /gif/i) {
                         $animate->Ctrls->set_gif_switch($val);
                     }
-                    if ($subkey =~ /avi/i) {
-                        $animate->Ctrls->set_avi_switch($val);
-                    }
                     if ($subkey =~ /mp4/i) {
                         $animate->Ctrls->set_mp4_switch($val);
+                    }
+                    if ($subkey =~ /avi/i) {
+                        $animate->Ctrls->set_avi_switch($val);
                     }
                 }
             }
@@ -1785,12 +1850,6 @@ sub parse_inp {
         if ($key =~ /^t_.*(?:$obj_attr_delim)err_switch/i) {
             $key =~ s/\w+\K(?:$obj_attr_delim)err_switch//i;
             $_switch_holders{$key}->Ctrls->set_err_switch($val);
-        }
-
-        # Switch for front matter writing
-        if ($key =~ /^\w+(?:$obj_attr_delim)(\w+$obj_attr_delim)*write_fm/i) {
-            $key =~ s/\w+\K(?:$obj_attr_delim)write_fm//i;
-            $_switch_holders{$key}->Ctrls->set_write_fm($val);
         }
 
         # Switch-like setter $phits
@@ -1836,13 +1895,13 @@ sub parse_inp {
             if ($key =~ /duration/i) {
                 $animate->Ctrls->set_duration($val);
             }
-            # MPEG-4 bitrate in kbit/s
-            if ($key =~ /avi(?:$obj_attr_delim)kbps/i) {
-                $animate->Ctrls->set_avi_kbps($val);
-            }
             # H.264 constant rate factor
             if ($key =~ /mp4(?:$obj_attr_delim)crf/i) {
                 $animate->Ctrls->set_mp4_crf($val);
+            }
+            # MPEG-4 bitrate in kbit/s
+            if ($key =~ /avi(?:$obj_attr_delim)kbps/i) {
+                $animate->Ctrls->set_avi_kbps($val);
             }
         }
 
@@ -1912,13 +1971,13 @@ sub parse_inp {
             if ($key =~ /mat(erial)?/i) {
                 # Validate the material.
                 my $_passed = first { /\b$val\b/i }
-                    @{$phits->constrained_args->{$_mc_cell.'_cell_mat'}};
+                    @{$phits->constraint_args->{$_mc_cell.'_cell_mat'}};
                 unless ($_passed) {
                     croak(
                         "[$val] is not an allowed material for [$_mc_cell].\n".
                         "Input one of these: [".join(
                             ', ',
-                            @{$phits->constrained_args->{$_mc_cell.'_cell_mat'}}
+                            @{$phits->constraint_args->{$_mc_cell.'_cell_mat'}}
                         )."]\n"
                     );
                 }
@@ -1934,10 +1993,10 @@ sub parse_inp {
             }
 
             # Geometric parameters for inner iteration
-            if ($key =~ /iteration_geoms/i) {
-                $_mc_cells{$_mc_cell}->set_iteration_geoms(
+            if ($key =~ /iter(ation)?_geoms/i) {
+                $_mc_cells{$_mc_cell}->set_iter_geoms(
                     $val ? (split $parser->Data->delims->{list_val}, $val) :
-                           undef # An empty arg is used for skipping iteration.
+                        undef  # Empty arg: for skipping iteration
                 );
             }
 
@@ -1950,9 +2009,7 @@ sub parse_inp {
             if ($key =~ /heights_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 $_mc_cells{$_mc_cell}->set_heights_of_int(
                     $parser->Data->list_val
                 );
@@ -1976,9 +2033,7 @@ sub parse_inp {
             if ($key =~ /radii_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 if ($_mc_cell =~ /bconv|motar_rcc/i) {
                     $_mc_cells{$_mc_cell}->set_radii_of_int(
                         $parser->Data->list_val
@@ -2005,9 +2060,7 @@ sub parse_inp {
             if ($_mc_cell =~ /bconv/i and $key =~ /gaps_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 $_mc_cells{$_mc_cell}->set_gaps_of_int(
                     $parser->Data->list_val
                 );
@@ -2025,75 +2078,99 @@ sub parse_inp {
         if ($key =~ /^source$obj_attr_delim/i) {
             $key =~ s/source$obj_attr_delim//i;
 
-            # Shape
-            if ($key =~ /shape/i) {
-                $phits->source->set_type_of_int(
-                    $val =~ /cylind/i ? $phits->source->cylindrical :
-                    $val =~ /gaussian_xyz/i ?
-                        $phits->source->gaussian_xyz :
-                        $phits->source->gaussian_xy # Default
+            # Energy distribution
+            if ($key =~ /nrg_dist/i) {
+                $phits->source->set_nrg_dist_of_int(
+                    $val =~ /free(_form)?/i ?
+                        $phits->source->free_form_nrg :
+                        $phits->source->gaussian_nrg  # Default
                 );
             }
 
-            # Varying parameter
-            if ($key =~ /varying_param/i) {
-                # cylindrical
-                if ($phits->source->type_of_int->{type}{val} == 1) {
-                    $phits->source->set_varying_param(
-                        $val =~ /nrg|energy/i ? 'nrg' : 'rad'
+            # Spatial distribution
+            if ($key =~ /spat_dist/i) {
+                $phits->source->set_spat_dist_of_int(
+                    $val =~ /cylind/i       ? $phits->source->cylindrical :
+                    $val =~ /gaussian_xyz/i ? $phits->source->gaussian_xyz :
+                        $phits->source->gaussian_xy  # Default
+                );
+            }
+
+            # Iteration parameter
+            if ($key =~ /(iter|varying)_param/i) {
+                # gaussian_xy
+                if ($phits->source->spat_dist_of_int->{type}{val} == 13) {
+                    $phits->source->set_iter_param(
+                        $val =~ /eg0/i ? 'eg0' : 'xy_fwhms'
                     );
                 }
                 # gaussian_xyz
-                elsif ($phits->source->type_of_int->{type}{val} == 3) {
-                    $phits->source->set_varying_param(
-                        $val =~ /nrg|energy/i  ? 'nrg' :
+                if ($phits->source->spat_dist_of_int->{type}{val} == 3) {
+                    $phits->source->set_iter_param(
+                        $val =~ /eg0/i         ? 'eg0' :
                         $val =~ /z[\-_]?fwhm/i ? 'z_fwhm' :
                         $val =~ /y[\-_]?fwhm/i ? 'y_fwhm' :
                                                  'x_fwhm'
                     );
                 }
-                # gaussian_xy
-                elsif ($phits->source->type_of_int->{type}{val} == 13) {
-                    $phits->source->set_varying_param(
-                        $val =~ /nrg|energy/i ? 'nrg' : 'xy_fwhms'
+                # cylindrical
+                if ($phits->source->spat_dist_of_int->{type}{val} == 1) {
+                    $phits->source->set_iter_param(
+                        $val =~ /eg0/i ? 'eg0' : 'rad'
                     );
                 }
             }
 
-            # Source energy, shared by
-            # - cylindrical
-            # - gaussian_xyz
-            # - gaussian_xy
-            if ($key =~ /nrg_fixed/i) {
-                $phits->source->set_nrg_val_fixed($val);
+            # Energy distribution parameters
+            # (i) gaussian_nrg
+            if ($key =~ /gaussian_nrg/i) {
+                ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
+                $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
+                if ($subkey =~ /\beg0\b/i) {
+                    $phits->source->set_eg0_val_fixed($val);
+                }
+                if ($subkey =~ /eg0s_of_int/i) {
+                    @{$parser->Data->list_val} =
+                        split $parser->Data->delims->{list_val}, $val;
+                    construct_range($parser->Data->list_val, \$line);
+                    $phits->source->set_eg0_vals_of_int(
+                        $parser->Data->list_val
+                    );
+                }
+                if ($subkey =~ /fwhm/i) {
+                    $phits->source->gaussian_nrg->{fwhm}{val} = $val;
+                }
+                if ($subkey =~ /lt_from_eg0/i) {
+                    $phits->source->gaussian_nrg->{lt_from_eg0} = $val;
+                }
+                if ($subkey =~ /rt_from_eg0/i) {
+                    $phits->source->gaussian_nrg->{rt_from_eg0} = $val;
+                }
             }
-            if ($key =~ /nrgs_of_int/i) {
+            # (ii) free_form_nrg
+            if ($key =~ /free_form_nrg/i) {
+                ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
+                $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
+                if ($subkey =~ /file/i) {
+                    $phits->source->free_form_nrg->{file} = $val;
+                }
+            }
+
+            # Spatial distribution parameters
+            # gaussian_xy: xy_fwhms only
+            if ($key =~ /xy_fwhm_fixed/i) {
+                $phits->source->set_xy_fwhms_val_fixed($val);
+            }
+            if ($key =~ /xy_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
-                $phits->source->set_nrg_vals_of_int(
+                $phits->source->set_xy_fwhms_vals_of_int(
                     $parser->Data->list_val
                 );
             }
 
-            # cylindrical: radius
-            if ($key =~ /rad_fixed/i) {
-                $phits->source->set_rad_val_fixed($val);
-            }
-            if ($key =~ /radii_of_int/i) {
-                @{$parser->Data->list_val} =
-                    split $parser->Data->delims->{list_val}, $val;
-
-                construct_range($parser->Data->list_val, \$line);
-
-                $phits->source->set_rad_vals_of_int(
-                    $parser->Data->list_val
-                );
-            }
-
-            # gaussian_xyz
+            # gaussian_xyz: x_fwhm, y_fwhm, and z_fwhm
             # x_fwhm
             if ($key =~ /x_fwhm_fixed/i) {
                 $phits->source->set_x_fwhm_val_fixed($val);
@@ -2101,23 +2178,19 @@ sub parse_inp {
             if ($key =~ /x_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 $phits->source->set_x_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
             }
             # y_fwhm
-            if ($key =~ /\by_fwhm_fixed/i) { # \b to skip 'xy_fwhm_fixed'
+            if ($key =~ /\by_fwhm_fixed/i) {  # \b to skip 'xy_fwhm_fixed'
                 $phits->source->set_y_fwhm_val_fixed($val);
             }
             if ($key =~ /\by_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 $phits->source->set_y_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
@@ -2129,26 +2202,21 @@ sub parse_inp {
             if ($key =~ /z_fwhms_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
                 $phits->source->set_z_fwhm_vals_of_int(
                     $parser->Data->list_val
                 );
             }
 
-            # gaussian_xy
-            # xy_fwhms
-            if ($key =~ /xy_fwhm_fixed/i) {
-                $phits->source->set_xy_fwhms_val_fixed($val);
+            # cylindrical: radius only
+            if ($key =~ /rad_fixed/i) {
+                $phits->source->set_rad_val_fixed($val);
             }
-            if ($key =~ /xy_fwhms_of_int/i) {
+            if ($key =~ /radii_of_int/i) {
                 @{$parser->Data->list_val} =
                     split $parser->Data->delims->{list_val}, $val;
-
                 construct_range($parser->Data->list_val, \$line);
-
-                $phits->source->set_xy_fwhms_vals_of_int(
+                $phits->source->set_rad_vals_of_int(
                     $parser->Data->list_val
                 );
             }
@@ -2160,13 +2228,13 @@ sub parse_inp {
         if ($key =~ /^linac$obj_attr_delim/i) {
             $key =~ s/linac$obj_attr_delim//i;
 
-            if ($key =~ /$obj_attr_delim/) { # for xband and sband
+            if ($key =~ /$obj_attr_delim/) {  # for xband and sband
                 ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
                 $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
                 if ($subkey =~ /rf_power_source/i) {
                     $_linacs{$key}->rf_power_source->_set_kly_params(
-                        "\L$val" # The klystron name must be all-lowercase
-                                 # letters for hash access.
+                        "\L$val"  # The klystron name must be all-lowercase
+                                  # letters for hash access.
                     );
                 }
                 else {
@@ -2179,7 +2247,7 @@ sub parse_inp {
                 $elinac_of_int = $_linacs{$val};
 
                 # Create a key-val pair for the tally
-                # factor setter in 5. PHITS tally.
+                # factor setter in 5. PHITS tallies.
                 #
                 # This is because, even if 'of_int' is defined at the
                 # declaration of %_tallies like
@@ -2192,30 +2260,48 @@ sub parse_inp {
         }
 
         #
-        # 5. PHITS tally
+        # 5. PHITS tallies
         #
         if (first { $key =~ /$_$obj_attr_delim/i } keys %_tallies) {
             # Particles of interest
             if ($key =~ /particles_of_int/i) {
                 $key =~ s/$obj_attr_delim(?:particles_of_int)//i;
-
+                # String validation
+                my @_vals = split $parser->Data->delims->{list_val}, $val
+                    if $val;
+                my $_passed;
+                foreach my $_val (@_vals) {
+                    last unless $val;
+                    $_passed = first { /\b$_val\b/i }
+                        @{$phits->constraint_args->{tally_particles}};
+                    unless ($_passed) {
+                        croak(
+                            "[$_val] is not allowed for particles_of_int.\n".
+                            "Input one of these: [".join(
+                                ', ',
+                                @{$phits->constraint_args->{tally_particles}}
+                            )."]\n"
+                        );
+                    }
+                }
+                # Assign the particles of interest.
                 $_tallies{$key}->set_particles_of_int(
                     $val ? (split $parser->Data->delims->{list_val}, $val) :
-                           $phits->source->type_of_int->{name}{val} # electron
+                           # {proj}{val}: electron
+                           $phits->source->spat_dist_of_int->{proj}{val}
                 );
-
                 # Run the particle_dependent_settings() subroutine,
                 # which contains "some" parameters of the section 6.
-                # These "some" parameters are the ones whose values
-                # are dependent on the particles of interest,
-                # examples including: ipnint, negs, and nucdata. They have been
-                # separated into the particle_dependent_settings()
-                # subroutine so that they can be overridden
-                # in the section 6 when a user input specifies the values.
-                #
-                #---------------------------------------------------------------
+                # These "some" parameters have values dependent on
+                # the particles of interest, examples including:
+                # ipnint, negs, and nucdata.
+                # They have been separated into
+                # the particle_dependent_settings() subroutine
+                # so that they can be overridden in the section 6
+                # when a user input specifies the values.
+                #--------------------------------------------------------------
                 # Caution (as a log of debugging on 2018-08-15):
-                #---------------------------------------------------------------
+                #--------------------------------------------------------------
                 # > The $t_shared->set_particles_of_int method in
                 #   the particle_dependent_settings() subroutine
                 #   works in a cumulative manner.
@@ -2245,20 +2331,10 @@ sub parse_inp {
             # Mesh sizes
             if ($key =~ /mesh_sizes/i) {
                 $key =~ s/$obj_attr_delim(?:mesh_sizes)//i;
-
                 foreach (split $parser->Data->delims->{list_val}, $val) {
                     push @dict_val, split $parser->Data->delims->{dict_val};
                 }
-
-                $_tallies{$key}->set_mesh_sizes(
-                    @dict_val ? @dict_val : ( # Default values
-                        'x' => 200, # t_track, t_heat, t_heat_mapdl
-                        'y' => 200, # t_track, t_heat, t_heat_mapdl
-                        'z' => 200, # t_track, t_heat, t_heat_mapdl
-                        'r' => 100, # t_track, t_heat, t_heat_mapdl
-                        'e' => 100, # t_track, t_cross, t_cross_dump
-                    )
-                );
+                $_tallies{$key}->set_mesh_sizes(@dict_val) if @dict_val;
             }
 
             # Cell boundary resolution and width
@@ -2289,10 +2365,10 @@ sub parse_inp {
 
                     $_tallies{$key}->set_factor(
                         val => (
-                            $_linacs{$val}->avg_beam_curr          # C s^-1
-                            / $phys->constants->{coulomb_per_elec} # C source^-1
+                            $_linacs{$val}->avg_beam_curr           # C s^-1
+                            / $phys->constants->{coulomb_per_elec}  # C src^-1
                         ),
-                        cmt => ' '.$phits->Cmt->symb.' '.$cmt
+                        cmt => '  '.$phits->Cmt->symb.' '.$cmt
                     );
                 }
 
@@ -2307,7 +2383,7 @@ sub parse_inp {
                         # Assign the tally factor.
                         $_tallies{$key}->set_factor(
                             val => eval $val,
-                            cmt => ' '.$phits->Cmt->symb.' '.$cmt
+                            cmt => '  '.$phits->Cmt->symb.' '.$cmt
                         );
                     }
 
@@ -2325,7 +2401,7 @@ sub parse_inp {
                 }
 
                 $_tallies{$key}->set_offsets(
-                    $val ? @dict_val : ( # Default values
+                    $val ? @dict_val : (  # Default values
                         x => 2,
                         y => 2,
                         z => 2
@@ -2335,9 +2411,9 @@ sub parse_inp {
         }
 
         #
-        # 6. PHITS parameters section
+        # 6. PHITS parameters
         #    Parameters depending on the particles of interest
-        #    are set following the tally section.
+        #    are set following the tallies section.
         #    For details, see the section 5 above.
         #
         if ($key =~ /^params$obj_attr_delim/i) {
@@ -2366,8 +2442,317 @@ sub parse_inp {
 }
 
 
+sub populate_gaussian_nrg_cutoffs {
+    # """Populate the attributes of Gaussian energy cutoff values."""
+    my $source_eg0 = $phits->source->gaussian_nrg->{eg0}{val_fixed};
+    $source_eg0 = shift if @_;  # For varying center energies
+
+    # Convert the user-given relative values to absolute eg2 and eg3 values.
+    # > lt_from_eg0 (relative to center) to cutoff_min (absolute)
+    # > rt_from_eg0 (relative to center) cutoff_max (absolute)
+    $phits->source->gaussian_nrg->{cutoff_min}{val} = (
+        $source_eg0  # Gaussian center energy, variable of fixed
+        - $phits->source->gaussian_nrg->{lt_from_eg0}  # Fixed
+    );
+    $phits->source->gaussian_nrg->{cutoff_max}{val} = (
+        $source_eg0
+        + $phits->source->gaussian_nrg->{rt_from_eg0}  # Fixed
+    );
+
+    return;
+}
+
+
+sub populate_free_form_nrg_dist {
+    # """Populate the attribute of free-form energy distribution."""
+
+    # Check if the file can be seen from the CWD.
+    my $_err_msg = sprintf(
+        "[Source energy distribution No. %d: %s]\n".
+        "[%s] NOT found from the CWD; terminating.\n\n",
+        $phits->source->free_form_nrg->{type}{val},
+        $phits->source->free_form_nrg->{type}{abbr},
+        $phits->source->free_form_nrg->{file},
+    );
+    croak $_err_msg if not -e $phits->source->free_form_nrg->{file};
+
+    # Calculate the number of energy bins, feed indentation, and
+    # store the data into the 'ne' hash ref.
+    # > The number of energy bins is stored into free_form_nrg->{ne}{val}.
+    # > The energy distribution data are appended to free_form_nrg->{ne}{cmt}.
+    #   > This is to conform to the construction method of [source] section:
+    #     in constructing the [source] section, parameters are first stored
+    #     as groups of three elements (key, val, and cmt) into array refs,
+    #     which are then unpacked all at once using the map function.
+    #     For details, look up "Source section".
+    #   > This initial value of free_form_nrg->{ne}{cmt} is:
+    #     $phits->Cmt->symb.' Number of energy bins'
+    #     The energy distribution data will appear on the next line onward.
+    my $ebin_first = 0;
+    my $ebin_last  = 0;
+    my $ne         = 0;
+    my $idt        = " " x 4;
+    $phits->source->free_form_nrg->{ne}{cmt}.= "\n";
+    open my $free_form_nrg_fh, '<', $phits->source->free_form_nrg->{file};
+    foreach (<$free_form_nrg_fh>) {
+        if (not /^$/) {
+            $ebin_first = $_ if $ne == 0;
+            $ebin_last  = $_;
+            $ne++;
+        }
+        s/^\s+//;  # Remove, if any, leading spaces for consistent use of $idt.
+        $_ = $idt.$_;
+        $phits->source->free_form_nrg->{ne}{cmt} .= $_;
+    }
+    close $free_form_nrg_fh;
+    chomp($phits->source->free_form_nrg->{ne}{cmt});  # Last newline chars
+    $phits->source->free_form_nrg->{cutoff_min}{val} =
+        (split(/\s+/, $ebin_first))[0];
+    $phits->source->free_form_nrg->{cutoff_max}{val} =
+        (split(/\s+/, $ebin_last))[1];
+    $phits->source->free_form_nrg->{ne}{val} = $ne;
+
+    return;
+}
+
+
+sub determ_tally_emin_emax {
+    # """Determine the emin and emax of tallies."""
+
+    #
+    # Dependencies on $phits->source->nrg_dist_of_int->{cutoff_max}{val}
+    # > $phits->source->set_nrg_dist_of_int() had been called beforehand
+    #   in default_run_settings() and parse_inp() to choose between
+    #   Gaussian and free-form energy distributions.
+    # > According to which energy distribution is used,
+    #   one of the following routines determines {cutoff_max}{val}:
+    #   > populate_gaussian_nrg_cutoffs()
+    #   > populate_free_form_nrg_dist()
+    #
+    my $src_emax = $phits->source->nrg_dist_of_int->{cutoff_max}{val};
+
+    #
+    # emin and emax for Mo-99 yields
+    #
+
+    # (1a) Pointwise emin for gnuplot smooth: Simply the first energy point
+    my $_micro_xs_dat_mo99 = sprintf(
+        "%s%s%s%s%s",
+        $phits->cwd,
+        $yield_mo99->FileIO->path_delim,
+        $yield_mo99->FileIO->micro_xs_dir,
+        $yield_mo99->FileIO->path_delim,
+        $yield_mo99->FileIO->micro_xs_dat,
+    );
+    my $_pointwise_mo99_emin;
+    open my $_micro_xs_dat_mo99_fh, '<', $_micro_xs_dat_mo99;
+    foreach (<$_micro_xs_dat_mo99_fh>) {
+        next if /^\s*#/;
+        # Obtain the first energy point.
+        if (/^\s*[0-9.]/) {
+            chomp;
+            ($_pointwise_mo99_emin = $_) =~ s/^\s*([0-9.]+)E.*/$1/i;
+            last;
+        }
+    }
+    close $_micro_xs_dat_mo99_fh;
+
+    # (1b) Pointwise emax for gnuplot smooth
+    my $_pointwise_mo99_emax = $src_emax;
+
+    # (2) Interval emin and emax for PHITS tallies
+    # > edel, which is the interval between e-lower and e-upper,
+    #   is calculated here to calculate emin and emax,
+    #   but is NOT used directly in PHITS tallies.
+    # > Not passing edel to PHITS is to prevent PHITS from setting
+    #   ne != $yield_mo99->num_of_nrg_bins, which can happen
+    #   because of the handling of floating numbers.
+    # > Instead, values of ne, emin, and emax (e-type = 2)
+    #   are passed to PHITS, and then PHITS calculates edel.
+    #   The resulting PHITS edel might be slightly different from
+    #   the edel calculated here (up to around 1e-4 MeV),
+    #   but because we pass 'ne' to PHITS, the same 'ne' between
+    #   PHITS tallies and xs data is guaranteed, allowing
+    #   pointwise multiplication.
+    my $_e_start = $_pointwise_mo99_emin;
+    my $_e_stop  = $src_emax;
+    my $_interval_mo99_edel = (
+        ($_e_stop - $_e_start)
+        / ($yield_mo99->num_of_nrg_bins - 1)
+    );
+    my $_interval_mo99_emin = $_e_start - 0.5*$_interval_mo99_edel;
+    my $_interval_mo99_emax = (
+        $_interval_mo99_emin
+        # Not ($yield_mo99->num_of_nrg_bins - 1) because
+        # PHITS calculates energy ranges up to ne + 1, and
+        # $yield_mo99->num_of_nrg_bins below is to be the ne + 1.
+        + $yield_mo99->num_of_nrg_bins*$_interval_mo99_edel
+    );
+
+    #
+    # emin and emax for Au-196 yields
+    #
+
+    # (1a) Pointwise emin for gnuplot smooth
+    my $_micro_xs_dat_au196 = sprintf(
+        "%s%s%s%s%s",
+        $phits->cwd,
+        $yield_au196->FileIO->path_delim,
+        $yield_au196->FileIO->micro_xs_dir,
+        $yield_au196->FileIO->path_delim,
+        $yield_au196->FileIO->micro_xs_dat,
+    );
+    my $_pointwise_au196_emin;
+    open my $_micro_xs_dat_au196_fh, '<', $_micro_xs_dat_au196;
+    foreach (<$_micro_xs_dat_au196_fh>) {
+        next if /^\s*#/;
+        if (/^\s*[0-9.]/) {
+            chomp;
+            ($_pointwise_au196_emin = $_) =~ s/^\s*([0-9.]+)E.*/$1/i;
+            last;
+        }
+    }
+    close $_micro_xs_dat_au196_fh;
+
+    # (1b) Pointwise emax for gnuplot smooth
+    my $_pointwise_au196_emax = $src_emax;
+
+    # (2) Interval emin and emax for PHITS tallies
+    $_e_start = $_pointwise_au196_emin;
+    $_e_stop  = $src_emax;
+    my $_interval_au196_edel = (
+        ($_e_stop - $_e_start)
+        / ($yield_au196->num_of_nrg_bins - 1)
+    );
+    my $_interval_au196_emin = (2*$_e_start - $_interval_au196_edel) / 2;
+    my $_interval_au196_emax = (
+        $_interval_au196_emin
+        + $yield_au196->num_of_nrg_bins*$_interval_au196_edel
+    );
+
+    #
+    # Assign the determined emin and emax to T-Track and T-Cross tallies.
+    #
+    $t_track->set_mesh_ranges(
+        emin => {
+            lower_nrg_range => 0,  # For photoneutrons
+            tot_nrg_range   => 0,  # For all particles
+            eff_nrg_range_pointwise_mo99  => $_pointwise_mo99_emin,  # xs
+            eff_nrg_range_pointwise_au196 => $_pointwise_au196_emin,
+            eff_nrg_range_interval_mo99   => $_interval_mo99_emin,  # Fluence
+            eff_nrg_range_interval_au196  => $_interval_au196_emin,
+        },
+        emin_cmt => {
+            lower_nrg_range => '',
+            tot_nrg_range   => '',
+            eff_nrg_range_pointwise_mo99 => (
+                '  '.$phits->Cmt->symb.
+                ' Mo-100(g,n)Mo-99 threshold'
+            ),
+            eff_nrg_range_pointwise_au196 => (
+                '  '.$phits->Cmt->symb.
+                ' Au-197(g,n)Au-196 threshold'
+            ),
+            eff_nrg_range_interval_mo99 => (
+                '  '.$phits->Cmt->symb.
+                ' Mo-100(g,n)Mo-99 threshold - 0.5*edel'
+            ),
+            eff_nrg_range_interval_au196 => (
+                '  '.$phits->Cmt->symb.
+                ' Au-197(g,n)Au-196 threshold - 0.5*edel'
+            ),
+        },
+        emax => {
+            lower_nrg_range => ceil($src_emax / 8),
+            tot_nrg_range   => $src_emax,
+            eff_nrg_range_pointwise_mo99  => $_pointwise_mo99_emax,
+            eff_nrg_range_pointwise_au196 => $_pointwise_au196_emax,
+            eff_nrg_range_interval_mo99   => $_interval_mo99_emax,
+            eff_nrg_range_interval_au196  => $_interval_au196_emax,
+        },
+        emax_cmt => {
+            lower_nrg_range => (
+                '  '.$phits->Cmt->symb.' ceil(emax of [source] / 8)'
+            ),
+            tot_nrg_range   => (
+                '  '.$phits->Cmt->symb.' emax of [source]'
+            ),
+            eff_nrg_range_pointwise_mo99  => (
+                '  '.$phits->Cmt->symb.' emax of [source]'
+            ),
+            eff_nrg_range_pointwise_au196 => (
+                '  '.$phits->Cmt->symb.' emax of [source]'
+            ),
+            eff_nrg_range_interval_mo99 => (
+                '  '.$phits->Cmt->symb.
+                ' emin + ne*edel'
+            ),
+            eff_nrg_range_interval_au196 => (
+                '  '.$phits->Cmt->symb.
+                ' emin + ne*edel'
+            ),
+        },
+        ymin => 1e-5,
+        ymax => 1e-1,
+    );
+
+    $t_cross->set_mesh_ranges(
+        emin => {
+            lower_nrg_range => 0,
+            tot_nrg_range   => 0,
+            eff_nrg_range_pointwise_mo99 => $_pointwise_mo99_emin,
+            eff_nrg_range_interval_mo99  => $_interval_mo99_emin,
+        },
+        emin_cmt => {
+            lower_nrg_range => '',
+            tot_nrg_range   => '',
+            eff_nrg_range_pointwise_mo99 => (
+                '  '.$phits->Cmt->symb.
+                ' Mo-100(g,n)Mo-99 threshold'
+            ),
+            eff_nrg_range_interval_mo99  => (
+                '  '.$phits->Cmt->symb.
+                ' Mo-100(g,n)Mo-99 threshold - 0.5*edel'
+            ),
+        },
+        emax => {
+            lower_nrg_range => ceil($src_emax / 8),
+            tot_nrg_range   => $src_emax,
+            eff_nrg_range_pointwise_mo99 => $_pointwise_mo99_emax,
+            eff_nrg_range_interval_mo99  => $_interval_mo99_emax,
+        },
+        emax_cmt => {
+            lower_nrg_range => (
+                '  '.$phits->Cmt->symb.' ceil(emax of [source] / 8)'
+            ),
+            tot_nrg_range   => (
+                '  '.$phits->Cmt->symb.' emax of [source]'
+            ),
+            eff_nrg_range_pointwise_mo99 => (
+                '  '.$phits->Cmt->symb.' emax of [source]'
+            ),
+            eff_nrg_range_interval_mo99 => (
+                '  '.$phits->Cmt->symb.
+                ' emin + ne*edel'
+            ),
+        },
+        ymin => 1e-5,
+        ymax => 1e-1,
+    );
+
+    $t_cross_dump->set_mesh_ranges(
+        emin     => 0,  # Always 0 as it will be used as a particle source.
+        emin_cmt => '',
+        emax     => $src_emax,
+        emax_cmt => '  '.$phits->Cmt->symb.' emax of [source]',
+    );
+
+    return;
+}
+
+
 sub populate_mc_cell_props {
-    # """ Populate MC cell properties."""
+    # """ Populate the attributes of MC cell properties."""
 
     #
     # List of Monte Carlo cells
@@ -2390,7 +2775,7 @@ sub populate_mc_cell_props {
         $bconv->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).'rcc' # As of v1.01, only RCC is allowed.
+        ).'rcc'  # As of v1.01, only RCC is allowed.
     );
 
     # Setter
@@ -2413,7 +2798,7 @@ sub populate_mc_cell_props {
             {$bconv->cell_mat}
             {mat_lab_color},
         dens => (
-            $bconv->dens_ratio # dens_{mat} / dens_{theo}
+            $bconv->dens_ratio  # dens_{mat} / dens_{theo}
             * (
                 $bconv->cell_mats_list->{$bconv->cell_mat}{mass_dens} ?
                 $bconv->cell_mats_list->{$bconv->cell_mat}{mass_dens} : 0
@@ -2486,11 +2871,11 @@ sub populate_mc_cell_props {
         $motar->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).$motar_rcc->cell_props->{macrobody_str} # e.g. moo3_rcc
+        ).$motar_rcc->cell_props->{macrobody_str}  # e.g. moo3_rcc
     );
     # Molybdenum target, TRC
     $motar_trc->set_cell_props(%_motar_common);
-    $motar_trc->cell_props->{macrobody_descr} = 'Truncated right circular cone';
+    $motar_trc->cell_props->{macrobody_descr} = 'Conical frustum';
     $motar_trc->cell_props->{macrobody_str}   = 'trc';
     $motar_trc->cell_props->{macrobody_id}    = 106;
     $motar_trc->cell_props->{cmt}            .= ' (TRC)';
@@ -2498,7 +2883,7 @@ sub populate_mc_cell_props {
         $motar->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).$motar_trc->cell_props->{macrobody_str} # e.g. moo3_trc
+        ).$motar_trc->cell_props->{macrobody_str}  # e.g. moo3_trc
     );
 
     #
@@ -2548,7 +2933,7 @@ sub populate_mc_cell_props {
         $flux_mnt_up->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).'rcc' # wrto Mo RCC
+        ).'rcc'  # wrto Mo RCC
     );
 
     # Flux monitor, downstream
@@ -2604,7 +2989,7 @@ sub populate_mc_cell_props {
         $flux_mnt_down->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).'rcc' # wrto Mo RCC
+        ).'rcc'  # wrto Mo RCC
     );
 
     #
@@ -2614,7 +2999,7 @@ sub populate_mc_cell_props {
         $tar_wrap->cell_mat.(
             $t_shared->Ctrls->shortname =~ /on/i ?
                 '' : $phits->FileIO->fname_space
-        ).'rcc' # wrto Mo RCC
+        ).'rcc'  # wrto Mo RCC
     );
     $tar_wrap->set_cell_props(
         cell_id => 30,
@@ -2729,7 +3114,7 @@ sub populate_mc_cell_props {
     $void->set_flag('void');
     $void->set_cell_props(
         cell_id => 99,
-        mat_id  => -1, # Predefined ID for the "outer void"
+        mat_id  => -1,  # Predefined ID for the "outer void"
         # No composition for void
         # No [mat name color] for void
         # No density for void
@@ -2781,7 +3166,6 @@ sub populate_mc_cell_props {
 
 sub show_tar_geoms {
     # """Show target geometries."""
-
     my $opt = shift if $_[0];
     my @target_geoms;
 
@@ -2842,14 +3226,16 @@ sub show_tar_geoms {
     );
 
     # Flux monitor, upstream
-    push @target_geoms, sprintf("\$flux_mnt_up->$_ is [%s]", $flux_mnt_up->$_)
+    push @target_geoms,
+        sprintf("\$flux_mnt_up->$_ is [%s]", $flux_mnt_up->$_)
         for qw (
             height_fixed
             radius_fixed
         );
 
     # Flux monitor, downstream
-    push @target_geoms, sprintf("\$flux_mnt_down->$_ is [%s]", $flux_mnt_down->$_)
+    push @target_geoms,
+        sprintf("\$flux_mnt_down->$_ is [%s]", $flux_mnt_down->$_)
         for qw (
             height_fixed
             radius_fixed
@@ -2869,7 +3255,6 @@ sub show_tar_geoms {
 
 sub show_linac_params {
     # """Show linac parameters."""
-
     my $opt = shift if $_[0];
     my @linac_settings;
 
@@ -2914,107 +3299,1113 @@ sub show_linac_params {
 }
 
 
-sub outer_iterator {
-    # """Iterate over target materials with varying source energies
-    # or varying radii."""
+sub run_and_rpt_calc_rn_yield {
+    # """Run Nuclear::calc_rn_yield() and generate report files."""
+    my (                      # e.g.
+        $mc_cell_of_int,      # $flux_mnt_up
+        $react_nucl,          # 'au197'
+        $prod_nucl,           # 'au196'
+        $prod_nucl_flag,      # '_1'
+        $yld_deleg,           # == $yield (delegate of all)
+        $yld_pn_deleg,        # $yield_au196 (product nuclide delegate)
+        $yld_pn_each,         # $yield_au196_1 (each product nuclide)
+        $yld_pn_each_sp_src,  # $yield_au196_1_for_sp_src
+        $pwm_pn_each_sp_src,  # $pwm_au196_1_for_sp_src
+        $mc_flue_dat,         # $t_track->nrg_flux_mnt_up->fname
+        # >> Dependent on inner_iterator()
+        $tar_of_int,
+        $_varying_str,
+        $run_opts_href,
+        $prog_info_href,
+        $source_eg0,
+        # <<
+    ) = @_;
+    my $_conv_cmt1 = '%-24s';
+    my $_conv_cmt2 = '%-30s';
+    my $_conv_val1 = '%.6f';
+    my $_conv_val2 = '%.6e';
 
-    my(
+    #
+    # (1/2) Running Part
+    # > Calculate the yield and specific yield of $prod_nucl and
+    #   fill in the data reduction array reference.
+    #
+    my $the_tar_mat = sprintf(
+        # calc_rn_yield() requirement:
+        # > 'mo' -> 'momet'
+        # > 'au' -> 'aumet'
+        "%s%s",
+        $mc_cell_of_int->cell_mat,
+        $mc_cell_of_int->cell_mat =~ /(mo|au)\b/i ? 'met' : '',
+    );
+    my $yld_pn_each_href = calc_rn_yield(
+        {
+            # Reactant nuclide number density calculation
+            tar_mat                 => $the_tar_mat,
+            tar_dens_ratio          => $mc_cell_of_int->dens_ratio,
+            tar_vol                 => $mc_cell_of_int->vol,
+            react_nucl              => $react_nucl,
+            react_nucl_enri_lev     => $yld_pn_deleg->react_nucl_enri_lev,
+            enri_lev_type           => 'amt_frac',
+            prod_nucl               => $prod_nucl,
+            min_depl_lev_global     => 0.0000,
+            min_depl_lev_local_href => {},
+            depl_order              => 'ascend',
+            is_verbose              => 0,
+
+            # Irradiation conditions
+            avg_beam_curr => $yld_deleg->avg_beam_curr,  # uA
+            end_of_irr    => $yld_deleg->end_of_irr,     # h
+
+            # Particle fluence data
+            mc_flue_dir => (
+                $phits->FileIO->subdir.
+                $phits->FileIO->path_delim.
+                $phits->FileIO->subsubdir
+            ),
+            # Column number for the reaction projectile
+            mc_flue_dat          => $mc_flue_dat,
+            mc_flue_dat_proj_col => $t_track->is_elec_of_int ? 4 : 2,
+
+            # Microscopic xs data
+            micro_xs_dir => (
+                $phits->cwd.
+                $phits->FileIO->path_delim.
+                $yld_pn_deleg->FileIO->micro_xs_dir
+            ),
+            micro_xs_dat         => $yld_pn_deleg->FileIO->micro_xs_dat,
+            micro_xs_interp_algo => $yld_pn_deleg->micro_xs_interp_algo,
+            # Note on eff_nrg_range_pointwise_<<$prod_nucl>>
+            # > xs data, as will be interpolated by gnuplot smooth
+            #   in calc_rn_yield(), are pointwise data; namely,
+            #   one cross section corresponds to one energy "point".
+            #   e.g. Energy: 8.46938e+06 eV, cross section: 0.0035858 b
+            # > On the other hand, a PHITS particle fluence is bounded by
+            #   e-lower and e-upper in a tally.
+            #   e.g. e-lower: 8.2820E+00 MeV, e-upper: 8.3017E+00 MeV
+            #        electron fluence: 1.6865E-04 cm^-2 source^-1
+            # > To make the indices of xs and fluence data correspond to
+            #   effectively the same energy points,
+            #   "eff_nrg_range_pointwise_<<$prod_nucl>>" is used for xs data,
+            #   and "eff_nrg_range_interval_<<$prod_nucl>>" for PHITS data.
+            # > Both the pointwise and interval parameters are calculated
+            #   at determ_tally_emin_emax().
+            micro_xs_emin => sprintf(
+                "%s"."e6",  # eV
+                $t_track->mesh_ranges
+                    ->{emin}{"eff_nrg_range_pointwise_$prod_nucl"}
+            ),
+            micro_xs_emax => sprintf(
+                "%s"."e6",  # eV
+                $t_track->mesh_ranges
+                    ->{emax}{"eff_nrg_range_pointwise_$prod_nucl"}
+            ),
+            micro_xs_ne => $yld_pn_deleg->num_of_nrg_bins,
+
+            # precision_href: Overwrite the local %fmt_specifiers.
+            precision_href => {
+                molar_mass         => $_conv_val1,
+                wgt_molar_mass     => $_conv_val1,
+                wgt_avg_molar_mass => $_conv_val1,
+                amt_frac           => $_conv_val1,
+                mass_frac          => $_conv_val1,
+                dens_ratio         => $_conv_val1,
+                mass_dens          => $_conv_val1,
+                num_dens           => $_conv_val2,
+                vol                => $_conv_val1,
+                mass               => $_conv_val1,
+                dcc                => $_conv_val1,
+                avg_beam_curr => $_conv_val1,
+                end_of_irr    => $_conv_val1,
+                nrg_ev        => $_conv_val2,
+                nrg_mega_ev   => $_conv_val1,
+                ev            => $_conv_val2,
+                mega_ev       => $_conv_val1,
+                proj          => $_conv_val2,
+                barn          => $_conv_val1,
+                'cm^2'        => $_conv_val2,
+                'cm^-1'       => $_conv_val2,
+                de            => $_conv_val1,
+                xs_micro      => $_conv_val2,
+                xs_macro      => $_conv_val2,
+                mc_flue       => $_conv_val2,
+                pwm_micro     => $_conv_val2,
+                pwm_micro_tot => $_conv_val2,
+                pwm_macro     => $_conv_val2,
+                pwm_macro_tot => $_conv_val2,
+                source_rate   => $_conv_val2,
+                reaction_rate => $_conv_val2,
+                react_rate_per_vol     => $_conv_val2,
+                react_rate_per_vol_tot => $_conv_val2,
+                react_rate             => $_conv_val2,
+                react_rate_tot         => $_conv_val2,
+                yield                 => $_conv_val1,
+                yield_per_microamp    => $_conv_val1,
+                sp_yield              => $_conv_val1,
+                sp_yield_per_microamp => $_conv_val1,
+            },
+
+            # Yield and specific yield units
+            yield_unit => $yld_deleg->unit,  # If omitted, 'Bq' is used.
+        },
+    );
+    $yld_pn_each->set_calc_rn_yield(%$yld_pn_each_href);
+
+    # Fill in the array refs with calculation results.
+    $_->add_columnar_arr(
+        $phits->v_src_param->{curr},        # Curr var src param
+        $phits->v_geom_param->{curr} * 10,  # Curr var geom param; cm --> mm
+        $yld_pn_each->calc_rn_yield->{prod_nucl_yield},
+        $yld_pn_each->calc_rn_yield->{prod_nucl_yield_per_microamp},
+        $yld_pn_each->calc_rn_yield->{prod_nucl_sp_yield},
+        $yld_pn_each->calc_rn_yield->{prod_nucl_sp_yield_per_microamp},
+    ) for ($yld_pn_each, $yld_pn_each_sp_src);
+
+    # PWM
+    if ($yld_pn_deleg->Ctrls->pwm_switch =~ /on/i) {
+        # Write data over the photon energy range.
+        for (
+            my $i=0;
+            $i<=$#{$yld_pn_each->calc_rn_yield->{mc_flue_nrg_mega_ev}};
+            $i++
+        ) {
+            $pwm_pn_each_sp_src->add_columnar_arr(
+                $phits->v_src_param->{curr},
+                $phits->v_geom_param->{curr} * 10,
+                $yld_pn_each->calc_rn_yield->{mc_flue_nrg_mega_ev}[$i],
+                $yld_pn_each->calc_rn_yield->{mc_flue_proj}[$i],
+                $yld_pn_each->calc_rn_yield->{xs_nrg_mega_ev}[$i],
+                $yld_pn_each->calc_rn_yield->{micro_xs_barn}[$i],
+                $yld_pn_each->calc_rn_yield->{'micro_xs_cm^2'}[$i],
+                $yld_pn_each->calc_rn_yield->{react_nucl_num_dens},
+                $yld_pn_each->calc_rn_yield->{'macro_xs_cm^-1'}[$i],
+                $yld_pn_each->calc_rn_yield->{pwm_micro}[$i],
+                $yld_pn_each->calc_rn_yield->{pwm_macro}[$i],
+                $yld_pn_each->calc_rn_yield->{avg_beam_curr},
+                $yld_pn_each->calc_rn_yield->{source_rate},
+                $yld_pn_each->calc_rn_yield->{react_rate_per_vol}[$i],
+                $yld_pn_each->calc_rn_yield->{tar_vol},
+                $yld_pn_each->calc_rn_yield->{react_rate}[$i],
+            );
+        }
+    }
+
+    #
+    # (2/2) Postprocessing Part
+    #
+    if (@{$yld_pn_each->columnar_arr}) {
+        # Heads and subheads 1
+        # > $yld_pn_each and $yld_pn_each_sp_src
+        my $_heads1 = [
+            sprintf(
+                "%s",  # e.g. eg0
+                $phits->v_src_param->{name},
+            ),
+            sprintf(
+                "%s %s",  # e.g. wrcc vhgt
+                $tar_of_int->flag,
+                $phits->FileIO->varying_flag,
+            ),
+            sprintf(
+                "%s yield",
+                $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
+            ),
+            sprintf(
+                "%s yield per uA",
+                $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
+            ),
+            sprintf(
+                "%s sp_yield",
+                $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
+            ),
+            sprintf(
+                "%s sp_yield per uA",
+                $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
+            ),
+        ];
+        my $_subheads1 = [
+            sprintf(
+                "(%s)",
+                $phits->v_src_param->{unit},
+            ),
+            "(mm)",
+            sprintf(
+                "(%s)",
+                $yld_pn_each->calc_rn_yield->{yield_unit},
+            ),
+            sprintf(
+                "(%s uA^{-1})",
+                $yld_pn_each->calc_rn_yield->{yield_unit},
+            ),
+            sprintf(
+                "(%s g^{-1})",
+                $yld_pn_each->calc_rn_yield->{yield_unit},
+            ),
+            sprintf(
+                "(%s g^{-1} uA^{-1})",
+                $yld_pn_each->calc_rn_yield->{yield_unit},
+            ),
+        ];
+        # Heads and subheads 2
+        # > $pwm_pn_each_sp_src
+        my $_heads2 = [
+            sprintf(
+                "%s",
+                $phits->v_src_param->{name},
+            ),
+            sprintf(
+                "%s %s",
+                $tar_of_int->flag,
+                $phits->FileIO->varying_flag,
+            ),
+            "MC fluence energy [(e-lower + e-upper) / 2]",
+            "MC fluence",
+            "xs energy",
+            "Microscopic xs",
+            "Microscopic xs",
+            (
+                $yld_pn_each->calc_rn_yield->{react_nucl_symb}.
+                ' number density'
+            ),
+            "Macroscopic xs",
+            "PWM for microscopic xs",
+            "PWM for macroscopic xs",
+            "Average beam current",
+            "Source rate",
+            sprintf(
+                "Reaction rate per %s volume",
+                $yld_pn_each->calc_rn_yield->{tar_mat_symb},
+            ),
+            sprintf(
+                "%s volume",
+                $yld_pn_each->calc_rn_yield->{tar_mat_symb},
+            ),
+            "Reaction rate",
+        ];
+        my $_subheads2 = [
+            sprintf(
+                "(%s)",
+                $phits->v_src_param->{unit},
+            ),
+            "(mm)",
+            "(MeV)",
+            sprintf(
+                "(cm^{-2} %s^{-1})",
+                $phits->source->spat_dist_of_int->{proj}{val},
+            ),
+            "(MeV)",
+            "(b)",
+            "(cm^{2})",
+            "(cm^{-3})",
+            "(cm^{-1})",
+            sprintf(
+                "(%s^{-1})",
+                $phits->source->spat_dist_of_int->{proj}{val},
+            ),
+            sprintf(
+                "(cm^{-3} %s^{-1})",
+                $phits->source->spat_dist_of_int->{proj}{val},
+            ),
+            "(uA)",
+            sprintf(
+                "(%s s^{-1})",
+                $phits->source->spat_dist_of_int->{proj}{val},
+            ),
+            "(cm^{-3} s^{-1})",
+            "(cm^{3})",
+            "(s^{-1} or Bq)",
+        ];
+
+        my $_v_src_param_start  = $phits->v_src_param->{start};
+        my $_v_src_param_stop   = $phits->v_src_param->{stop};
+        my $_v_src_param_curr   = $phits->v_src_param->{curr};
+        my $_v_geom_param_start = $phits->v_geom_param->{start};
+        my $_v_geom_param_stop  = $phits->v_geom_param->{stop};
+        s/[.]/p/ for (
+            $_v_src_param_start,
+            $_v_src_param_stop,
+            $_v_src_param_curr,
+            $_v_geom_param_start,
+            $_v_geom_param_stop,
+        );
+        my %yield_objs = (
+            yld_pn_each => {
+                obj_for_cmt => $yld_pn_each,
+                rpt_bname   => (                   # Filename w/o its ext
+                    "yields_$prod_nucl$prod_nucl_flag".
+                    $phits->FileIO->fname_sep.     # -
+                    $_varying_str.                 # v
+                    $phits->v_src_param->{name}.   # eg0
+                    (
+                        $phits->v_src_param->{name} =~ /[0-9]$/i ?
+                            $phits->FileIO->fname_space : ''
+                    ).
+                    $_v_src_param_start.           # 30
+                    'to'.                          # to
+                    $_v_src_param_stop.            # 40
+                    $phits->FileIO->fname_sep.     # -
+                    $tar_of_int->flag.             # wrcc || w_rcc
+                    $phits->FileIO->fname_sep.     # -
+                    $phits->FileIO->varying_flag.  # vhgt || v_hgt
+                    $_v_geom_param_start.          # 0p10
+                    'to'.                          # to
+                    $_v_geom_param_stop            # 0p70
+                ),
+                size         => 6,
+                heads        => $_heads1,
+                subheads     => $_subheads1,
+                columnar_arr => $yld_pn_each->columnar_arr,
+                ragged_left  => [2..5],
+            },
+            yld_pn_each_sp_src => {
+                obj_for_cmt => $yld_pn_each,
+                rpt_bname   => (                  # Filename w/o its ext
+                    "yields_$prod_nucl$prod_nucl_flag".
+                    $phits->FileIO->fname_sep.    # -
+                    $_varying_str.                # v
+                    $phits->v_src_param->{name}.  # eg0
+                    (
+                        $phits->v_src_param->{name} =~ /[0-9]$/i ?
+                            $phits->FileIO->fname_space : ''
+                    ).
+                    $_v_src_param_curr.           # 35
+                    $phits->FileIO->fname_sep.
+                    $tar_of_int->flag.
+                    $phits->FileIO->fname_sep.
+                    $phits->FileIO->varying_flag.
+                    $_v_geom_param_start.
+                    'to'.
+                    $_v_geom_param_stop
+                ),
+                size         => 6,
+                heads        => $_heads1,
+                subheads     => $_subheads1,
+                columnar_arr => $yld_pn_each_sp_src->columnar_arr,
+                ragged_left  => [2..5],
+            },
+            pwm_pn_each_sp_src => {
+                obj_for_cmt => $yld_pn_each,
+                rpt_bname   => (
+                    "yields_$prod_nucl$prod_nucl_flag".
+                    $phits->FileIO->fname_sep.
+                    $_varying_str.
+                    $phits->v_src_param->{name}.
+                    (
+                        $phits->v_src_param->{name} =~ /[0-9]$/i ?
+                            $phits->FileIO->fname_space : ''
+                    ).
+                    $_v_src_param_curr.
+                    $phits->FileIO->fname_sep.
+                    $tar_of_int->flag.
+                    $phits->FileIO->fname_sep.
+                    $phits->FileIO->varying_flag.
+                    $_v_geom_param_start.
+                    'to'.
+                    $_v_geom_param_stop.
+                    $phits->FileIO->fname_sep.
+                    'pwm'
+                ),
+                size         => 16,
+                heads        => $_heads2,
+                subheads     => $_subheads2,
+                columnar_arr => $pwm_pn_each_sp_src->columnar_arr,
+                switch       => $yld_pn_deleg->Ctrls->pwm_switch,
+            },
+        );
+
+        foreach my $k (sort keys %yield_objs) {
+            next if (
+                exists $yield_objs{$k}{switch}
+                and $yield_objs{$k}{switch} =~ /off/i
+            );
+
+            my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
+            reduce_data(
+                {  # Settings
+                    rpt_formats => $run_opts_href->{rpt_fmts},
+                    rpt_path    => $run_opts_href->{rpt_path},
+                    rpt_bname   => $yield_objs{$k}{rpt_bname},
+                    begin_msg   => "collecting yields and specific yields...",
+                    prog_info   => $prog_info_href,
+                    cmt_arr => [
+                        #
+                        # Shared comment 1: Yield calculation conditions
+                        #
+                        "-" x 69,
+                        " Yield calculation conditions (last evaluated)",
+                        "-" x 69,
+                        # (1) Source particle
+                        sprintf(
+                            " %s %s",
+                            'Source particle:',  # Projectile: electron
+                            $phits->source->spat_dist_of_int->{proj}{val},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Source energy distribution:',
+                            $phits->curr_src_nrg_dist->{name},
+                        ),
+                        sprintf(
+                            " %s",
+                            $phits->curr_src_nrg_dist->{param1},
+                        ),
+                        sprintf(
+                            " %s",
+                            $phits->curr_src_nrg_dist->{param2},
+                        ),
+                        sprintf(
+                            " %s %s uA",
+                            'Source average current:',
+                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Source spatial distribution:',
+                            $phits->curr_src_spat_dist->{name},
+                        ),
+                        sprintf(
+                            " %s",
+                            $phits->curr_src_spat_dist->{param1},
+                        ),
+                        sprintf(
+                            " %s",
+                            $phits->curr_src_spat_dist->{param2},
+                        ),
+                        # (2) Converter
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Converter material:',
+                            $bconv->cell_mat,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1",
+                            'Converter density ratio:',
+                            $bconv->dens_ratio,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 g cm^{-3}",
+                            'Converter mass density:',
+                            $bconv->cell_props->{dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 mm",
+                            'Converter diameter:',
+                            2 * $bconv->radius * 10,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 mm",
+                            'Converter thickness:',
+                            $bconv->height * 10,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 cm^{3}",
+                            'Converter volume:',
+                            $bconv->vol,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 g",
+                            'Converter mass:',
+                            $bconv->mass,
+                        ),
+                        # Intertarget distance
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 mm",
+                            'Converter-Mo target distance:',
+                            $bconv->gap * 10,
+                        ),
+                        # (3) Mo target
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Mo target:',
+                            $motar->cell_mat,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1",
+                            'Mo target density ratio:',
+                            $motar->dens_ratio,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 g cm^{-3}",
+                            'Mo target mass density:',
+                            $motar->cell_props->{dens},
+                        ),
+                        (
+                            $tar_of_int->flag eq $motar_trc->flag ?
+                            (
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 mm",
+                                    'Mo target bottom radius:',
+                                    $motar_trc->bot_radius * 10,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 mm",
+                                    'Mo target top radius:',
+                                    $motar_trc->top_radius * 10,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 mm",
+                                    'Mo target thickness:',
+                                    $motar_trc->height * 10,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 cm^{3}",
+                                    'Mo target volume:',
+                                    $motar_trc->vol,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 g",
+                                    'Mo target mass:',
+                                    $motar_trc->mass,
+                                ),
+                            ) : (
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 mm",
+                                    'Mo target diameter:',
+                                    2 * $motar_rcc->radius * 10,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 mm",
+                                    'Mo target thickness:',
+                                    $motar_rcc->height * 10,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 cm^{3}",
+                                    'Mo target volume:',
+                                    $motar_rcc->vol,
+                                ),
+                                sprintf(
+                                    " $_conv_cmt1 $_conv_val1 g",
+                                    'Mo target mass:',
+                                    $motar_rcc->mass,
+                                ),
+                            ),
+                        ),
+                        # (4) Flux monitor, upstream (conditional)
+                        '',
+                        $flux_mnt_up->height > 0 ? (
+                            sprintf(
+                                " $_conv_cmt1 %s",
+                                'Upstream flux monitor material:',
+                                $flux_mnt_up->cell_mat,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1",
+                                'Upstream flux monitor density ratio:',
+                                $flux_mnt_up->dens_ratio,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 g cm^{-3}",
+                                'Upstream flux monitor mass density:',
+                                $flux_mnt_up->cell_props->{dens},
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 mm",
+                                'Upstream flux monitor diameter:',
+                                2 * $flux_mnt_up->radius * 10,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 um",
+                                'Upstream flux monitor thickness:',
+                                $flux_mnt_up->height * 1e4,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 cm^{3}",
+                                'Upstream flux monitor volume:',
+                                $flux_mnt_up->vol,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 g",
+                                'Upstream flux monitor mass:',
+                                $flux_mnt_up->mass,
+                            ),
+                        ) : " No upstream fluence",
+                        # (5) Flux monitor, downstream (conditional)
+                        $flux_mnt_down->height > 0 ? (
+                            '',
+                            sprintf(
+                                " $_conv_cmt1 %s",
+                                'Downstream flux monitor material:',
+                                $flux_mnt_down->cell_mat,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1",
+                                'Downstream flux monitor density ratio:',
+                                $flux_mnt_down->dens_ratio,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 g cm^{-3}",
+                                'Downstream flux monitor mass density:',
+                                $flux_mnt_down->cell_props->{dens},
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 mm",
+                                'Downstream flux monitor diameter:',
+                                2 * $flux_mnt_down->radius * 10,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 um",
+                                'Downstream flux monitor thickness:',
+                                $flux_mnt_down->height * 1e4,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 cm^{3}",
+                                'Downstream flux monitor volume:',
+                                $flux_mnt_down->vol,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 g",
+                                'Downstream flux monitor mass:',
+                                $flux_mnt_down->mass,
+                            ),
+                        ) : " No downstream fluence",
+                        # (6) Target wrap (conditional)
+                        $tar_wrap->thickness > 0 ? (
+                            '',
+                            sprintf(
+                                " $_conv_cmt1 %s",
+                                'Target wrap flux monitor material:',
+                                $tar_wrap->cell_mat,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1",
+                                'Target wrap flux monitor density ratio:',
+                                $tar_wrap->dens_ratio,
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 g cm^{-3}",
+                                'Target wrap flux monitor mass density:',
+                                $tar_wrap->cell_props->{dens},
+                            ),
+                            sprintf(
+                                " $_conv_cmt1 $_conv_val1 um",
+                                'Target wrap flux monitor thickness:',
+                                $tar_wrap->thickness * 1e4,
+                            ),
+                        ) : " No target wrap",
+                        # Main calculation conditions
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1",
+                            (
+                                $obj_for_cmt->calc_rn_yield->{react_nucl_symb}.
+                                ' enrichment level:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{react_nucl_enri_lev},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 uA (%s)",
+                            'Average beam current:',
+                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
+                            sprintf(
+                                "$_conv_val2 %ss s^{-1}",
+                                $obj_for_cmt->calc_rn_yield->{source_rate},
+                                $phits->source->spat_dist_of_int->{proj}{val},
+                            ),
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 h",
+                            'Irradiation time:',
+                            $obj_for_cmt->calc_rn_yield->{end_of_irr},
+                        ),
+                        # PHITS summary
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Summary file:',
+                            $phits->params->{file}{summary_out_fname}{val},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'maxcas:',
+                            $phits->retrieved->{maxcas},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'maxbch:',
+                            $phits->retrieved->{maxbch},
+                        ),
+                        # Particle fluence
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Fluence file:',
+                            $mc_flue_dat,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1--$_conv_val1 MeV",
+                            'Fluence energy range:',
+                            $t_track->mesh_ranges
+                                ->{emin}{"eff_nrg_range_interval_$prod_nucl"},
+                            $t_track->mesh_ranges
+                                ->{emax}{"eff_nrg_range_interval_$prod_nucl"},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Fluence ne:',
+                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_ne},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s MeV",
+                            'Fluence de:',
+                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_de},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'Fluence unit:',
+                            $obj_for_cmt->calc_rn_yield->{mc_flue_unit},
+                        ),
+                        # Microscopic xs
+                        '',
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'xs file:',
+                            $yld_pn_deleg->FileIO->micro_xs_dat,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'xs interpolation algo:',
+                            $yld_pn_deleg->micro_xs_interp_algo,
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1--$_conv_val1 MeV",
+                            'xs energy range:',
+                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[0],
+                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[-1],
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 %s",
+                            'xs ne:',
+                            $obj_for_cmt->calc_rn_yield->{xs_nrg_ne},
+                        ),
+                        sprintf(
+                            " $_conv_cmt1 $_conv_val1 MeV",
+                            'xs de:',
+                            $obj_for_cmt->calc_rn_yield->{xs_nrg_de},
+                        ),
+                        "-" x 69,
+                        #
+                        # Shared comment 2: Part of calculation results
+                        #
+                        "-" x 69,
+                        " Part of calculation results (last evaluated)",
+                        "-" x 69,
+                        # Target material
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
+                                ' mass density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
+                                ' number density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{tar_num_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g",
+                            (
+                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
+                                ' mass:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{tar_mass},
+                        ),
+                        # Reactant nuclide element
+                        '',
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.
+                                ' mass fraction in '.
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{tar_mat_symb}.':'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_elem_mass_frac},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.' mass density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_elem_mass_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.' number density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_elem_num_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.' mass:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_elem_mass},
+                        ),
+                        # Reactant nuclide
+                        '',
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_symb}.' amount fraction in '.
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.':'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{react_nucl_amt_frac},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_symb}.' mass fraction in '.
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_elem_symb}.':'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_mass_frac},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_symb}.' mass density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_nucl_mass_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 cm^{-3}",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_symb}.' number density:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{react_nucl_num_dens},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val1 g",
+                            (
+                                $obj_for_cmt->calc_rn_yield
+                                    ->{react_nucl_symb}.' mass:'
+                            ),
+                            $obj_for_cmt->calc_rn_yield->{react_nucl_mass},
+                        ),
+                        # PWMs
+                        '',
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 %s^{-1}",
+                            'Sum of microscopic PWMs:',
+                            $obj_for_cmt->calc_rn_yield->{pwm_micro_tot},
+                            $phits->source->spat_dist_of_int->{proj}{val},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 cm^{-3} %s^{-1}",
+                            'Sum of macroscopic PWMs:',
+                            $obj_for_cmt->calc_rn_yield->{pwm_macro_tot},
+                            $phits->source->spat_dist_of_int->{proj}{val},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 cm^{-3} s^{-1}",
+                            'Sum of per-vol reaction rates:',
+                            $obj_for_cmt->calc_rn_yield
+                                ->{react_rate_per_vol_tot},
+                        ),
+                        sprintf(
+                            " $_conv_cmt2 $_conv_val2 s^{-1} or Bq",
+                            'Sum of reaction rates:',
+                            $obj_for_cmt->calc_rn_yield->{react_rate_tot},
+                        ),
+                        ' (= saturation yield)',
+                        "-" x 69,
+                    ],
+                },
+                {  # Columnar
+                    size     => $yield_objs{$k}{size},  # Col size validation
+                    heads    => $yield_objs{$k}{heads},
+                    subheads => $yield_objs{$k}{subheads},
+                    data_arr_ref => $yield_objs{$k}{columnar_arr},
+                    sum_idx_multiples =>
+                        $yield_objs{$k}{sum} // [],
+                    ragged_left_idx_multiples =>
+                        $yield_objs{$k}{ragged_left} // [],
+                    freeze_panes => 'D4',  # Alt: {row => 3, col => 3}
+                    space_bef    => {dat => " ", tex => " "},
+                    heads_sep    => {dat => "|", csv => ","},
+                    space_aft    => {dat => " ", tex => " "},
+                    data_sep     => {dat => " ", csv => ","},
+                }
+            );
+        }
+    }
+
+    return;
+}
+
+
+sub outer_iterator {
+    # """Iterate over target materials with varying source parameters."""
+    my (
         $prog_info_href,
         $run_opts_href,
     ) = @_;
 
-    # Fill in an array with the varying source parameters.
-    my @varying_source_params = @{
-        $phits->source->type_of_int->{$phits->source->varying_param}
-                                     {vals_of_int}
-    };
-
-    # Memorize the name, value, and unit of the varying parameter - (1/2)
-    # They will be used for the notification of the foreach loop below, and
-    # will also be used in reduce_data(... %hash_max_flues ...).
-    $phits->set_curr_v_source_param(
-        name => $phits->source->varying_param =~ /nrg|energy/i ?
-            'nrg' :
-            $phits->source->type_of_int->{$phits->source->varying_param}{flag},
-        unit => $phits->source->varying_param =~ /nrg|energy/i ?
-            'MeV' :
-            'cm',
+    # Array ref of varying source parameters
+    my $v_src_params_href;
+    if ($phits->source->iter_param =~ /eg0/i) {
+        $v_src_params_href =
+            $phits->source->gaussian_nrg->{$phits->source->iter_param}
+                                          {vals_of_int};
+        $phits->set_v_src_param(
+            name => 'eg0',
+            unit => 'MeV',
+        );
+    }
+    else {  # Source spatial distribution parameters; e.g. x_fwhm, xy_fwhms
+        $v_src_params_href =
+            $phits->source->spat_dist_of_int->{$phits->source->iter_param}
+                                              {vals_of_int};
+        $phits->set_v_src_param(
+            name => $phits->source->spat_dist_of_int->
+                        {$phits->source->iter_param}
+                        {flag},
+            unit => 'cm',
+        );
+    }
+    $phits->set_v_src_param(
+        start => $v_src_params_href->[0],
+        stop  => $v_src_params_href->[-1],
+        # 'curr' will be given a value in the loop of @v_src_params.
     );
+    my @v_src_params = @$v_src_params_href;
 
     # Iterate over the varying source parameters.
-    my($src_nrg, $src_size, $src_size_str);
+    my ($src_eg0, $src_size, $src_size_str);
 
     # Conversion for annotations
-    my %_dim_val_conv;
-    $_dim_val_conv{dec_places_len} = 0;
-    my @_varying_source_params = @varying_source_params;
-    foreach (@_varying_source_params) {
+    my %_geom_val_conv;
+    $_geom_val_conv{dec_places_len} = 0;
+    my @_v_src_params = @v_src_params;
+    foreach (@_v_src_params) {
         $_ *= 1e1 if (
-            not $phits->source->varying_param =~ /nrg|energy/i
+            not $phits->source->iter_param =~ /eg0/i
             and $angel->dim_unit =~ /mm/i
         );
         $_ *= 1e4 if (
-            not $phits->source->varying_param =~ /nrg|energy/i
+            not $phits->source->iter_param =~ /eg0/i
             and $angel->dim_unit =~ /um/i
         );
-        $_dim_val_conv{dec} = index((reverse $_), '.');
-        $_dim_val_conv{dec} = 0 if $_dim_val_conv{dec} == -1;
-        $_dim_val_conv{dec_places_len} = $_dim_val_conv{dec} if (
-            $_dim_val_conv{dec}
-            > $_dim_val_conv{dec_places_len}
+        $_geom_val_conv{dec} = index((reverse $_), '.');
+        $_geom_val_conv{dec} = 0 if $_geom_val_conv{dec} == -1;
+        $_geom_val_conv{dec_places_len} = $_geom_val_conv{dec} if (
+            $_geom_val_conv{dec} > $_geom_val_conv{dec_places_len}
         );
     }
-    $_dim_val_conv{the_conv} = '%.'.$_dim_val_conv{dec_places_len}.'f';
+    $_geom_val_conv{the_conv} = '%.'.$_geom_val_conv{dec_places_len}.'f';
 
-    # The real outer iteration
-    foreach my $v_source_param (@varying_source_params) {
+    #**************************************************************************
+    # Real outer iteration
+    #**************************************************************************
+    foreach my $v_src_param (@v_src_params) {
         #
         # Initializations: Must be performed
         #
 
         # Varying/fixed source parameters (1/2): Source energy
-        if ($phits->source->varying_param =~ /nrg|energy/i) {
-            # Source energy: varying
-            $src_nrg = $v_source_param;
-
-            # Source size: fixed
-            if ($phits->source->type_of_int->{type}{val} == 1) {
-                $src_size = $phits->source->type_of_int->{rad}{val_fixed};
+        if ($phits->source->iter_param =~ /eg0/i) {
+            # Source energy: Varying
+            if ($phits->source->nrg_dist_of_int->{type}{val} == 2) {
+                $src_eg0 = $v_src_param;
+                # Populate the Gaussian energy cutoffs and
+                # determine the emin and emax of tallies.
+                # > Although the two routines below had already been called
+                #   in phitar(), they must be called repeatedly for
+                #   every varying Gaussian center energy.
+                # > This is because the Gaussian energy cutoffs are determined
+                #   by the Gaussian center energy, and the effective tally emax
+                #   is determined by the upper Gaussian energy cutoff.
+                populate_gaussian_nrg_cutoffs($src_eg0);
+                determ_tally_emin_emax($src_eg0);
             }
-            elsif ($phits->source->type_of_int->{type}{val} == 3) {
+            elsif ($phits->source->nrg_dist_of_int->{type}{val} == 22) {
+                my $_err_msg = sprintf(
+                    "[Source energy distribution No. %d: %s]".
+                    " is incompatible with [eg0] iteration.\n".
+                    "Instead, use of one these: [%s]\n\n",
+                    $phits->source->nrg_dist_of_int->{type}{val},
+                    $phits->source->nrg_dist_of_int->{type}{abbr},
+                    join(
+                        ', ',
+                        qw(
+                            rad
+                            x_fwhm
+                            y_fwhm
+                            z_fwhm
+                            xy_fwhms
+                        ),
+                    ),
+                );
+                croak $_err_msg;
+            }
+
+            # Source size: Fixed
+            if ($phits->source->spat_dist_of_int->{type}{val} == 1) {
+                $src_size = $phits->source->spat_dist_of_int->{rad}{val_fixed};
+            }
+            elsif ($phits->source->spat_dist_of_int->{type}{val} == 3) {
                 $src_size = sprintf(
-                    "%s%s%s%s%s", # Will be split before [source]
-                    $phits->source->type_of_int->{x_fwhm}{val_fixed},
-                    $phits->source->type_of_int->{xyz_sep},
-                    $phits->source->type_of_int->{y_fwhm}{val_fixed},
-                    $phits->source->type_of_int->{xyz_sep},
-                    $phits->source->type_of_int->{z_fwhm}{val_fixed},
+                    # $src_size is passed to inner_iterator() but
+                    # the values of {val_fixed} will be separately used
+                    # around the [source] section; namely, $src_size here
+                    # are only for displaying purposes.
+                    "%s%s%s%s%s",
+                    $phits->source->spat_dist_of_int->{x_fwhm}{val_fixed},
+                    $phits->source->spat_dist_of_int->{xyz_sep},
+                    $phits->source->spat_dist_of_int->{y_fwhm}{val_fixed},
+                    $phits->source->spat_dist_of_int->{xyz_sep},
+                    $phits->source->spat_dist_of_int->{z_fwhm}{val_fixed},
                 );
             }
-            else { # $phits->source->type_of_int->{type}{val} == 13
-                $src_size = $phits->source->type_of_int->{xy_fwhms}{val_fixed};
+            else {  # $phits->source->spat_dist_of_int->{type}{val} == 13
+                $src_size = $phits->source->spat_dist_of_int
+                    ->{xy_fwhms}{val_fixed};
             }
         }
 
         # Varying/fixed source parameters (2/3): Source size
         else {
-            # Source energy: fixed
-            $src_nrg  = $phits->source->type_of_int->{nrg}{val_fixed};
+            # Source energy: Fixed
+            $src_eg0 = $phits->source->gaussian_nrg->{eg0}{val_fixed};
 
-            # Source size: varying
-            $src_size = $v_source_param;
+            # Source size: Varying
+            $src_size = $v_src_param;
         }
 
-        # Varying/fixed source parameters (3/3): Show the beam parameters.
+        # Varying/fixed source parameters (3/3): Display the source parameters.
         print "^" x 70, "\n\n";
         printf(
-            "%sSource type is [%s]\n",
+            "%sSource spatial distribution: [%s]\n",
             ' ' x 15,
-            $phits->source->type_of_int->{type}{abbr},
+            $phits->source->spat_dist_of_int->{type}{abbr},
         );
-        printf("%sSource size is [", ' ' x 15);
-        print $phits->curr_v_source_param->{name}." "
-            if $phits->curr_v_source_param->{name} !~ /nrg|energy/i;
+        printf("%sSource size: [", ' ' x 15);
+        print $phits->v_src_param->{name}." "
+            if $phits->v_src_param->{name} !~ /eg0/i;
         print $src_size;
         print "]<--Unit: cm\n";
         print "\n", "^" x 70, "\n";
@@ -3025,25 +4416,26 @@ sub outer_iterator {
         # Initialize animation raster subdir names used in the previous run
         $animate->clear_examined_dirs();
 
-        # Memorize the name, value, and unit of the varying parameter - (2/2)
-        $phits->set_curr_v_source_param(val => $v_source_param);
+        # Memorize the current value of the varying source parameter.
+        $phits->set_v_src_param(curr => $v_src_param);
 
         # (conditional) Populate the annot attribute - outer (beam).
         # > Look up "Populate the annot attribute - inner (geom)".
         if ($angel->Cmt->annot_type =~ /beam/i) {
-            if (not $phits->source->varying_param =~ /nrg|energy/i) {
-                my $_beam_size_val = $phits->curr_v_source_param->{val};
+            if (not $phits->source->iter_param =~ /eg0/i) {
+                my $_beam_size_val = $phits->v_src_param->{curr};
                 $_beam_size_val *= 1e1 if $angel->dim_unit =~ /mm/i;
                 $_beam_size_val *= 1e4 if $angel->dim_unit =~ /um/i;
                 $angel->Cmt->set_annot(
                     sprintf(
                         "Incident e^\{\$-\$\} beam size:".
-                        " $_dim_val_conv{the_conv} %s in %s",
+                        " $_geom_val_conv{the_conv} %s in %s",
                         $_beam_size_val,
-                        $angel->dim_unit =~ /um/i ?
-                            '{\mu}m' : $angel->dim_unit,
-                        $phits->Cmt->full_names->
-                            {$phits->curr_v_source_param->{name}},
+                        (
+                            $angel->dim_unit =~ /um/i ?
+                                '{\mu}m' : $angel->dim_unit
+                        ),
+                        $phits->Cmt->full_names->{$phits->v_src_param->{name}},
                     )
                 );
             }
@@ -3051,11 +4443,10 @@ sub outer_iterator {
                 $angel->Cmt->set_annot(
                     sprintf(
                         "Incident e^\{\$-\$\} beam %s:".
-                        " $_dim_val_conv{the_conv} %s",
-                        $phits->Cmt->full_names->
-                            {$phits->curr_v_source_param->{name}},
-                        $phits->curr_v_source_param->{val},
-                        $phits->curr_v_source_param->{unit},
+                        " $_geom_val_conv{the_conv} %s",
+                        $phits->Cmt->full_names->{$phits->v_src_param->{name}},
+                        $phits->v_src_param->{curr},
+                        $phits->v_src_param->{unit},
                     )
                 );
             }
@@ -3068,24 +4459,24 @@ sub outer_iterator {
             "%s [%s] running at [%s: %s / %s--%s %s]...\n",
             $phits->Cmt->symb,
             (caller(0))[3],
-            $phits->curr_v_source_param->{name},
-            $v_source_param,
-            $varying_source_params[0],
-            $varying_source_params[-1],
-            $phits->curr_v_source_param->{unit},
+            $phits->v_src_param->{name},
+            $v_src_param,
+            $v_src_params[0],
+            $v_src_params[-1],
+            $phits->v_src_param->{unit},
         );
         say $phits->Cmt->borders->{'*'};
 
         # Make a subdirectory wrto the varying source parameter
         # and move to that subdirectory to work on.
-        chdir $phits->cwd; # Start from the parent dir.
+        chdir $phits->cwd;  # Start from the parent dir.
         $phits->FileIO->set_subdir(
             $phits->cwd.
             $phits->FileIO->path_delim.(
-                $phits->source->varying_param =~ /nrg|energy/i ?
-                    'nrg'.$src_nrg :
-                    $phits->source->type_of_int->{$phits->source->varying_param}
-                                                 {flag}.$src_size_str
+                $phits->source->iter_param =~ /eg0/i ?
+                    'eg0_'.$src_eg0 :
+                    $phits->source->spat_dist_of_int
+                        ->{$phits->source->iter_param}{flag}.$src_size_str
             )
         );
         if (not -e $phits->FileIO->subdir) {
@@ -3098,33 +4489,38 @@ sub outer_iterator {
         chdir $phits->FileIO->subdir;
         printf("CWD: [%s]\n", getcwd());
 
-        # Invoke the inner iterator for a range of varying geometric parameter
-        # of a target material, with the set of source parameters specified
-        # at the beginning of this outer iterator.
+        # Invoke inner_iterator() for each target material.
+        # > The iterator is invoked for each of the designated
+        #   varying geometric parameters (e.g. height, radius, ...)
+        #   of the target material in question (e.g. w_rcc, mo_rcc, ...).
+        # > Remember that we are now within the outer iterator;
+        #   the series of inner_iterator() invocation below will continue
+        #   with the next, if any, outer iteration source parameter
+        #   (e.g. eg = 31, 32, ...).
         inner_iterator(
             $prog_info_href,
             $run_opts_href,
-            $src_nrg,
+            $src_eg0,
             $src_size,
             $bconv,
             $_,
-        ) for @{$bconv->iteration_geoms};
+        ) for @{$bconv->iter_geoms};
         inner_iterator(
             $prog_info_href,
             $run_opts_href,
-            $src_nrg,
+            $src_eg0,
             $src_size,
             $motar_rcc,
             $_,
-        ) for @{$motar_rcc->iteration_geoms};
+        ) for @{$motar_rcc->iter_geoms};
         inner_iterator(
             $prog_info_href,
             $run_opts_href,
-            $src_nrg,
+            $src_eg0,
             $src_size,
             $motar_trc,
             $_,
-        ) for @{$motar_trc->iteration_geoms};
+        ) for @{$motar_trc->iter_geoms};
     }
 
     return;
@@ -3133,17 +4529,15 @@ sub outer_iterator {
 
 sub inner_iterator {
     # """Inner: Iterate over geometric parameters."""
-
-    my(
+    my (
         $prog_info_href,
         $run_opts_href,
-        $source_nrg,
+        $source_eg0,
         $source_size,
         $tar_of_int,
-        $varying,
+        $v_geom,
     ) = @_;
 
-    my @varying_vals;
     state $tot_flues_hash_ref = {};
     my %tot_flues = %$tot_flues_hash_ref;
 
@@ -3151,15 +4545,15 @@ sub inner_iterator {
     #
     # Validate the 4th subroutine argument.
     #
-    return if not $varying;
-    my $passed = first { /\b$varying\b/i }
-        @{$phits->constrained_args->{varying}};
+    return if not $v_geom;
+    my $passed = first { /\b$v_geom\b/i }
+        @{$phits->constraint_args->{v_geom}};
     unless ($passed) {
         croak(
-            "[$varying] is a wrong iteration geometry".
+            "[$v_geom] is a wrong iteration geometry".
             " to the [inner_iterator] subroutine.\n".
             "Input one of these: [".join(
-                ', ', @{$phits->constrained_args->{varying}}
+                ', ', @{$phits->constraint_args->{v_geom}}
             )."]\n"
         );
     }
@@ -3168,14 +4562,12 @@ sub inner_iterator {
     #
     # Initializations
     #
-    # (1) Update attributes that depend on
-    #     the varying params of the inner iterator.
+    # (1) Update the attributes dependent on the varying geometric parameters.
     # (2) Initializations
     #
 
-    # (1)
     # Electron linac parameters
-    $elinac_of_int->update_params(peak_beam_nrg => $source_nrg * 1e+06);
+    $elinac_of_int->update_params(peak_beam_nrg => $source_eg0 * 1e+06);
 
     #+++++debugging+++++#
 #    show_tar_geoms();
@@ -3193,22 +4585,22 @@ sub inner_iterator {
         # v.   Target wrap
         my $_num_mats_to_score = 0;
         $_num_mats_to_score++ if $bconv->flag !~ /none/i;
-        $_num_mats_to_score++; #<--Mo target, which is always turned on
+        $_num_mats_to_score++;  # <--Mo tgt, which is always turned on
         $_num_mats_to_score++ if $flux_mnt_up->height_fixed   > 0;
         $_num_mats_to_score++ if $flux_mnt_down->height_fixed > 0;
         $_num_mats_to_score++ if $tar_wrap->thickness_fixed   > 0;
         my $_num_mats_to_score_cutaway = 0;
         $_num_mats_to_score_cutaway++ if $bconv->flag !~ /none/i;
-        $_num_mats_to_score_cutaway++; #<--Mo target, which is always turned on
+        $_num_mats_to_score_cutaway++;  # <--Mo tgt, which is always turned on
         $_num_mats_to_score_cutaway++ if $flux_mnt_up->height_fixed   > 0;
         $_num_mats_to_score_cutaway++ if $flux_mnt_down->height_fixed > 0;
-        #<---No tar wrapper--->
+        # <---No tar wrapper--->
         my $_mats_of_int = sprintf(
             "   %s\n".
             "%s".
-            "%s".     # Optional: Converter
-            "%s".     # Required: Mo target
-            "%s%s%s", # Optional: Flux monitors and a target wrapper
+            "%s".      # Optional: Converter
+            "%s".      # Required: Mo target
+            "%s%s%s",  # Optional: Flux monitors and a target wrapper
             $_num_mats_to_score,
             (' ' x 12),
             (
@@ -3289,13 +4681,13 @@ sub inner_iterator {
         $phits->params->{dmax}{neut}{val} = undef;
     }
 
-    # (2) Initializations
-    $yield_mo99_for_specific_source->clear_columnar_arr();
-    $pwm_mo99_for_specific_source->clear_columnar_arr();
-    $yield_au196_1_for_specific_source->clear_columnar_arr();
-    $pwm_au196_1_for_specific_source->clear_columnar_arr();
-    $yield_au196_2_for_specific_source->clear_columnar_arr();
-    $pwm_au196_2_for_specific_source->clear_columnar_arr();
+    # Initializations
+    $yield_mo99_for_sp_src->clear_columnar_arr();
+    $pwm_mo99_for_sp_src->clear_columnar_arr();
+    $yield_au196_1_for_sp_src->clear_columnar_arr();
+    $pwm_au196_1_for_sp_src->clear_columnar_arr();
+    $yield_au196_2_for_sp_src->clear_columnar_arr();
+    $pwm_au196_2_for_sp_src->clear_columnar_arr();
     # Empty the filenames of MAPDL macros contained in a target-specific
     # macro-of-macros for the next target.
     $mapdl_of_macs->FileIO->clear_macs();
@@ -3305,12 +4697,12 @@ sub inner_iterator {
     #
     # Construct flag strings that will be used for naming files and subsubdirs.
     #
-    # (1) Shorten, if long, the strings of geometric parameters.
+    # (1) Shorten, if long, the names of geometric parameters.
     # (2) Define the values of the varying geometry and
     #     the flags and values of the fixed geometries
     #     as functions of the shortened varying geometry.
-    # (3) Copy-paste the value of {varying_vals} defined in (2)
-    #     to @varying_vals.
+    # (3) Copy-paste the value of {v_geom_vals} defined in (2)
+    #     to @v_geom_vals.
     # (4) Copy-paste the value of {fixed_flags_and_vals} defined in (2)
     #     to $fixed_flags_and_vals.
     #     > Values of the fixed geometries included
@@ -3348,13 +4740,13 @@ sub inner_iterator {
         $phits->Cmt->abbrs->{gap}[0],
         $phits->Cmt->abbrs->{gap}[1]
     );
-    my $varying_intact = $varying;
-    $varying_intact =~ s/height/thickness/; # For titles of ANGEL PS files
-    $varying =~ s/\b$abbr_hgt[0]/$abbr_hgt[1]/gi;
-    $varying =~ s/\b$abbr_rad[0]/$abbr_rad[1]/gi;
-    $varying =~ s/\b$abbr_bot_rad[0]/$abbr_bot_rad[1]/gi;
-    $varying =~ s/\b$abbr_top_rad[0]/$abbr_top_rad[1]/gi;
-    $varying =~ s/\b$abbr_gap[0]/$abbr_gap[1]/gi;
+    my $v_geom_intact = $v_geom;
+    $v_geom_intact =~ s/height/thickness/;  # For titles of ANGEL PS files
+    $v_geom =~ s/\b$abbr_hgt[0]/$abbr_hgt[1]/gi;
+    $v_geom =~ s/\b$abbr_rad[0]/$abbr_rad[1]/gi;
+    $v_geom =~ s/\b$abbr_bot_rad[0]/$abbr_bot_rad[1]/gi;
+    $v_geom =~ s/\b$abbr_top_rad[0]/$abbr_top_rad[1]/gi;
+    $v_geom =~ s/\b$abbr_gap[0]/$abbr_gap[1]/gi;
 
     # (2)
     my $_varying_str = $phits->FileIO->varying_str.(
@@ -3367,7 +4759,7 @@ sub inner_iterator {
     );
     my $geom_val_sep = $t_shared->Ctrls->shortname =~ /on/i ?
         '' : $phits->FileIO->fname_space;
-    my %functs_of_varying_geom = ( # (key) Abbreviated geom, (val) hash ref
+    my %functs_of_v_geom = (  # (key) Abbreviated geom, (val) hash ref
         # Varying height; applies to
         # > $bconv
         # > $motar_rcc
@@ -3376,37 +4768,37 @@ sub inner_iterator {
             varying_vals         => $tar_of_int->heights_of_int,
             fixed_flags_and_vals => $tar_of_int->flag eq $motar_trc->flag ? (
                 # Fixed bottom radius
-                $_fixed_str.                   # f || f_
-                $abbr_bot_rad[1].              # brad
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->bot_radius_fixed. # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_bot_rad[1].               # brad
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->bot_radius_fixed.  # 0.15
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed top radius
-                $_fixed_str.                   # f || f_
-                $abbr_top_rad[1].              # trad
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->top_radius_fixed. # 0.60
+                $_fixed_str.                    # f || f_
+                $abbr_top_rad[1].               # trad
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->top_radius_fixed.  # 0.60
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed gap
-                $_fixed_str.                   # f || f_
-                $abbr_gap[1].                  # gap
-                $geom_val_sep.                 # '' || _
-                $bconv->gap_fixed              # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_gap[1].                   # gap
+                $geom_val_sep.                  # '' || _
+                $bconv->gap_fixed               # 0.15
             ) : (
                 # Fixed radius
-                $_fixed_str.                   # f || f_
-                $abbr_rad[1].                  # rad
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->radius_fixed.     # 1.00
+                $_fixed_str.                    # f || f_
+                $abbr_rad[1].                   # rad
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->radius_fixed.      # 1.00
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed gap
-                $_fixed_str.                   # f || f_
-                $abbr_gap[1].                  # gap
-                $geom_val_sep.                 # '' || _
-                $bconv->gap_fixed              # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_gap[1].                   # gap
+                $geom_val_sep.                  # '' || _
+                $bconv->gap_fixed               # 0.15
             ),
         },
         # Varying radius; applies to
@@ -3416,17 +4808,17 @@ sub inner_iterator {
             varying_vals         => $tar_of_int->radii_of_int,
             fixed_flags_and_vals => (
                 # Fixed height
-                $_fixed_str.               # f || f_
-                $abbr_hgt[1].              # hgt
-                $geom_val_sep.             # '' || _
-                $tar_of_int->height_fixed. # 0.33
+                $_fixed_str.                # f || f_
+                $abbr_hgt[1].               # hgt
+                $geom_val_sep.              # '' || _
+                $tar_of_int->height_fixed.  # 0.33
                 # Filename separator
-                $phits->FileIO->fname_sep. # -
+                $phits->FileIO->fname_sep.  # -
                 # Fixed gap
-                $_fixed_str.               # f || f_
-                $abbr_gap[1].              # gap
-                $geom_val_sep.             # '' || _
-                $bconv->gap_fixed          # 0.15
+                $_fixed_str.                # f || f_
+                $abbr_gap[1].               # gap
+                $geom_val_sep.              # '' || _
+                $bconv->gap_fixed           # 0.15
             ),
         },
         # Varying bottom radius; applies to
@@ -3435,24 +4827,24 @@ sub inner_iterator {
             varying_vals         => $tar_of_int->bot_radii_of_int,
             fixed_flags_and_vals => (
                 # Fixed height
-                $_fixed_str.                   # f || f_
-                $abbr_hgt[1].                  # hgt
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->height_fixed.     # 0.50
+                $_fixed_str.                    # f || f_
+                $abbr_hgt[1].                   # hgt
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->height_fixed.      # 0.50
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed top radius
-                $_fixed_str.                   # f || f_
-                $abbr_top_rad[1].              # trad
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->top_radius_fixed. # 0.60
+                $_fixed_str.                    # f || f_
+                $abbr_top_rad[1].               # trad
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->top_radius_fixed.  # 0.60
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed gap
-                $_fixed_str.                   # f || f_
-                $abbr_gap[1].                  # gap
-                $geom_val_sep.                 # '' || _
-                $bconv->gap_fixed              # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_gap[1].                   # gap
+                $geom_val_sep.                  # '' || _
+                $bconv->gap_fixed               # 0.15
             ),
         },
         # Varying top radius; applies to
@@ -3461,24 +4853,24 @@ sub inner_iterator {
             varying_vals         => $tar_of_int->top_radii_of_int,
             fixed_flags_and_vals => (
                 # Fixed height
-                $_fixed_str.                   # f || f_
-                $abbr_hgt[1].                  # hgt
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->height_fixed.     # 0.50
+                $_fixed_str.                    # f || f_
+                $abbr_hgt[1].                   # hgt
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->height_fixed.      # 0.50
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed bot radius
-                $_fixed_str.                   # f || f_
-                $abbr_bot_rad[1].              # brad
-                $geom_val_sep.                 # '' || _
-                $tar_of_int->bot_radius_fixed. # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_bot_rad[1].               # brad
+                $geom_val_sep.                  # '' || _
+                $tar_of_int->bot_radius_fixed.  # 0.15
                 # Filename separator
-                $phits->FileIO->fname_sep.     # -
+                $phits->FileIO->fname_sep.      # -
                 # Fixed gap
-                $_fixed_str.                   # f || f_
-                $abbr_gap[1].                  # gap
-                $geom_val_sep.                 # '' || _
-                $bconv->gap_fixed              # 0.15
+                $_fixed_str.                    # f || f_
+                $abbr_gap[1].                   # gap
+                $geom_val_sep.                  # '' || _
+                $bconv->gap_fixed               # 0.15
             ),
         },
         # Varying gaps; applies to
@@ -3487,41 +4879,41 @@ sub inner_iterator {
             varying_vals         => $tar_of_int->gaps_of_int,
             fixed_flags_and_vals => (
                 # Fixed height
-                $_fixed_str.               # f || f_
-                $abbr_hgt[1].              # hgt
-                $geom_val_sep.             # '' || _
-                $bconv->height_fixed.      # 0.33
+                $_fixed_str.                # f || f_
+                $abbr_hgt[1].               # hgt
+                $geom_val_sep.              # '' || _
+                $bconv->height_fixed.       # 0.33
                 # Filename separator
-                $phits->FileIO->fname_sep. # -
+                $phits->FileIO->fname_sep.  # -
                 # Fixed radius
-                $_fixed_str.               # f || f_
-                $abbr_rad[1].              # rad
-                $geom_val_sep.             # '' || _
-                $tar_of_int->radius_fixed  # 1.00
+                $_fixed_str.                # f || f_
+                $abbr_rad[1].               # rad
+                $geom_val_sep.              # '' || _
+                $tar_of_int->radius_fixed   # 1.00
             ),
         },
     );
 
     # (3)
-    @varying_vals = @{$functs_of_varying_geom{$varying}{varying_vals}};
+    my @v_geom_vals = @{$functs_of_v_geom{$v_geom}{varying_vals}};
 
     # (4)
     (
         my $fixed_flags_and_vals =
-            $functs_of_varying_geom{$varying}{fixed_flags_and_vals}
+            $functs_of_v_geom{$v_geom}{fixed_flags_and_vals}
     ) =~ s/[.]/p/g;
 
     # (5)
     (
         my $fixed_flags =
-            $functs_of_varying_geom{$varying}{fixed_flags_and_vals}
+            $functs_of_v_geom{$v_geom}{fixed_flags_and_vals}
     ) =~ s/[0-9.]+//g;
-    $fixed_flags =~ s/_-/-/g; # For $t_shared->Ctrls->shortname =~ /off/i
-    $fixed_flags =~ s/--/-/g; # For $t_shared->Ctrls->shortname =~ /off/i
+    $fixed_flags =~ s/_-/-/g;  # For $t_shared->Ctrls->shortname =~ /off/i
+    $fixed_flags =~ s/--/-/g;  # For $t_shared->Ctrls->shortname =~ /off/i
     $fixed_flags =~ s/[\-_]$//;
 
     # (6)
-    $phits->FileIO->set_varying_flag($_varying_str.$varying); # e.g. vhgt
+    $phits->FileIO->set_varying_flag($_varying_str.$v_geom);  # e.g. vhgt
     $phits->FileIO->set_fixed_flag($fixed_flags);             # e.g. frad-fgap
 
     #
@@ -3537,7 +4929,7 @@ sub inner_iterator {
         ymin => -($bconv->radius_fixed + $t_shared->offsets->{y}),
         ymax =>  ($bconv->radius_fixed + $t_shared->offsets->{y}),
         zmin => $bconv->beam_ent - $t_shared->offsets->{z},
-        zmax => # z-coordinate of the molybdenum target entrance
+        zmax =>  # z-coordinate of the molybdenum target entrance
                 (
                     $bconv->beam_ent
                     + $bconv->height_fixed
@@ -3557,7 +4949,7 @@ sub inner_iterator {
     # using the "largest" radius of the converter.
     if (
         $tar_of_int->flag eq $bconv->flag
-        and $varying =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
+        and $v_geom =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
     ) {
         $t_shared->set_mesh_ranges(
             xmin => -($bconv->radii_of_int->[-1] + $t_shared->offsets->{x}),
@@ -3568,11 +4960,11 @@ sub inner_iterator {
     }
 
     # If a bremsstrahlung converter is the target of interest and
-    # its distance to the molybdenum target (refer to as 'gap') is to be varied,
+    # its distance to the molybdenum target (i.e. gap) is to be varied,
     # extend the z-max mesh using the "largest" gap.
     if (
         $tar_of_int->flag eq $bconv->flag
-        and $varying =~ /\b($abbr_gap[0]|$abbr_gap[1])/i
+        and $v_geom =~ /\b($abbr_gap[0]|$abbr_gap[1])/i
     ) {
         $t_shared->set_mesh_ranges(
             zmax => $t_shared->mesh_ranges->{zmax}
@@ -3588,7 +4980,7 @@ sub inner_iterator {
     # using the "largest" height of the molybdenum target.
     if (
         $tar_of_int->flag ne $bconv->flag
-        and $varying =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
+        and $v_geom =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
     ) {
         $t_shared->set_mesh_ranges(
             zmax => $t_shared->mesh_ranges->{zmax}
@@ -3602,120 +4994,12 @@ sub inner_iterator {
         );
     }
 
-    # Determine emin of effective energy ranges using xs files
-    # which will be used for yield calculations (look up 'step 6-1').
-    my $_micro_xs_dat_mo99 = sprintf(
-        "%s%s%s%s%s",
-        $phits->cwd,
-        $yield_mo99->FileIO->path_delim,
-        $yield_mo99->FileIO->micro_xs_dir,
-        $yield_mo99->FileIO->path_delim,
-        $yield_mo99->FileIO->micro_xs_dat,
-    );
-    my $_micro_xs_dat_au196 = sprintf(
-        "%s%s%s%s%s",
-        $phits->cwd,
-        $yield_au196->FileIO->path_delim,
-        $yield_au196->FileIO->micro_xs_dir,
-        $yield_au196->FileIO->path_delim,
-        $yield_au196->FileIO->micro_xs_dat,
-    );
-    my $_eff_nrg_range_mo99;
-    my $_eff_nrg_range_au196;
-    # Mo-99
-    open my $_micro_xs_dat_mo99_fh, '<', $_micro_xs_dat_mo99;
-    foreach (<$_micro_xs_dat_mo99_fh>) {
-        next if /^\s*#/;
-        # Obtain the first energy bin.
-        if (/^\s*[0-9.]/) {
-            chomp;
-            ($_eff_nrg_range_mo99 = $_) =~ s/^\s*([0-9.]+)E.*/$1/i;
-            last;
-        }
-    }
-    close $_micro_xs_dat_mo99_fh;
-    # Au-196
-    open my $_micro_xs_dat_au196_fh, '<', $_micro_xs_dat_au196;
-    foreach (<$_micro_xs_dat_au196_fh>) {
-        next if /^\s*#/;
-        # Obtain the first energy bin.
-        if (/^\s*[0-9.]/) {
-            chomp;
-            ($_eff_nrg_range_au196 = $_) =~ s/^\s*([0-9.]+)E.*/$1/i;
-            last;
-        }
-    }
-    close $_micro_xs_dat_au196_fh;
-
-    # Set the energy mesh ranges.
-    $t_track->set_mesh_ranges(
-        emin => {
-            lower_nrg_range     => 0, # Lower energy range
-            tot_nrg_range       => 0, # Total energy range
-            eff_nrg_range_mo99  => $_eff_nrg_range_mo99,
-            eff_nrg_range_au196 => $_eff_nrg_range_au196,
-        },
-        emin_cmt => {
-            lower_nrg_range     => '',
-            tot_nrg_range       => '',
-            eff_nrg_range_mo99  => ' '.$phits->Cmt->symb.
-                                   ' Mo-100(g,n)Mo-99 threshold',
-            eff_nrg_range_au196 => ' '.$phits->Cmt->symb.
-                                   ' Au-197(g,n)Au-196 threshold',
-        },
-        emax => {
-            lower_nrg_range     => ceil($source_nrg / 7),
-            tot_nrg_range       => $source_nrg,
-            eff_nrg_range_mo99  => $source_nrg,
-            eff_nrg_range_au196 => $source_nrg,
-        },
-        emax_cmt => {
-            lower_nrg_range     => ' '.$phits->Cmt->symb.' ceil(e0 / 7)',
-            tot_nrg_range       => ' '.$phits->Cmt->symb.' e0',
-            eff_nrg_range_mo99  => ' '.$phits->Cmt->symb.' e0',
-            eff_nrg_range_au196 => ' '.$phits->Cmt->symb.' e0',
-        },
-        ymin => 1e-5,
-        ymax => 1e-1,
-    );
-    $t_cross->set_mesh_ranges(
-        emin => {
-            lower_nrg_range    => 0,
-            tot_nrg_range      => 0,
-            eff_nrg_range_mo99 => $_eff_nrg_range_mo99,
-        },
-        emin_cmt => {
-            lower_nrg_range    => '',
-            tot_nrg_range      => '',
-            eff_nrg_range_mo99 => ' '.$phits->Cmt->symb.
-                                  ' Mo-100(g,n)Mo-99 threshold',
-        },
-        emax => {
-            lower_nrg_range    => ceil($source_nrg / 7),
-            tot_nrg_range      => $source_nrg,
-            eff_nrg_range_mo99 => $source_nrg,
-        },
-        emax_cmt => {
-            lower_nrg_range    => ' '.$phits->Cmt->symb.' ceil(e0 / 7)',
-            tot_nrg_range      => ' '.$phits->Cmt->symb.' e0',
-            eff_nrg_range_mo99 => ' '.$phits->Cmt->symb.' e0',
-        },
-        ymin => 1e-5,
-        ymax => 1e-1,
-    );
-    $t_cross_dump->set_mesh_ranges(
-        emin     => 0, # Always 0 because it will be used as a particle source.
-        emin_cmt => '',
-        emax     => $source_nrg,
-        emax_cmt => ' '.$phits->Cmt->symb.' e0',
-    );
-
-
     #
-    # Make a subsubdirectory wrto the varying geometric parameter
-    # and move to that subsubdirectory to work on.
+    # Create a sub-subdirectory with respect to
+    # the varying geometric parameter, and
+    # move to and work on that directory.
     #
-    chdir $phits->FileIO->subdir; # Start from the parent dir.
+    chdir $phits->FileIO->subdir;  # Start from the parent dir.
     $phits->FileIO->set_subsubdir(
         $tar_of_int->flag.
         $phits->FileIO->fname_sep.
@@ -3752,64 +5036,72 @@ sub inner_iterator {
     # Step 4. Run angel.bat:            .ang --> .eps
     #         Modify .eps:              .eps --> .eps
     # Step 5. Run gs.exe (or Win ver):  .eps --> .pdf, .png, .jpg
-    #         Run inkscape.exe:         .eps --> .emf, .wmf
+    #         Run inkscape.exe:         .eps --> .svg, .emf, .wmf
     #         Memorize .png/.jpg dirs for the Step 7
-    # Step 6. Calculate the yield and specific yield
-    #         of Mo-99 and/or Au-196, and generate data files.
+    # Step 6. Calculate the yields and specific yields of
+    #         Mo-99 and/or Au-196, and generate data files.
     #
     # Below: Outside the inner iteration
-    # Step 7. Run magick.exe            : .png/.jpg --> .gif
-    #         Run ffmpeg.exe            : .gif      --> .avi/.mp4
+    # Step 7. Run magick.exe: .png/.jpg --> .gif
+    #         Run ffmpeg.exe: .gif      --> .mp4/.avi
     # Step 8. Generate MAPDL macro-of-macro files (.mac).
     # Step 9. Retrieve max total fluences from the tally files (.ang).
     #
 
     # Conversion for annotations
-    my %_dim_val_conv;
-    $_dim_val_conv{dec_places_len} = 0;
-    my @_varying_vals = @varying_vals;
-    foreach (@_varying_vals) {
+    my %_geom_val_conv;
+    $_geom_val_conv{dec_places_len} = 0;
+    my @_v_geom_vals = @v_geom_vals;
+    foreach (@_v_geom_vals) {
         $_ *= 1e1 if $angel->dim_unit =~ /mm/i;
         $_ *= 1e4 if $angel->dim_unit =~ /um/i;
-        $_dim_val_conv{dec} = index((reverse $_), '.');
-        $_dim_val_conv{dec} = 0 if $_dim_val_conv{dec} == -1;
-        $_dim_val_conv{dec_places_len} = $_dim_val_conv{dec} if (
-            $_dim_val_conv{dec}
-            > $_dim_val_conv{dec_places_len}
+        $_geom_val_conv{dec} = index((reverse $_), '.');
+        $_geom_val_conv{dec} = 0 if $_geom_val_conv{dec} == -1;
+        $_geom_val_conv{dec_places_len} = $_geom_val_conv{dec} if (
+            $_geom_val_conv{dec}
+            > $_geom_val_conv{dec_places_len}
         );
     }
-    $_dim_val_conv{the_conv} = '%.'.$_dim_val_conv{dec_places_len}.'f';
+    $_geom_val_conv{the_conv} = '%.'.$_geom_val_conv{dec_places_len}.'f';
 
-    # The real inner iteration
-    foreach my $varying_val (@varying_vals) {
+    #**************************************************************************
+    # Real inner iteration
+    #**************************************************************************
+    $phits->set_v_geom_param(
+        start => $v_geom_vals[0],
+        stop  => $v_geom_vals[-1],
+        # 'curr' will be given a value in the loop of @v_geom_vals below.
+    );
+    foreach my $v_geom_val (@v_geom_vals) {
         # Initializations
-        $phits->clear_sects(); # Prevents repeating input lines.
+        $phits->clear_sects();  # Prevents repeating input lines.
         $t_track->reset_t_counter();
         $t_cross->reset_t_counter();
         $t_cross_dump->reset_t_counter();
         $t_heat->reset_t_counter();
         $t_gshow->reset_t_counter();
         $t_3dshow->reset_t_counter();
-        $t_subtotal->reset_t_counter(); # Number of tallies of an input file
+        $t_subtotal->reset_t_counter();  # Number of tallies of an input file
         # Note: $t_total->t_counter, which represents the number of tallies
         #       of a run of phitar, is not reset.
         $angel->Ctrls->init_is_first_run();
-        $angel->clear_ang_fnames(); # Prevents rerunning ANGEL on previous val.
+        $angel->clear_ang_fnames();  # Prevents rerunning ANGEL on prev val.
         $image->Ctrls->init_is_first_run();
+        $phits->set_v_geom_param(curr => $v_geom_val);
 
         # (conditional) Populate the annot attribute - inner (geom).
         # > Look up "Populate the annot attribute - outer (beam)".
         if ($angel->Cmt->annot_type =~ /geom/i) {
-            my $_dim_val = $varying_val;
-            $_dim_val *= 1e1 if $angel->dim_unit =~ /mm/i;
-            $_dim_val *= 1e4 if $angel->dim_unit =~ /um/i;
+            my $_geom_val = $v_geom_val;
+            $_geom_val *= 1e1 if $angel->dim_unit =~ /mm/i;
+            $_geom_val *= 1e4 if $angel->dim_unit =~ /um/i;
             (my $_tar_of_int_cell_mat = $tar_of_int->cell_mat);
             $angel->Cmt->set_annot(
                 sprintf(
-                    "%s %s: $_dim_val_conv{the_conv} %s",
-                    "\u$_tar_of_int_cell_mat", # First letter uppercased
-                    $varying_intact,
-                    $_dim_val,
+                    "%s %s: $_geom_val_conv{the_conv} %s",
+                    "\u$_tar_of_int_cell_mat",  # First letter uppercased
+                    $v_geom_intact,
+                    $_geom_val,
                     $angel->dim_unit,
                 )
             );
@@ -3822,7 +5114,9 @@ sub inner_iterator {
             "%s [%s] running at [%s: %s / %s--%s cm]...\n",
             $phits->Cmt->symb, (caller(0))[3],
             $phits->FileIO->varying_flag,
-            $varying_val, $varying_vals[0], $varying_vals[-1]
+            $phits->v_geom_param->{curr},
+            $phits->v_geom_param->{start},
+            $phits->v_geom_param->{stop},
         );
         say $phits->Cmt->borders->{'*'};
         printf("CWD: [%s]\n", getcwd());
@@ -3847,20 +5141,20 @@ sub inner_iterator {
         $bconv->set_height(
             (
                 $tar_of_int->flag eq $bconv->flag
-                and $varying =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
-            ) ? $varying_val : $bconv->height_fixed
+                and $v_geom =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
+            ) ? $v_geom_val : $bconv->height_fixed
         );
         $bconv->set_radius(
             (
                 $tar_of_int->flag eq $bconv->flag
-                and $varying =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
-            ) ? $varying_val : $bconv->radius_fixed
+                and $v_geom =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
+            ) ? $v_geom_val : $bconv->radius_fixed
         );
         $bconv->set_gap(
             (
                 $tar_of_int->flag eq $bconv->flag
-                and $varying =~ /\b($abbr_gap[0]|$abbr_gap[1])/i
-            ) ? $varying_val : $bconv->gap_fixed
+                and $v_geom =~ /\b($abbr_gap[0]|$abbr_gap[1])/i
+            ) ? $v_geom_val : $bconv->gap_fixed
         );
         $bconv->set_vol(
             calc_vol(
@@ -3881,14 +5175,14 @@ sub inner_iterator {
         $motar_rcc->set_height(
             (
                 $tar_of_int->flag eq $motar_rcc->flag
-                and $varying =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
-            ) ? $varying_val : $motar_rcc->height_fixed
+                and $v_geom =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
+            ) ? $v_geom_val : $motar_rcc->height_fixed
         );
         $motar_rcc->set_radius(
             (
                 $tar_of_int->flag eq $motar_rcc->flag
-                and $varying =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
-            ) ? $varying_val : $motar_rcc->radius_fixed
+                and $v_geom =~ /\b($abbr_rad[0]|$abbr_rad[1])/i
+            ) ? $v_geom_val : $motar_rcc->radius_fixed
         );
         $motar_rcc->set_vol(
             calc_vol(
@@ -3909,20 +5203,20 @@ sub inner_iterator {
         $motar_trc->set_height(
             (
                 $tar_of_int->flag eq $motar_trc->flag
-                and $varying =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
-            ) ? $varying_val : $motar_trc->height_fixed
+                and $v_geom =~ /\b($abbr_hgt[0]|$abbr_hgt[1])/i
+            ) ? $v_geom_val : $motar_trc->height_fixed
         );
         $motar_trc->set_bot_radius(
             (
                 $tar_of_int->flag eq $motar_trc->flag
-                and $varying =~ /\b($abbr_bot_rad[0]|$abbr_bot_rad[1])/i
-            ) ? $varying_val : $motar_trc->bot_radius_fixed
+                and $v_geom =~ /\b($abbr_bot_rad[0]|$abbr_bot_rad[1])/i
+            ) ? $v_geom_val : $motar_trc->bot_radius_fixed
         );
         $motar_trc->set_top_radius(
             (
                 $tar_of_int->flag eq $motar_trc->flag
-                and $varying =~ /\b($abbr_top_rad[0]|$abbr_top_rad[1])/i
-            ) ? $varying_val : $motar_trc->top_radius_fixed
+                and $v_geom =~ /\b($abbr_top_rad[0]|$abbr_top_rad[1])/i
+            ) ? $v_geom_val : $motar_trc->top_radius_fixed
         );
         $motar_trc->set_vol(
             calc_vol(
@@ -3937,6 +5231,11 @@ sub inner_iterator {
             )
         );
         $motar_trc->set_mass($motar->cell_props->{dens} * $motar_trc->vol);
+        # Molybdenum target, delegate
+        $motar->set_vol(
+            $tar_of_int->flag eq $motar_trc->flag ?
+                $motar_trc->vol : $motar_rcc->vol
+        );
         # [Mat for expt] Flux monitor, upstream
         $flux_mnt_up->set_height(
             # 2019-04-17 updated:
@@ -3944,7 +5243,10 @@ sub inner_iterator {
             $tar_of_int->flag eq $motar_trc->flag ?
                 0 : $flux_mnt_up->height_fixed
         );
-        $flux_mnt_up->set_beam_ent($motar_rcc->beam_ent - $flux_mnt_up->height);
+        $flux_mnt_up->set_beam_ent(
+            $motar_rcc->beam_ent
+            - $flux_mnt_up->height
+        );
         $flux_mnt_up->set_radius($flux_mnt_up->radius_fixed);
         $flux_mnt_up->set_vol(
             calc_vol(
@@ -3968,7 +5270,10 @@ sub inner_iterator {
             $tar_of_int->flag eq $motar_trc->flag ?
                 0 : $flux_mnt_down->height_fixed
         );
-        $flux_mnt_down->set_beam_ent($motar_rcc->beam_ent + $motar_rcc->height);
+        $flux_mnt_down->set_beam_ent(
+            $motar_rcc->beam_ent
+            + $motar_rcc->height
+        );
         $flux_mnt_down->set_radius($flux_mnt_down->radius_fixed);
         $flux_mnt_down->set_vol(
             calc_vol(
@@ -3994,9 +5299,9 @@ sub inner_iterator {
         );
         $tar_wrap->set_beam_ent($flux_mnt_up->beam_ent - $tar_wrap->thickness);
         $tar_wrap->set_height(
-            $tar_wrap->thickness + $flux_mnt_up->height # Upstream
+            $tar_wrap->thickness + $flux_mnt_up->height  # Upstream
             + $motar_rcc->height
-            + $flux_mnt_down->height + $tar_wrap->thickness # Downstream
+            + $flux_mnt_down->height + $tar_wrap->thickness  # Downstream
         );
         $tar_wrap->set_radius($motar_rcc->radius + $tar_wrap->thickness);
         $tar_wrap->set_vol(
@@ -4065,6 +5370,7 @@ sub inner_iterator {
         $t_heat->xy_bconv->set_angel($_t_track_xyz_angel);
         $t_heat->xy_motar->set_angel_mo($_t_track_xyz_angel);
         $t_heat->rz_bconv->set_angel($_t_track_xyz_angel);
+        $t_heat->rz_motar->set_angel($_t_track_xyz_angel);
         $t_gshow->xz->set_angel($_t_track_xyz_angel);
         $t_gshow->yz->set_angel($_t_track_xyz_angel);
         $t_gshow->xy_bconv->set_angel($_t_track_xyz_angel);
@@ -4103,6 +5409,8 @@ sub inner_iterator {
             if $angel->Ctrls->nomessage_switch =~ /on/i;
         $_t_cross_nrg_angel .= sprintf(" cm%s", $angel->dim_unit)
             if $angel->dim_unit !~ /cm/i;
+        $t_cross->nrg_intact->set_angel($_t_cross_nrg_angel);
+        $t_cross->nrg_intact_low_emax->set_angel($_t_cross_nrg_angel);
         $t_cross->nrg_bconv_ent->set_angel($_t_cross_nrg_angel);
         $t_cross->nrg_bconv_ent_low_emax->set_angel($_t_cross_nrg_angel);
         $t_cross->nrg_bconv_exit->set_angel($_t_cross_nrg_angel);
@@ -4115,7 +5423,7 @@ sub inner_iterator {
         #
         # sangel: Annotations for MC cell materials
         #
-        my(
+        my (
             %_bconv_aw,
             %_motar_aw,
             %_flux_mnt_up_aw,
@@ -4129,10 +5437,10 @@ sub inner_iterator {
         # Bremsstrahlung converter
         $_bconv_aw{mat} = $bconv->cell_props->{mat_lab_name} ?
             $bconv->cell_props->{mat_lab_name} : '',
-        $_bconv_aw{mat} =~ s/\\//g; # Backslashes are not necessary for annots
+        $_bconv_aw{mat} =~ s/\\//g;  # Backslashes are not necessary for annots
         $_bconv_aw{ax} = $bconv->beam_ent + ($bconv->height / 2.0);
         $_bconv_aw{ay} = -$bconv->radius;
-        $_bconv_aw{x}  = $_bconv_aw{ax} + 0.0; # 0.0: same line as x
+        $_bconv_aw{x}  = $_bconv_aw{ax} + 0.0;  # 0.0: same line as x
         $_bconv_aw{y}  = $_bconv_aw{ay} - 0.8;
         $_bconv_aw{0}  = 0;
         # Molybdenum target
@@ -4184,7 +5492,7 @@ sub inner_iterator {
         $_src_ab{y}   = 0;
         $_src_ab{ay}  = $_src_ab{y};
         $_src_ab{ang} = 1.2;
-        $_src_ab{col} = 'red'; # wrto the coordinate frame color
+        $_src_ab{col} = 'red';  # wrto the coordinate frame color
         $_src_ab{tck} = 'tt';
         $_src_w{cmt}  = 'e^{$-$}';
         $_src_w{x}    = $_src_ab{x} + 0.4;
@@ -4204,7 +5512,7 @@ sub inner_iterator {
                 \%_bconv_aw,
             ],
             [
-                1, # Always turned on
+                1,  # Always turned on
                 \%_motar_aw,
             ],
             [
@@ -4222,7 +5530,7 @@ sub inner_iterator {
         );
         my $angel_cmt_annot = sprintf(
             "\n%9s".
-            "'%8s'", # ANGEL man p. 5
+            "'%8s'",  # ANGEL man p. 5
             ' ',
             $angel->Cmt->annot,
         );
@@ -4232,7 +5540,7 @@ sub inner_iterator {
         );
         my $num_cells = 0;
         $num_cells += $_->[0] for @_cells;
-        $num_cells++ if $angel->Cmt->annot; # Increment num. lines of sangel.
+        $num_cells++ if $angel->Cmt->annot;  # Increment num. lines of sangel.
         my $format_str = sprintf(
             "%4s%s",
             $num_cells,
@@ -4283,6 +5591,8 @@ sub inner_iterator {
         $t_track->nrg_flux_mnt_up->set_sangel($format_str_title_only);
         $t_track->nrg_flux_mnt_down->set_sangel($format_str_title_only);
 
+        $t_cross->nrg_intact->set_sangel($format_str_title_only);
+        $t_cross->nrg_intact_low_emax->set_sangel($format_str_title_only);
         $t_cross->nrg_bconv_ent->set_sangel($format_str_title_only);
         $t_cross->nrg_bconv_ent_low_emax->set_sangel($format_str_title_only);
         $t_cross->nrg_bconv_exit->set_sangel($format_str_title_only);
@@ -4299,6 +5609,7 @@ sub inner_iterator {
         $t_heat->xy->set_sangel_mo($t_track->xy->sangel_mo);
         $t_heat->xy_motar->set_sangel_mo($t_heat->xy->sangel_mo);
         $t_heat->rz_bconv->set_sangel($format_str_title_only);
+        $t_heat->rz_motar->set_sangel($format_str_title_only);
 
         $num_cells += 2;
         $format_str =~ s/^\s*[0-9]/$num_cells/;
@@ -4370,19 +5681,19 @@ sub inner_iterator {
         #
 
         # (1)
-        (my $_varying_val = $varying_val) =~ s/[.]/p/;
+        (my $_v_geom_val = $v_geom_val) =~ s/[.]/p/;
         # Changed at each iteration are:
-        # > $_varying_val
+        # > $_v_geom_val
         # > $fixed_flags_and_vals
-        my $backbone = (                  # e.g.
-            $tar_of_int->flag.            # wrcc || w_rcc
-            $phits->FileIO->fname_sep.    # -
-            $phits->FileIO->varying_flag. # vhgt || v_hgt
-            $geom_val_sep.                # '' || _
-            $_varying_val.                # 0p10
-            $phits->FileIO->fname_sep.    # -
-            $fixed_flags_and_vals         # frad1p00_fgap0p15
-                                          # || f_rad_1p00_f_gap_0p15
+        my $backbone = (                   # e.g.
+            $tar_of_int->flag.             # wrcc || w_rcc
+            $phits->FileIO->fname_sep.     # -
+            $phits->FileIO->varying_flag.  # vhgt || v_hgt
+            $geom_val_sep.                 # '' || _
+            $_v_geom_val.                  # 0p10
+            $phits->FileIO->fname_sep.     # -
+            $fixed_flags_and_vals          # frad1p00_fgap0p15
+                                           # || f_rad_1p00_f_gap_0p15
         );
 
         # (2)
@@ -4396,14 +5707,14 @@ sub inner_iterator {
             $phits->FileIO->fname_exts->{inp}
         );
 
-        $phits->FileIO->set_inp_dmp( # Input file generating a dump file
+        $phits->FileIO->set_inp_dmp(  # Input file generating a dump file
             $backbone.
             $t_cross_dump->dump->{suffix}.
             $phits->FileIO->fname_ext_delim.
             $phits->FileIO->fname_exts->{inp}
         );
 
-        $phits->params->{file}{summary_out_fname}{val} = sprintf( # file(6)
+        $phits->params->{file}{summary_out_fname}{val} = sprintf(  # file(6)
             "%s%s%s",
             $backbone,
             $phits->FileIO->fname_ext_delim,
@@ -4424,24 +5735,24 @@ sub inner_iterator {
             cut_prot
             bat
             pegs5
-        ); # file(x): 11, 12, 13, 10, 22, 23
+        );  # file(x): 11, 12, 13, 10, 22, 23
 
-        my @_args = ( # e.g. wrcc-vhgt0p10-frad1p00-fgap0p15
+        my @_args = (  # e.g. wrcc-vhgt0p10-frad1p00-fgap0p15
             $bconv->cell_mat,
             $motar->cell_mat,
             $flux_mnt_up->cell_mat,
             $flux_mnt_down->cell_mat,
             $t_cross_dump->particles_of_int->[0],
             $backbone
-        );                                 # e.g.
-        $t_track->set_fnames(@_args);      # -track-xz
-        $t_cross->set_fnames(@_args);      # -cross-eng-w_exit
-        $t_cross_dump->set_fnames(@_args); # -cross-eng-moo3_ent_elec
-        $t_heat->set_fnames(@_args);       # -heat-xz
-        $t_heat_mapdl->set_fnames(@_args); # -w
-        $t_gshow->set_fnames(@_args);      # -gshow-xz
-        $t_3dshow->set_fnames(@_args);     # -3dshow
-                                           # .ang
+        );                                  # e.g.
+        $t_track->set_fnames(@_args);       # -track-xz
+        $t_cross->set_fnames(@_args);       # -cross-eng-w_exit
+        $t_cross_dump->set_fnames(@_args);  # -cross-eng-moo3_ent_elec
+        $t_heat->set_fnames(@_args);        # -heat-xz
+        $t_heat_mapdl->set_fnames(@_args);  # -w
+        $t_gshow->set_fnames(@_args);       # -gshow-xz
+        $t_3dshow->set_fnames(@_args);      # -3dshow
+                                            # .ang
 
         $mapdl->FileIO->set_inp(
             $backbone.
@@ -4452,15 +5763,15 @@ sub inner_iterator {
         $mapdl_of_macs->FileIO->add_macs($backbone);
         # Target-independent: Not initialized
         $mapdl_of_macs_all->FileIO->add_macs(
-            $phits->FileIO->subdir.       # beam_fwhm_0p3
-            $phits->FileIO->path_delim.   # \
-            $tar_of_int->flag.            # wrcc
-            $phits->FileIO->fname_sep.    # -
-            $phits->FileIO->varying_flag. # vhgt
-            $phits->FileIO->fname_sep.    # _
-            $phits->FileIO->fixed_flag.   # frad-fgap
-            $phits->FileIO->path_delim.   # \
-            $backbone                  # wrcc-vhgt0p10-frad1p00-fgap0p15 <= .mac
+            $phits->FileIO->subdir.        # beam_fwhm_0p3
+            $phits->FileIO->path_delim.    # \
+            $tar_of_int->flag.             # wrcc
+            $phits->FileIO->fname_sep.     # -
+            $phits->FileIO->varying_flag.  # vhgt
+            $phits->FileIO->fname_sep.     # _
+            $phits->FileIO->fixed_flag.    # frad-fgap
+            $phits->FileIO->path_delim.    # \
+            $backbone  # wrcc-vhgt0p10-frad1p00-fgap0p15 <= .mac
         );
 
 
@@ -4476,7 +5787,7 @@ sub inner_iterator {
                 "\$OMP=%s",
                 $phits->Ctrls->openmp,
             ),
-            ""; # End
+            "";  # End
 
         #
         # List of abbreviations
@@ -4497,27 +5808,24 @@ sub inner_iterator {
             radius
             height
         );
-        push @{$phits->sects->{abbr}}, ""; # End
+        push @{$phits->sects->{abbr}}, "";  # End
 
         #
         # Title section: phitar front matter
         #
         push @{$phits->sects->{title}},
             "[Title]",
-            (
-                $phits->Ctrls->write_fm =~ /on/i ?
-                    show_front_matter(
-                        $prog_info_href,
-                        'prog',
-                        'auth',
-                        'timestamp',
-                        'no_trailing_blkline',
-                        'no_newline',
-                        'copy',
-#                        $phits->Cmt->symb,
-                    ) : ""
+            show_front_matter(
+                $prog_info_href,
+                'prog',
+                'auth',
+                'timestamp',
+                'no_trailing_blkline',
+                'no_newline',
+                'copy',
+#                $phits->Cmt->symb,
             ),
-            ""; # End
+            "";  # End
 
         #
         # Parameters section
@@ -4527,14 +5835,14 @@ sub inner_iterator {
         # Common parameters
         push @_parameters_sect, map {
             $phits->params->{$_}
-        } (            # Instead of qw to add comments as below
-            'icntl',   # MC run options
-            'istdev',  # Batch control
-            'maxcas',  # Number of histories per batch
-            'maxbch',  # Number of batches
-            'ipnint',  # Photonuclear reaction considered
-            'negs',    # EGS5
-            'nucdata', # Neutron data emin and dmax
+        } (             # Instead of qw to add comments as below
+            'icntl',    # MC run options
+            'istdev',   # Batch control
+            'maxcas',   # Number of histories per batch
+            'maxbch',   # Number of batches
+            'ipnint',   # Photonuclear reaction considered
+            'negs',     # EGS5
+            'nucdata',  # Neutron data emin and dmax
         );
 
         # Cutoff energies: Conditional
@@ -4557,7 +5865,7 @@ sub inner_iterator {
         # Please check [material] section,
         # or set nucdata=0 to disable nuclear data
         foreach my $cutoff_type (qw /emin dmax/) {
-            foreach my $part (qw/neut elec posi phot/) { # No 'prot'
+            foreach my $part (qw/neut elec posi phot/) {  # No 'prot'
                 # e.g.
                 # $phits->params->{emin}{neut}
                 # $phits->params->{emin}{elec}
@@ -4616,201 +5924,271 @@ sub inner_iterator {
         # Fill in the section array.
         push @{$phits->sects->{parameters}}, "[Parameters]";
         push @{$phits->sects->{parameters}}, map {
-            sprintf("%-8s = %6s %s", @{$_}{'key', 'val', 'cmt'})
+            sprintf("%-8s = %6s  %s", @{$_}{'key', 'val', 'cmt'})
         } @_parameters_sect;
-        push @{$phits->sects->{parameters}}, ""; # End
+        push @{$phits->sects->{parameters}}, "";  # End
 
         #
         # Source section
         #
 
-        # Shared parameters
-        my @_source_sect_shared = (
-            [
-                $phits->source->type_of_int->{type}{key},
-                $phits->source->type_of_int->{type}{val},
-                $phits->source->type_of_int->{type}{cmt},
+        # (i) Common parameters
+        my @_source_sect_common = (
+            [  # s-type
+                $phits->source->spat_dist_of_int->{type}{key},
+                $phits->source->spat_dist_of_int->{type}{val},
+                $phits->source->spat_dist_of_int->{type}{cmt},
             ],
-            [
-                $phits->source->type_of_int->{name}{key},
-                $phits->source->type_of_int->{name}{val},
-                $phits->source->type_of_int->{name}{cmt},
+            [  # Projectile
+                $phits->source->spat_dist_of_int->{proj}{key},
+                $phits->source->spat_dist_of_int->{proj}{val},
+                $phits->source->spat_dist_of_int->{proj}{cmt},
             ],
-            [
-                $phits->source->type_of_int->{nrg}{key},
-                $source_nrg, # <= One of the control vars
-                $phits->source->type_of_int->{nrg}{cmt},
-            ]
         );
-        my @_source_sect_nonshared = ();
-        # Source distribution for 'cylind'
-        if ($phits->source->type_of_int->{type}{val} == 1) {
-            @_source_sect_nonshared = (
+        # (ii) Parameters dependent on source->nrg_dist_of_int
+        my @_source_sect_nrg_dist_of_int = ();
+        if ($phits->source->nrg_dist_of_int->{type}{val} == 2) {
+            # Energy distribution bound to the 'nrg' key of spat_dist_of_int
+            @_source_sect_nrg_dist_of_int = (
                 [
-                    $phits->source->type_of_int->{x_center}{key},
-                    $phits->source->type_of_int->{x_center}{val},
-                    $phits->source->type_of_int->{x_center}{cmt},
+                    $phits->source->nrg_dist_of_int->{type}{key},
+                    $phits->source->nrg_dist_of_int->{type}{val},
+                    $phits->source->nrg_dist_of_int->{type}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{y_center}{key},
-                    $phits->source->type_of_int->{y_center}{val},
-                    $phits->source->type_of_int->{y_center}{cmt},
+                    $phits->source->nrg_dist_of_int->{eg0}{key},
+                    $source_eg0,  # <= One of the control vars
+                    $phits->source->nrg_dist_of_int->{eg0}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{rad}{key},
-                    $source_size, # <= One of the control vars
-                    $phits->source->type_of_int->{rad}{cmt},
+                    $phits->source->nrg_dist_of_int->{fwhm}{key},
+                    $phits->source->nrg_dist_of_int->{fwhm}{val},
+                    $phits->source->nrg_dist_of_int->{fwhm}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{z_beg}{key},
-                    $phits->source->type_of_int->{z_beg}{val},
-                    $phits->source->type_of_int->{z_beg}{cmt},
+                    $phits->source->nrg_dist_of_int->{cutoff_min}{key},
+                    $phits->source->nrg_dist_of_int->{cutoff_min}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_min}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{z_end}{key},
-                    $phits->source->type_of_int->{z_end}{val},
-                    $phits->source->type_of_int->{z_end}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{dir}{key},
-                    $phits->source->type_of_int->{dir}{val},
-                    $phits->source->type_of_int->{dir}{cmt},
+                    $phits->source->nrg_dist_of_int->{cutoff_max}{key},
+                    $phits->source->nrg_dist_of_int->{cutoff_max}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_max}{cmt},
                 ],
             );
-            # To be used as comments in the step 6-2
-            $phits->set_curr_source_dist(
-                shape => 'cylind',
-                dim1 => sprintf(
-                    "Radius on the xy plane: %s mm",
-                    $source_size * 10,
+            # Used in run_and_rpt_calc_rn_yield() (2/2) Postprocessing Part
+            $phits->set_curr_src_nrg_dist(
+                name   => $phits->source->nrg_dist_of_int->{type}{abbr},
+                param1 => sprintf(
+                    "Center energy: %s MeV",
+                    $source_eg0,
                 ),
-                dim2 => sprintf(
-                    "z-axis coordinates: %s mm to %s mm",
-                    $phits->source->type_of_int->{z_beg}{val} * 10,
-                    $phits->source->type_of_int->{z_end}{val} * 10,
+                param2 => sprintf(
+                    "FWHM: %s MeV, cutoff min: %s MeV, cutoff max: %s MeV",
+                    $phits->source->nrg_dist_of_int->{fwhm}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_min}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_max}{val},
                 ),
             );
         }
-        # Source distribution for 'gaussian_xyz'
-        if ($phits->source->type_of_int->{type}{val} == 3) {
-            # Three independent variables
-            $phits->source->type_of_int->{x_fwhm}{val} =
-                $phits->source->varying_param =~ /x[\-_]?fwhm/i ?
-                    $source_size :
-                    $phits->source->type_of_int->{x_fwhm}{val_fixed};
-            $phits->source->type_of_int->{y_fwhm}{val} =
-                $phits->source->varying_param =~ /y[\-_]?fwhm/i ?
-                    $source_size :
-                    $phits->source->type_of_int->{y_fwhm}{val_fixed};
-            $phits->source->type_of_int->{z_fwhm}{val} =
-                $phits->source->varying_param =~ /z[\-_]?fwhm/i ?
-                    $source_size :
-                    $phits->source->type_of_int->{z_fwhm}{val_fixed};
-            @_source_sect_nonshared = (
+        elsif ($phits->source->nrg_dist_of_int->{type}{val} == 22) {
+            @_source_sect_nrg_dist_of_int = (
                 [
-                    $phits->source->type_of_int->{x_center}{key},
-                    $phits->source->type_of_int->{x_center}{val},
-                    $phits->source->type_of_int->{x_center}{cmt},
+                    $phits->source->nrg_dist_of_int->{type}{key},
+                    $phits->source->nrg_dist_of_int->{type}{val},
+                    $phits->source->nrg_dist_of_int->{type}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{x_fwhm}{key},
-                    $phits->source->type_of_int->{x_fwhm}{val},
-                    $phits->source->type_of_int->{x_fwhm}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{y_center}{key},
-                    $phits->source->type_of_int->{y_center}{val},
-                    $phits->source->type_of_int->{y_center}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{y_fwhm}{key},
-                    $phits->source->type_of_int->{y_fwhm}{val},
-                    $phits->source->type_of_int->{y_fwhm}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{z_center}{key},
-                    $phits->source->type_of_int->{z_center}{val},
-                    $phits->source->type_of_int->{z_center}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{z_fwhm}{key},
-                    $phits->source->type_of_int->{z_fwhm}{val},
-                    $phits->source->type_of_int->{z_fwhm}{cmt},
-                ],
-                [
-                    $phits->source->type_of_int->{dir}{key},
-                    $phits->source->type_of_int->{dir}{val},
-                    $phits->source->type_of_int->{dir}{cmt},
+                    $phits->source->nrg_dist_of_int->{ne}{key},
+                    $phits->source->nrg_dist_of_int->{ne}{val},
+                    $phits->source->nrg_dist_of_int->{ne}{cmt},
                 ],
             );
-            $phits->set_curr_source_dist(
-                shape => 'gaussian_xyz',
-                dim1 => sprintf(
-                    "x-FWHM: %s mm, y-FWHM: %s mm, z-FWHM: %s mm",
-                    $phits->source->type_of_int->{x_fwhm}{val} * 10,
-                    $phits->source->type_of_int->{y_fwhm}{val} * 10,
-                    $phits->source->type_of_int->{z_fwhm}{val} * 10,
+            $phits->set_curr_src_nrg_dist(
+                name   => $phits->source->nrg_dist_of_int->{type}{abbr},
+                param1 => sprintf(
+                    "File: %s",
+                    $phits->source->nrg_dist_of_int->{file},
                 ),
-                dim2 => sprintf(
-                    "Beginning z-coordinate: %s mm",
-                    $phits->source->type_of_int->{z_center}{val} * 10,
+                param2 => sprintf(
+                    "ne: %s, emin: %s MeV, emax: %s MeV",
+                    $phits->source->nrg_dist_of_int->{ne}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_min}{val},
+                    $phits->source->nrg_dist_of_int->{cutoff_max}{val},
                 ),
             );
         }
-        # Source distribution for 'gaussian_xy'
-        if ($phits->source->type_of_int->{type}{val} == 13) {
-            @_source_sect_nonshared = (
+        # (iii) Parameters dependent on source->spat_dist_of_int
+        my @_source_sect_spat_dist_of_int = ();
+        # Spatial distribution parameters of source->gaussian_xy
+        if ($phits->source->spat_dist_of_int->{type}{val} == 13) {
+            @_source_sect_spat_dist_of_int = (
                 [
-                    $phits->source->type_of_int->{x_center}{key},
-                    $phits->source->type_of_int->{x_center}{val},
-                    $phits->source->type_of_int->{x_center}{cmt},
+                    $phits->source->spat_dist_of_int->{x_center}{key},
+                    $phits->source->spat_dist_of_int->{x_center}{val},
+                    $phits->source->spat_dist_of_int->{x_center}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{y_center}{key},
-                    $phits->source->type_of_int->{y_center}{val},
-                    $phits->source->type_of_int->{y_center}{cmt},
+                    $phits->source->spat_dist_of_int->{y_center}{key},
+                    $phits->source->spat_dist_of_int->{y_center}{val},
+                    $phits->source->spat_dist_of_int->{y_center}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{xy_fwhms}{key},
-                    $source_size, # <= One of the control vars
-                    $phits->source->type_of_int->{xy_fwhms}{cmt},
+                    $phits->source->spat_dist_of_int->{xy_fwhms}{key},
+                    $source_size,  # <= One of the control vars
+                    $phits->source->spat_dist_of_int->{xy_fwhms}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{z_beg}{key},
-                    $phits->source->type_of_int->{z_beg}{val},
-                    $phits->source->type_of_int->{z_beg}{cmt},
+                    $phits->source->spat_dist_of_int->{z_beg}{key},
+                    $phits->source->spat_dist_of_int->{z_beg}{val},
+                    $phits->source->spat_dist_of_int->{z_beg}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{z_end}{key},
-                    $phits->source->type_of_int->{z_end}{val},
-                    $phits->source->type_of_int->{z_end}{cmt},
+                    $phits->source->spat_dist_of_int->{z_end}{key},
+                    $phits->source->spat_dist_of_int->{z_end}{val},
+                    $phits->source->spat_dist_of_int->{z_end}{cmt},
                 ],
                 [
-                    $phits->source->type_of_int->{dir}{key},
-                    $phits->source->type_of_int->{dir}{val},
-                    $phits->source->type_of_int->{dir}{cmt},
+                    $phits->source->spat_dist_of_int->{dir}{key},
+                    $phits->source->spat_dist_of_int->{dir}{val},
+                    $phits->source->spat_dist_of_int->{dir}{cmt},
                 ],
             );
-            $phits->set_curr_source_dist(
-                shape => 'gaussian_xy',
-                dim1 => sprintf(
+            # Used in run_and_rpt_calc_rn_yield() (2/2) Postprocessing Part
+            $phits->set_curr_src_spat_dist(
+                name   => $phits->source->spat_dist_of_int->{type}{abbr},
+                param1 => sprintf(
                     "FWHM on the xy plane: %s mm",
                     $source_size * 10,
                 ),
-                dim2 => sprintf(
+                param2 => sprintf(
                     "z-axis coordinates: %s mm to %s mm",
-                    $phits->source->type_of_int->{z_beg}{val} * 10,
-                    $phits->source->type_of_int->{z_end}{val} * 10,
+                    $phits->source->spat_dist_of_int->{z_beg}{val} * 10,
+                    $phits->source->spat_dist_of_int->{z_end}{val} * 10,
+                ),
+            );
+        }
+        # Spatial distribution parameters of source->gaussian_xyz
+        elsif ($phits->source->spat_dist_of_int->{type}{val} == 3) {
+            # Three independent variables
+            $phits->source->spat_dist_of_int->{x_fwhm}{val} =
+                $phits->source->iter_param =~ /x[\-_]?fwhm/i ?
+                    $source_size :
+                    $phits->source->spat_dist_of_int->{x_fwhm}{val_fixed};
+            $phits->source->spat_dist_of_int->{y_fwhm}{val} =
+                $phits->source->iter_param =~ /y[\-_]?fwhm/i ?
+                    $source_size :
+                    $phits->source->spat_dist_of_int->{y_fwhm}{val_fixed};
+            $phits->source->spat_dist_of_int->{z_fwhm}{val} =
+                $phits->source->iter_param =~ /z[\-_]?fwhm/i ?
+                    $source_size :
+                    $phits->source->spat_dist_of_int->{z_fwhm}{val_fixed};
+            @_source_sect_spat_dist_of_int = (
+                [
+                    $phits->source->spat_dist_of_int->{x_center}{key},
+                    $phits->source->spat_dist_of_int->{x_center}{val},
+                    $phits->source->spat_dist_of_int->{x_center}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{x_fwhm}{key},
+                    $phits->source->spat_dist_of_int->{x_fwhm}{val},
+                    $phits->source->spat_dist_of_int->{x_fwhm}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{y_center}{key},
+                    $phits->source->spat_dist_of_int->{y_center}{val},
+                    $phits->source->spat_dist_of_int->{y_center}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{y_fwhm}{key},
+                    $phits->source->spat_dist_of_int->{y_fwhm}{val},
+                    $phits->source->spat_dist_of_int->{y_fwhm}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{z_center}{key},
+                    $phits->source->spat_dist_of_int->{z_center}{val},
+                    $phits->source->spat_dist_of_int->{z_center}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{z_fwhm}{key},
+                    $phits->source->spat_dist_of_int->{z_fwhm}{val},
+                    $phits->source->spat_dist_of_int->{z_fwhm}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{dir}{key},
+                    $phits->source->spat_dist_of_int->{dir}{val},
+                    $phits->source->spat_dist_of_int->{dir}{cmt},
+                ],
+            );
+            $phits->set_curr_src_spat_dist(
+                name   => $phits->source->spat_dist_of_int->{type}{abbr},
+                param1 => sprintf(
+                    "x-FWHM: %s mm, y-FWHM: %s mm, z-FWHM: %s mm",
+                    $phits->source->spat_dist_of_int->{x_fwhm}{val} * 10,
+                    $phits->source->spat_dist_of_int->{y_fwhm}{val} * 10,
+                    $phits->source->spat_dist_of_int->{z_fwhm}{val} * 10,
+                ),
+                param2 => sprintf(
+                    "Beginning z-coordinate: %s mm",
+                    $phits->source->spat_dist_of_int->{z_center}{val} * 10,
+                ),
+            );
+        }
+        # Spatial distribution parameters of source->cylind
+        elsif ($phits->source->spat_dist_of_int->{type}{val} == 1) {
+            @_source_sect_spat_dist_of_int = (
+                [
+                    $phits->source->spat_dist_of_int->{x_center}{key},
+                    $phits->source->spat_dist_of_int->{x_center}{val},
+                    $phits->source->spat_dist_of_int->{x_center}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{y_center}{key},
+                    $phits->source->spat_dist_of_int->{y_center}{val},
+                    $phits->source->spat_dist_of_int->{y_center}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{rad}{key},
+                    $source_size,  # <= One of the control vars
+                    $phits->source->spat_dist_of_int->{rad}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{z_beg}{key},
+                    $phits->source->spat_dist_of_int->{z_beg}{val},
+                    $phits->source->spat_dist_of_int->{z_beg}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{z_end}{key},
+                    $phits->source->spat_dist_of_int->{z_end}{val},
+                    $phits->source->spat_dist_of_int->{z_end}{cmt},
+                ],
+                [
+                    $phits->source->spat_dist_of_int->{dir}{key},
+                    $phits->source->spat_dist_of_int->{dir}{val},
+                    $phits->source->spat_dist_of_int->{dir}{cmt},
+                ],
+            );
+            $phits->set_curr_src_spat_dist(
+                name   => $phits->source->spat_dist_of_int->{type}{abbr},
+                param1 => sprintf(
+                    "Radius on the xy plane: %s mm",
+                    $source_size * 10,
+                ),
+                param2 => sprintf(
+                    "z-axis coordinates: %s mm to %s mm",
+                    $phits->source->spat_dist_of_int->{z_beg}{val} * 10,
+                    $phits->source->spat_dist_of_int->{z_end}{val} * 10,
                 ),
             );
         }
         push @{$phits->sects->{source}}, "[Source]";
         push @{$phits->sects->{source}},
-            map { sprintf("%-6s = %8s %s", @{$_}[0, 1, 2]) } (
-                @_source_sect_shared,
-                @_source_sect_nonshared,
+            map { sprintf("%-6s = %8s  %s", @{$_}[0, 1, 2]) } (
+                @_source_sect_common,
+                @_source_sect_nrg_dist_of_int,
+                @_source_sect_spat_dist_of_int,
             );
-        push @{$phits->sects->{source}}, ""; # End
+        push @{$phits->sects->{source}}, "";  # End
 
         #
         # "Dump" source section
@@ -4843,7 +6221,7 @@ sub inner_iterator {
                 ' ',
                 $t_cross_dump->dump->{dat}
             ),
-            ""; # End
+            "";  # End
 
         #
         # Material section
@@ -4854,7 +6232,7 @@ sub inner_iterator {
         push @mc_cells, $flux_mnt_up   if $flux_mnt_up->height   > 0;
         push @mc_cells, $flux_mnt_down if $flux_mnt_down->height > 0;
         push @mc_cells, $tar_wrap      if $tar_wrap->thickness   > 0;
-        push @mc_cells, $mc_space; # Ignored if set to be a vacuum
+        push @mc_cells, $mc_space;  # Ignored if set to be a vacuum
         push @{$phits->sects->{material}}, "[Material]";
         foreach my $mc_cell (@mc_cells) {
             push @{$phits->sects->{material}}, sprintf(
@@ -4870,7 +6248,7 @@ sub inner_iterator {
         # > Must be performed to prevent a fatal error of PHITS.
         rm_duplicates($phits->sects->{material});
         rm_empty($phits->sects->{material});
-        push @{$phits->sects->{material}}, ""; # End
+        push @{$phits->sects->{material}}, "";  # End
 
         #
         # Mat Name Color section for T-Gshow and T-3Dshow
@@ -4898,7 +6276,7 @@ sub inner_iterator {
         #   even if duplicate material IDs are designated
         #   in the mat_name_color section)
         rm_duplicates($phits->sects->{mat_name_color});
-        push @{$phits->sects->{mat_name_color}}, ""; # End
+        push @{$phits->sects->{mat_name_color}}, "";  # End
 
         #
         # Surface section
@@ -4919,7 +6297,7 @@ sub inner_iterator {
                         ' ', $bconv->height
                     ),
                     sprintf(
-                        "%9s"."%s %s",
+                        "%9s"."%s  %s",
                         ' ', $bconv->radius, $bconv->cell_props->{cmt}
                     );
             }
@@ -4936,7 +6314,7 @@ sub inner_iterator {
                 ' ', $motar_rcc->height
             ),
             sprintf(
-                "%9s"."%s %s",
+                "%9s"."%s  %s",
                 ' ', $motar_rcc->radius, $motar_rcc->cell_props->{cmt}
             ),
             # Molybdenum target, TRC
@@ -4955,7 +6333,7 @@ sub inner_iterator {
                 ' ', $motar_trc->bot_radius
             ),
             sprintf(
-                "%9s"."%s %s",
+                "%9s"."%s  %s",
                 ' ', $motar_trc->top_radius, $motar_trc->cell_props->{cmt}
             );
             # (3) Flux monitor, upstream (conditional)
@@ -4974,7 +6352,7 @@ sub inner_iterator {
                     sprintf(
                         "%9s".
                         "%s".
-                        " %s",
+                        "  %s",
                         ' ',
                         $flux_mnt_up->radius,
                         $flux_mnt_up->cell_props->{cmt}
@@ -4996,7 +6374,7 @@ sub inner_iterator {
                     sprintf(
                         "%9s".
                         "%s".
-                        " %s",
+                        "  %s",
                         ' ',
                         $flux_mnt_down->radius,
                         $flux_mnt_down->cell_props->{cmt}
@@ -5016,7 +6394,7 @@ sub inner_iterator {
                         ' ', $tar_wrap->height
                     ),
                     sprintf(
-                        "%9s"."%s %s",
+                        "%9s"."%s  %s",
                         ' ', $tar_wrap->radius, $tar_wrap->cell_props->{cmt}
                     );
             }
@@ -5033,22 +6411,22 @@ sub inner_iterator {
                     ' ', $motar_ent->height
                 ),
                 sprintf(
-                    "%9s"."%s %s",
+                    "%9s"."%s  %s",
                     ' ', $motar_ent->radius, $motar_ent->cell_props->{cmt}
                 );
             # (7) MC space: Inner
             push @{$phits->sects->{surface}},
                 sprintf(
-                    "%s %3s %.2f %s",
+                    "%s %3s %.2f  %s",
                     $mc_space->cell_props->{macrobody_id},
                     $mc_space->cell_props->{macrobody_str},
                     $mc_space->radius_fixed,
                     $mc_space->cell_props->{cmt},
                 ),
-                ""; # End
+                "";  # End
 
         # Cell section
-        my %_excluded = ( # Must also be initialized
+        my %_excluded = (  # Must also be initialized
             bconv     => '',
             motar     => '',
             flux_mnt  => '',
@@ -5084,10 +6462,10 @@ sub inner_iterator {
                     $motar->cell_props->{dens} ?
                         -$motar->cell_props->{dens} : ' '
                 ),
-                ( # Conditional
+                (  # Conditional
                     $tar_of_int->flag eq $motar_trc->flag ?
                         $motar_trc->cell_props->{macrobody_id} :
-                        $motar_rcc->cell_props->{macrobody_id} # Default
+                        $motar_rcc->cell_props->{macrobody_id}  # Default
                 )
             );
             # (3) Flux monitor, upstream (conditional)
@@ -5162,7 +6540,7 @@ sub inner_iterator {
                 # (7) MC space: Inner
                 sprintf(
                     "%-2s %3s %-9s -%s".
-                    "%s%s%s%s%s", # Excluded
+                    "%s%s%s%s%s",  # Excluded
                     $mc_space->cell_props->{cell_id},
                     $mc_space->cell_props->{mat_id},
                     (
@@ -5185,7 +6563,7 @@ sub inner_iterator {
                     ' ',
                     $mc_space->cell_props->{macrobody_id}
                 ),
-                ""; # End
+                "";  # End
 
         # Volume section
         my @_volume_sect = ();
@@ -5199,13 +6577,13 @@ sub inner_iterator {
         push @{$phits->sects->{volume}}, "[Volume]", "reg vol";
         push @{$phits->sects->{volume}}, map {
             sprintf(
-                "%-3s %s %s", # %-3s <= length('reg')
+                "%-3s %s  %s",  # %-3s <= length('reg')
                 $_->cell_props->{cell_id},
                 $_->vol,
                 $_->cell_props->{cmt},
             );
         } @_volume_sect;
-        push @{$phits->sects->{volume}}, ""; # End
+        push @{$phits->sects->{volume}}, "";  # End
 
         # T-Track 1
         # > Mesh: xyz
@@ -5216,7 +6594,7 @@ sub inner_iterator {
             $t_track->Ctrls->switch =~ /off/i ?
                 $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5266,14 +6644,14 @@ sub inner_iterator {
                 eval { $t_track->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_track->xz->title        ),
+            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
+            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             sprintf("%-6s = %s",  'angel',  $t_track->xz->angel        ),
             sprintf("%-6s = %s",  'sangel', $t_track->xz->sangel       ),
             sprintf("%-6s = %4s", 'gshow',  $t_track->gshow            ),
             sprintf("%-6s = %4s", 'resol',  $t_track->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_track->cell_bnd->{width}),
-            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
-            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
-            ""; # End
+            "";  # End
 
         # T-Track 2
         # > Mesh: xyz
@@ -5283,7 +6661,7 @@ sub inner_iterator {
             $t_track->Ctrls->switch =~ /off/i ?
                 $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5333,14 +6711,14 @@ sub inner_iterator {
                 eval { $t_track->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_track->yz->title        ),
+            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
+            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             sprintf("%-6s = %s",  'angel',  $t_track->yz->angel        ),
             sprintf("%-6s = %s",  'sangel', $t_track->yz->sangel       ),
             sprintf("%-6s = %4s", 'gshow',  $t_track->gshow            ),
             sprintf("%-6s = %4s", 'resol',  $t_track->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_track->cell_bnd->{width}),
-            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
-            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
-            ""; # End
+            "";  # End
 
         # T-Track 3
         # > Mesh: xyz
@@ -5353,7 +6731,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5403,14 +6781,14 @@ sub inner_iterator {
                 eval { $t_track->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_track->xy_bconv->title  ),
+            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
+            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
             sprintf("%-6s = %s",  'angel',  $t_track->xy_bconv->angel  ),
             sprintf("%-6s = %s",  'sangel', $t_track->xy_bconv->sangel ),
             sprintf("%-6s = %4s", 'gshow',  $t_track->gshow            ),
             sprintf("%-6s = %4s", 'resol',  $t_track->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_track->cell_bnd->{width}),
-            sprintf("%-6s = %4s", 'epsout', $t_track->epsout           ),
-            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout           ),
-            ""; # End
+            "";  # End
 
         # T-Track 4
         # > Mesh: xyz
@@ -5421,7 +6799,7 @@ sub inner_iterator {
             $t_track->Ctrls->switch =~ /off/i ?
                 $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5482,14 +6860,14 @@ sub inner_iterator {
                 eval { $t_track->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_track->xy_motar->title    ),
+            sprintf("%-6s = %4s", 'epsout', $t_track->epsout             ),
+            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout             ),
             sprintf("%-6s = %s",  'angel',  $t_track->xy_motar->angel_mo ),
             sprintf("%-6s = %s",  'sangel', $t_track->xy_motar->sangel_mo),
             sprintf("%-6s = %4s", 'gshow',  $t_track->gshow              ),
             sprintf("%-6s = %4s", 'resol',  $t_track->cell_bnd->{resol}  ),
             sprintf("%-6s = %4s", 'width',  $t_track->cell_bnd->{width}  ),
-            sprintf("%-6s = %4s", 'epsout', $t_track->epsout             ),
-            sprintf("%-6s = %4s", 'vtkout', $t_track->vtkout             ),
-            ""; # End
+            "";  # End
 
         # T-Track 5
         # > Mesh: reg
@@ -5501,7 +6879,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5560,6 +6938,11 @@ sub inner_iterator {
                 $t_track->nrg_bconv->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_bconv->angel
@@ -5569,18 +6952,13 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_bconv->sangel
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_track->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Track 6
         # > Mesh: reg
         # > Axis: eng
         # > Particle fluences in bremsstrahlung converter volume
-        # > Low emax for photoneutrons (emax: ceil(e0 / 7))
+        # > Low emax for photoneutrons (ceil(emax of [source] / 8))
         push @{$phits->sects->{t_track_nrg_bconv_low_emax}},
             (
                 $t_track->Ctrls->switch =~ /off/i
@@ -5588,7 +6966,7 @@ sub inner_iterator {
                 or not $t_track->is_neut_of_int
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5663,6 +7041,11 @@ sub inner_iterator {
                 $t_track->nrg_bconv_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_bconv_low_emax->angel
@@ -5672,12 +7055,7 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_bconv_low_emax->sangel
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_track->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Track 7
         # > Mesh: reg
@@ -5688,7 +7066,7 @@ sub inner_iterator {
             $t_track->Ctrls->switch =~ /off/i ?
                 $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5713,7 +7091,7 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s",
                 'e-type',
-                $t_track->mesh_types->{e}
+                2  # Fixed to use ne
             ),
             sprintf(
                 "%-6s = %4s",
@@ -5723,14 +7101,14 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_track->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_mo99}
+                $t_track->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_track->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_mo99}
+                $t_track->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
             ),
             # Particles of interest
             sprintf(
@@ -5765,6 +7143,11 @@ sub inner_iterator {
                 $t_track->nrg_motar->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_motar->angel
@@ -5774,12 +7157,7 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_motar->sangel
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_track->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Track 8
         # > Mesh: reg
@@ -5792,7 +7170,7 @@ sub inner_iterator {
                 or not $t_track->is_neut_of_int
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5868,6 +7246,11 @@ sub inner_iterator {
                 $t_track->nrg_motar_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_motar_low_emax->angel
@@ -5877,12 +7260,7 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_motar_low_emax->sangel
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_track->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Track 9
         # > Mesh: reg
@@ -5895,7 +7273,7 @@ sub inner_iterator {
                 or $flux_mnt_up->height == 0
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -5918,7 +7296,7 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s",
                 'e-type',
-                $t_track->mesh_types->{e}
+                2
             ),
             sprintf(
                 "%-6s = %4s",
@@ -5928,14 +7306,14 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_track->mesh_ranges->{emin}{eff_nrg_range_au196},
-                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_au196}
+                $t_track->mesh_ranges->{emin}{eff_nrg_range_interval_au196},
+                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_au196}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_track->mesh_ranges->{emax}{eff_nrg_range_au196},
-                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_au196}
+                $t_track->mesh_ranges->{emax}{eff_nrg_range_interval_au196},
+                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_au196}
             ),
             # Particles of interest
             sprintf(
@@ -5970,6 +7348,11 @@ sub inner_iterator {
                 $t_track->nrg_flux_mnt_up->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_flux_mnt_up->angel
@@ -5979,12 +7362,7 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_flux_mnt_up->sangel
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_track->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Track 10
         # > Mesh: reg
@@ -5997,7 +7375,7 @@ sub inner_iterator {
                 or $flux_mnt_down->height == 0
             ) ? $t_track->sect_begin." off" :
                 $t_track->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6020,7 +7398,7 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s",
                 'e-type',
-                $t_track->mesh_types->{e}
+                2
             ),
             sprintf(
                 "%-6s = %4s",
@@ -6030,14 +7408,14 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_track->mesh_ranges->{emin}{eff_nrg_range_au196},
-                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_au196}
+                $t_track->mesh_ranges->{emin}{eff_nrg_range_interval_au196},
+                $t_track->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_au196}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_track->mesh_ranges->{emax}{eff_nrg_range_au196},
-                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_au196}
+                $t_track->mesh_ranges->{emax}{eff_nrg_range_interval_au196},
+                $t_track->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_au196}
             ),
             # Particles of interest
             sprintf(
@@ -6072,6 +7450,11 @@ sub inner_iterator {
                 $t_track->nrg_flux_mnt_down->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_track->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_track->nrg_flux_mnt_down->angel
@@ -6081,14 +7464,230 @@ sub inner_iterator {
                 'sangel',
                 $t_track->nrg_flux_mnt_down->sangel
             ),
+            "";  # End
+
+        # T-Cross 1
+        # > Mesh: r-z
+        # > Axis: eng
+        # > Intact particle fluences
+        push @{$phits->sects->{t_cross_intact}},
+            (
+                $t_cross->Ctrls->switch =~ /off/i
+                or $bconv->flag =~ /none/i
+            ) ? $t_cross->sect_begin." off" :
+                $t_cross->sect_begin.sprintf(
+                    "  %s ".
+                    "%s No. %s, ".
+                    "%s No. %s, ".
+                    "%s No. %s",
+                    $phits->Cmt->symb,
+                    $t_cross->flag,    $t_cross->inc_t_counter(),
+                    $t_subtotal->flag, $t_subtotal->inc_t_counter(),
+                    $t_total->flag,    $t_total->inc_t_counter(),
+                ),
+            # Meshing
+            sprintf("%-6s = %4s",     'mesh',   $t_cross->mesh_shape->{rz}),
+            sprintf("%-6s = %4s",     'r-type', $t_cross->mesh_types->{r} ),
+            sprintf("%-6s = %4s",     'nr',     $t_cross->mesh_sizes->{1} ),
+            sprintf("%-6s = %10.5f",  'rmin',   0                         ),
+            sprintf("%-6s = %10.5f",  'rmax',   $bconv->radius            ),
+            sprintf("%-6s = %4s",     'z-type', $t_cross->mesh_types->{z} ),
+            sprintf("%-6s = %4s",     'nz',     $t_cross->mesh_sizes->{1} ),
+            sprintf(
+                "%-6s = %17.12f",
+                'zmin',
+                $phits->source->spat_dist_of_int->{t_cross_intact}{z_beg},
+            ),
+            sprintf(
+                "%-6s = %17.12f",
+                'zmax',
+                $phits->source->spat_dist_of_int->{t_cross_intact}{z_end},
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'e-type',
+                2
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'ne',
+                $yield_mo99->num_of_nrg_bins
+            ),
+            sprintf(
+                "%-6s = %4s%s",
+                'emin',
+                $t_cross->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
+            ),
+            sprintf(
+                "%-6s = %4s%s",
+                'emax',
+                $t_cross->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
+            ),
+            # Particles of interest
+            sprintf("%-6s = @{$t_cross->particles_of_int}", 'part'),
+            # Output settings
+            sprintf("%-6s = %4s", 'axis',  $t_cross->nrg_intact->name ),
+            sprintf("%-6s = %s",  'file',  $t_cross->nrg_intact->fname),
+            sprintf("%-6s = %4s", 'unit',  $t_cross->unit             ),
+            sprintf(
+                "%-6s = %4g%s",
+                'factor',
+                $t_cross->factor->{val},
+                eval { $t_cross->factor->{cmt} } // ''
+            ),
+            sprintf("%-6s = %s",  'title',  $t_cross->nrg_intact->title ),
+            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout            ),
+            sprintf("%-6s = %s",  'angel',  $t_cross->nrg_intact->angel ),
+            sprintf("%-6s = %s",  'sangel', $t_cross->nrg_intact->sangel),
+            sprintf("%-6s = %4s", 'output', $t_cross->output            ),
+            "";  # End
+
+        # T-Cross 2
+        # > Mesh: r-z
+        # > Axis: eng
+        # > Intact particle fluences
+        # > Low emax for photoneutrons
+        push @{$phits->sects->{t_cross_intact_low_emax}},
+            (
+                $t_cross->Ctrls->switch =~ /off/i
+                or $bconv->flag =~ /none/i
+                or not $t_cross->is_neut_of_int
+            ) ? $t_cross->sect_begin." off" :
+                $t_cross->sect_begin.sprintf(
+                    "  %s ".
+                    "%s No. %s, ".
+                    "%s No. %s, ".
+                    "%s No. %s",
+                    $phits->Cmt->symb,
+                    $t_cross->flag,    $t_cross->inc_t_counter(),
+                    $t_subtotal->flag, $t_subtotal->inc_t_counter(),
+                    $t_total->flag,    $t_total->inc_t_counter(),
+                ),
+            # Meshing
+            sprintf(
+                "%-6s = %4s",
+                'mesh',
+                $t_cross->mesh_shape->{rz}
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'r-type',
+                $t_cross->mesh_types->{r}
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'nr',
+                $t_cross->mesh_sizes->{1}
+            ),
+            sprintf(
+                "%-6s = %10.5f",
+                'rmin',
+                0
+            ),
+            sprintf(
+                "%-6s = %10.5f",
+                'rmax',
+                $bconv->radius
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'z-type',
+                $t_cross->mesh_types->{z}
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'nz',
+                $t_cross->mesh_sizes->{1}
+            ),
+            sprintf(
+                "%-6s = %17.12f",
+                'zmin',
+                $phits->source->spat_dist_of_int->{t_cross_intact}{z_beg},
+            ),
+            sprintf(
+                "%-6s = %17.12f",
+                'zmax',
+                $phits->source->spat_dist_of_int->{t_cross_intact}{z_end},
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'e-type',
+                $t_cross->mesh_types->{e}
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'ne',
+                $t_cross->mesh_sizes->{e}
+            ),
+            sprintf(
+                "%-6s = %4s%s",
+                'emin',
+                $t_cross->mesh_ranges->{emin}{lower_nrg_range},
+                $t_cross->mesh_ranges->{emin_cmt}{lower_nrg_range}
+            ),
+            sprintf(
+                "%-6s = %4s%s",
+                'emax',
+                $t_cross->mesh_ranges->{emax}{lower_nrg_range},
+                $t_cross->mesh_ranges->{emax_cmt}{lower_nrg_range}
+            ),
+            # Particles of interest
+            sprintf(
+                "%-6s = @{$t_cross->particles_of_int}",
+                'part'
+            ),
+            # Output settings
+            sprintf(
+                "%-6s = %4s",
+                'axis',
+                $t_cross->nrg_intact_low_emax->name
+            ),
+            sprintf(
+                "%-6s = %s",
+                'file',
+                $t_cross->nrg_intact_low_emax->fname
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'unit',
+                $t_cross->unit
+            ),
+            sprintf(
+                "%-6s = %4g%s",
+                'factor',
+                $t_cross->factor->{val},
+                eval { $t_cross->factor->{cmt} } // ''
+            ),
+            sprintf(
+                "%-6s = %s",
+                'title',
+                $t_cross->nrg_intact_low_emax->title
+            ),
             sprintf(
                 "%-6s = %4s",
                 'epsout',
-                $t_track->epsout
+                $t_cross->epsout
             ),
-            ""; # End
+            sprintf(
+                "%-6s = %s",
+                'angel',
+                $t_cross->nrg_intact_low_emax->angel
+            ),
+            sprintf(
+                "%-6s = %s",
+                'sangel',
+                $t_cross->nrg_intact_low_emax->sangel
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'output',
+                $t_cross->output
+            ),
+            "";  # End
 
-        # T-Cross 1
+        # T-Cross 3
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at bremsstrahlung converter entrance
@@ -6098,7 +7697,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6117,19 +7716,27 @@ sub inner_iterator {
             sprintf("%-6s = %4s",     'nz',     $t_cross->mesh_sizes->{1} ),
             sprintf("%-6s = %17.12f", 'zmin',   $bconv->beam_ent          ),
             sprintf("%-6s = %17.12f", 'zmax',   ($bconv->beam_ent + 1e-07)),
-            sprintf("%-6s = %4s",     'e-type', $t_cross->mesh_types->{e} ),
-            sprintf("%-6s = %4s",     'ne',     $t_cross->mesh_sizes->{e} ),
+            sprintf(
+                "%-6s = %4s",
+                'e-type',
+                2
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'ne',
+                $yield_mo99->num_of_nrg_bins
+            ),
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_cross->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_cross->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
             ),
             # Particles of interest
             sprintf("%-6s = @{$t_cross->particles_of_int}", 'part'),
@@ -6144,13 +7751,13 @@ sub inner_iterator {
                 eval { $t_cross->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_cross->nrg_bconv_ent->title ),
+            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
             sprintf("%-6s = %s",  'angel',  $t_cross->nrg_bconv_ent->angel ),
             sprintf("%-6s = %s",  'sangel', $t_cross->nrg_bconv_ent->sangel),
             sprintf("%-6s = %4s", 'output', $t_cross->output               ),
-            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 2
+        # T-Cross 4
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at bremsstrahlung converter entrance
@@ -6162,7 +7769,7 @@ sub inner_iterator {
                 or not $t_cross->is_neut_of_int
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6272,6 +7879,11 @@ sub inner_iterator {
                 $t_cross->nrg_bconv_ent_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_cross->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_cross->nrg_bconv_ent_low_emax->angel
@@ -6286,14 +7898,9 @@ sub inner_iterator {
                 'output',
                 $t_cross->output
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_cross->epsout
-            ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 3
+        # T-Cross 5
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at bremsstrahlung converter exit
@@ -6303,7 +7910,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6333,24 +7940,24 @@ sub inner_iterator {
             sprintf(
                 "%-6s = %4s",
                 'e-type',
-                $t_cross->mesh_types->{e}
+                2
             ),
             sprintf(
                 "%-6s = %4s",
                 'ne',
-                $t_cross->mesh_sizes->{e}
+                $yield_mo99->num_of_nrg_bins
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_cross->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_cross->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
             ),
             # Particles of interest
             sprintf(
@@ -6385,6 +7992,11 @@ sub inner_iterator {
                 $t_cross->nrg_bconv_exit->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_cross->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_cross->nrg_bconv_exit->angel
@@ -6399,14 +8011,9 @@ sub inner_iterator {
                 'output',
                 $t_cross->output
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_cross->epsout
-            ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 4
+        # T-Cross 6
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at bremsstrahlung converter exit
@@ -6418,7 +8025,7 @@ sub inner_iterator {
                 or not $t_cross->is_neut_of_int
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6528,6 +8135,11 @@ sub inner_iterator {
                 $t_cross->nrg_bconv_exit_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_cross->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_cross->nrg_bconv_exit_low_emax->angel
@@ -6542,14 +8154,9 @@ sub inner_iterator {
                 'output',
                 $t_cross->output
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_cross->epsout
-            ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 5
+        # T-Cross 7
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at molybdenum target entrance
@@ -6557,7 +8164,7 @@ sub inner_iterator {
             $t_cross->Ctrls->switch =~ /off/i ?
                 $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6592,19 +8199,27 @@ sub inner_iterator {
                     ($motar_trc->beam_ent + 1e-07) :
                     ($motar_rcc->beam_ent + 1e-07)
             ),
-            sprintf("%-6s = %4s", 'e-type', $t_cross->mesh_types->{e}),
-            sprintf("%-6s = %4s", 'ne',     $t_cross->mesh_sizes->{e}),
+            sprintf(
+                "%-6s = %4s",
+                'e-type',
+                2
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'ne',
+                $yield_mo99->num_of_nrg_bins
+            ),
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_cross->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_cross->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
             ),
             # Particles of interest
             sprintf("%-6s = @{$t_cross->particles_of_int}", 'part'),
@@ -6619,13 +8234,13 @@ sub inner_iterator {
                 eval { $t_cross->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_cross->nrg_motar_ent->title ),
+            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
             sprintf("%-6s = %s",  'angel',  $t_cross->nrg_motar_ent->angel ),
             sprintf("%-6s = %s",  'sangel', $t_cross->nrg_motar_ent->sangel),
             sprintf("%-6s = %4s", 'output', $t_cross->output               ),
-            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout               ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 6
+        # T-Cross 8
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at molybdenum target entrance
@@ -6636,7 +8251,7 @@ sub inner_iterator {
                 or not $t_cross->is_neut_of_int
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6734,6 +8349,11 @@ sub inner_iterator {
                 $t_cross->nrg_motar_ent_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_cross->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_cross->nrg_motar_ent_low_emax->angel
@@ -6748,19 +8368,14 @@ sub inner_iterator {
                 'output',
                 $t_cross->output
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_cross->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Cross dump
         # > Generates a dump source entering the molybdenum target.
         push @{$phits->sects->{t_cross_motar_ent_dump}},
             sprintf(
-                "%s ".
-                "%s ".
+                "%s".
+                "  %s ".
                 "%s No. %s",
                 $t_cross_dump->sect_begin,
                 $phits->Cmt->symb,
@@ -6846,9 +8461,9 @@ sub inner_iterator {
                 ' ',
                 $t_cross_dump->dump->{dat}
             ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 7
+        # T-Cross 9
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at molybdenum target exit
@@ -6856,7 +8471,7 @@ sub inner_iterator {
             $t_cross->Ctrls->switch =~ /off/i ?
                 $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -6892,19 +8507,27 @@ sub inner_iterator {
                     ($motar_trc->beam_ent + $motar_trc->height + 1e-07) :
                     ($motar_rcc->beam_ent + $motar_rcc->height + 1e-07)
             ),
-            sprintf("%-6s = %4s", 'e-type', $t_cross->mesh_types->{e}),
-            sprintf("%-6s = %4s", 'ne',     $t_cross->mesh_sizes->{e}),
+            sprintf(
+                "%-6s = %4s",
+                'e-type',
+                2
+            ),
+            sprintf(
+                "%-6s = %4s",
+                'ne',
+                $yield_mo99->num_of_nrg_bins
+            ),
             sprintf(
                 "%-6s = %4s%s",
                 'emin',
-                $t_cross->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emin}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emin_cmt}{eff_nrg_range_interval_mo99}
             ),
             sprintf(
                 "%-6s = %4s%s",
                 'emax',
-                $t_cross->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_mo99}
+                $t_cross->mesh_ranges->{emax}{eff_nrg_range_interval_mo99},
+                $t_cross->mesh_ranges->{emax_cmt}{eff_nrg_range_interval_mo99}
             ),
             # Particles of interest
             sprintf("%-6s = @{$t_cross->particles_of_int}", 'part'),
@@ -6919,13 +8542,13 @@ sub inner_iterator {
                 eval { $t_cross->factor->{cmt} } // ''
             ),
             sprintf("%-6s = %s",  'title',  $t_cross->nrg_motar_exit->title ),
+            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout                ),
             sprintf("%-6s = %s",  'angel',  $t_cross->nrg_motar_exit->angel ),
             sprintf("%-6s = %s",  'sangel', $t_cross->nrg_motar_exit->sangel),
             sprintf("%-6s = %4s", 'output', $t_cross->output                ),
-            sprintf("%-6s = %4s", 'epsout', $t_cross->epsout                ),
-            ""; # End
+            "";  # End
 
-        # T-Cross 8
+        # T-Cross 10
         # > Mesh: r-z
         # > Axis: eng
         # > Particle fluences at molybdenum target exit
@@ -6936,7 +8559,7 @@ sub inner_iterator {
                 or not $t_cross->is_neut_of_int
             ) ? $t_cross->sect_begin." off" :
                 $t_cross->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7035,6 +8658,11 @@ sub inner_iterator {
                 $t_cross->nrg_motar_exit_low_emax->title
             ),
             sprintf(
+                "%-6s = %4s",
+                'epsout',
+                $t_cross->epsout
+            ),
+            sprintf(
                 "%-6s = %s",
                 'angel',
                 $t_cross->nrg_motar_exit_low_emax->angel
@@ -7049,12 +8677,7 @@ sub inner_iterator {
                 'output',
                 $t_cross->output
             ),
-            sprintf(
-                "%-6s = %4s",
-                'epsout',
-                $t_cross->epsout
-            ),
-            ""; # End
+            "";  # End
 
         # T-Heat 1
         # > Mesh: xyz
@@ -7064,7 +8687,7 @@ sub inner_iterator {
             $t_heat->Ctrls->switch =~ /off/i ?
                 $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7098,17 +8721,17 @@ sub inner_iterator {
                 eval { $t_heat->factor->{cmt} } // ''
             ),
             sprintf("%-8s = %s",  'title',    $t_heat->xz->title        ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %s",  'angel',    $t_heat->xz->angel        ),
             sprintf("%-8s = %s",  'sangel',   $t_heat->xz->sangel       ),
             sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
             sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow            ),
             sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}),
             sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}),
-            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
-            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
-            ""; # End
+            "";  # End
 
         # T-Heat 2
         # > Mesh: xyz
@@ -7118,7 +8741,7 @@ sub inner_iterator {
             $t_heat->Ctrls->switch =~ /off/i ?
                 $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7152,17 +8775,17 @@ sub inner_iterator {
                 eval { $t_heat->factor->{cmt} } // ''
             ),
             sprintf("%-8s = %s",  'title',    $t_heat->yz->title        ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %s",  'angel',    $t_heat->yz->angel        ),
             sprintf("%-8s = %s",  'sangel',   $t_heat->yz->sangel       ),
             sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
             sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow            ),
             sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}),
             sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}),
-            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
-            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
-            ""; # End
+            "";  # End
 
         # T-Heat 3
         # > Mesh: xyz
@@ -7175,7 +8798,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7209,17 +8832,17 @@ sub inner_iterator {
                 eval { $t_heat->factor->{cmt} } // ''
             ),
             sprintf("%-8s = %s",  'title',    $t_heat->xy_bconv->title  ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %s",  'angel',    $t_heat->xy_bconv->angel  ),
             sprintf("%-8s = %s",  'sangel',   $t_heat->xy_bconv->sangel ),
             sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
             sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow            ),
             sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}),
             sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}),
-            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
-            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
-            ""; # End
+            "";  # End
 
         # T-Heat 4
         # > Mesh: xyz
@@ -7236,7 +8859,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7246,19 +8869,19 @@ sub inner_iterator {
                     $t_total->flag,    $t_total->inc_t_counter(),
                 ),
             # Meshing
-            sprintf("%-8s = %4s",    'mesh',  $t_heat_mapdl->mesh_shape->{xyz}),
-            sprintf("%-8s = %4s",    'x-type', $t_heat_mapdl->mesh_types->{x} ),
-            sprintf("%-8s = %4s",    'nx',     $t_heat_mapdl->mesh_sizes->{x} ),
-            sprintf("%-8s = %4s",    'xmin',   $t_shared->mesh_ranges->{xmin} ),
-            sprintf("%-8s = %4s",    'xmax',   $t_shared->mesh_ranges->{xmax} ),
-            sprintf("%-8s = %4s",    'y-type', $t_heat_mapdl->mesh_types->{y} ),
-            sprintf("%-8s = %4s",    'ny',     $t_heat_mapdl->mesh_sizes->{y} ),
-            sprintf("%-8s = %4s",    'ymin',   $t_shared->mesh_ranges->{ymin} ),
-            sprintf("%-8s = %4s",    'ymax',   $t_shared->mesh_ranges->{ymax} ),
-            sprintf("%-8s = %4s",    'z-type', $t_heat_mapdl->mesh_types->{z} ),
-            sprintf("%-8s = %4s",    'nz',     $t_heat_mapdl->mesh_sizes->{z} ),
-            sprintf("%-8s = %10.5f", 'zmin',   $bconv->beam_ent               ),
-            sprintf("%-8s = %10.5f", 'zmax',   $bconv->height                 ),
+            sprintf("%-8s = %4s", 'mesh',  $t_heat_mapdl->mesh_shape->{xyz}),
+            sprintf("%-8s = %4s", 'x-type', $t_heat_mapdl->mesh_types->{x} ),
+            sprintf("%-8s = %4s", 'nx',     $t_heat_mapdl->mesh_sizes->{x} ),
+            sprintf("%-8s = %4s", 'xmin',   $t_shared->mesh_ranges->{xmin} ),
+            sprintf("%-8s = %4s", 'xmax',   $t_shared->mesh_ranges->{xmax} ),
+            sprintf("%-8s = %4s", 'y-type', $t_heat_mapdl->mesh_types->{y} ),
+            sprintf("%-8s = %4s", 'ny',     $t_heat_mapdl->mesh_sizes->{y} ),
+            sprintf("%-8s = %4s", 'ymin',   $t_shared->mesh_ranges->{ymin} ),
+            sprintf("%-8s = %4s", 'ymax',   $t_shared->mesh_ranges->{ymax} ),
+            sprintf("%-8s = %4s", 'z-type', $t_heat_mapdl->mesh_types->{z} ),
+            sprintf("%-8s = %4s", 'nz',     $t_heat_mapdl->mesh_sizes->{z} ),
+            sprintf("%-8s = %10.5f", 'zmin', $bconv->beam_ent),
+            sprintf("%-8s = %10.5f", 'zmax', $bconv->height  ),
             # Output settings
             sprintf(
                 "%-8s = %4s",
@@ -7306,7 +8929,7 @@ sub inner_iterator {
                 'electron',
                 $t_heat_mapdl->electron
             ),
-            ""; # End
+            "";  # End
 
         # T-Heat 5
         # > Mesh: xyz
@@ -7316,7 +8939,7 @@ sub inner_iterator {
             $t_heat->Ctrls->switch =~ /off/i ?
                 $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7361,17 +8984,17 @@ sub inner_iterator {
                 eval { $t_heat->factor->{cmt} } // ''
             ),
             sprintf("%-8s = %s",  'title',    $t_heat->xy_motar->title    ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout             ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout             ),
             sprintf("%-8s = %s",  'angel',    $t_heat->xy_motar->angel_mo ),
             sprintf("%-8s = %s",  'sangel',   $t_heat->xy_motar->sangel_mo),
             sprintf("%-8s = %4s", 'output',   $t_heat->output             ),
             sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow              ),
             sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}  ),
             sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}  ),
-            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout             ),
-            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout             ),
             sprintf("%-8s = %4s", 'material', $t_heat->material           ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron           ),
-            ""; # End
+            "";  # End
 
         # T-Heat 6
         # > Mesh: xyz
@@ -7385,7 +9008,7 @@ sub inner_iterator {
             $t_heat->Ctrls->switch =~ /off/i ?
                 $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7466,20 +9089,20 @@ sub inner_iterator {
                 'electron',
                 $t_heat_mapdl->electron
             ),
-            ""; # End
+            "";  # End
 
         # T-Heat 7
         # > Mesh: r-z
         # > Axis: rz
-        # > Heat energy distribution on rz plane,
-        #   at z of bremsstrahlung converter
+        # > Heat energy distribution over the rz plane of
+        #   a bremsstrahlung converter
         push @{$phits->sects->{t_heat_rz_bconv}},
             (
                 $t_heat->Ctrls->switch =~ /off/i
                 or $bconv->flag =~ /none/i
             ) ? $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7509,19 +9132,227 @@ sub inner_iterator {
                 eval { $t_heat->factor->{cmt} } // ''
             ),
             sprintf("%-8s = %s",  'title',    $t_heat->rz_bconv->title  ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %s",  'angel',    $t_heat->rz_bconv->angel  ),
             sprintf("%-8s = %s",  'sangel',   $t_heat->rz_bconv->sangel ),
             sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
             sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow            ),
             sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}),
             sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}),
-            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
-            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
             sprintf("%-8s = %4s", 'material', $t_heat->material         ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
-            ""; # End
+            "";  # End
 
         # T-Heat 8
+        # > Mesh: r-z
+        # > Axis: rz
+        # > 2d-type: 4
+        # > Heat energy distribution over the rz plane of
+        #   a bremsstrahlung converter, for explicit plotting
+        push @{$phits->sects->{t_heat_rz_bconv_twodtype4}},
+            (
+                $t_heat->Ctrls->switch =~ /off/i
+                or $bconv->flag =~ /none/i
+            ) ? $t_heat->sect_begin." off" :
+                $t_heat->sect_begin.sprintf(
+                    "  %s ".
+                    "%s No. %s, ".
+                    "%s No. %s, ".
+                    "%s No. %s",
+                    $phits->Cmt->symb,
+                    $t_heat->flag,     $t_heat->inc_t_counter(),
+                    $t_subtotal->flag, $t_subtotal->inc_t_counter(),
+                    $t_total->flag,    $t_total->inc_t_counter(),
+                ),
+            # Meshing
+            sprintf("%-8s = %4s",    'mesh',   $t_heat->mesh_shape->{rz}),
+            sprintf("%-8s = %4s",    'r-type', $t_heat->mesh_types->{r} ),
+            sprintf("%-8s = %4s",    'nr',     $t_heat->mesh_sizes->{r} ),
+            sprintf("%-8s = %4s",    'rmin',   0                        ),
+            sprintf("%-8s = %4s",    'rmax',   $bconv->radius           ),
+            sprintf("%-8s = %4s",    'z-type', $t_heat->mesh_types->{z} ),
+            sprintf("%-8s = %4s",    'nz',     $t_heat->mesh_sizes->{z} ),
+            sprintf("%-8s = %10.5f", 'zmin',   $bconv->beam_ent         ),
+            sprintf("%-8s = %10.5f", 'zmax',   $bconv->height + 1e-07   ),
+            # Output settings
+            sprintf("%-8s = %4s", 'axis', $t_heat->rz_bconv->name           ),
+            sprintf("%-8s = %s",  'file', $t_heat->rz_bconv_twodtype4->fname),
+            sprintf("%-8s = %4s", 'unit', $t_heat->unit                     ),
+            sprintf(
+                "%-8s = %4g%s",
+                'factor',
+                $t_heat->factor->{val},
+                eval { $t_heat->factor->{cmt} } // ''
+            ),
+            sprintf("%-8s = %s",  'title',    $t_heat->rz_bconv->title  ),
+            sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
+            sprintf(
+                "%-8s = %4s",
+                '2d-type',
+                $t_heat_mapdl->two_dim_type
+            ),
+            sprintf("%-8s = %4s", 'material', $t_heat->material         ),
+            sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
+            "";  # End
+
+        # T-Heat 9
+        # > Mesh: r-z
+        # > Axis: rz
+        # > Heat energy distribution over the rz plane of
+        #   a Mo target
+        push @{$phits->sects->{t_heat_rz_motar}},
+            $t_heat->Ctrls->switch =~ /off/i ?
+                $t_heat->sect_begin." off" :
+                $t_heat->sect_begin.sprintf(
+                    "  %s ".
+                    "%s No. %s, ".
+                    "%s No. %s, ".
+                    "%s No. %s",
+                    $phits->Cmt->symb,
+                    $t_heat->flag,     $t_heat->inc_t_counter(),
+                    $t_subtotal->flag, $t_subtotal->inc_t_counter(),
+                    $t_total->flag,    $t_total->inc_t_counter(),
+                ),
+            # Meshing
+            sprintf("%-8s = %4s",    'mesh',   $t_heat->mesh_shape->{rz}),
+            sprintf("%-8s = %4s",    'r-type', $t_heat->mesh_types->{r} ),
+            sprintf("%-8s = %4s",    'nr',     $t_heat->mesh_sizes->{r} ),
+            sprintf(
+                "%-8s = %4s",
+                'rmin',
+                0,
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'rmax',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    $motar_trc->top_radius : $motar_rcc->radius
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'z-type',
+                $t_heat->mesh_types->{z},
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'nz',
+                $t_heat->mesh_sizes->{z},
+            ),
+            sprintf(
+                "%-8s = %10.5f",
+                'zmin',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    $motar_trc->beam_ent : $motar_rcc->beam_ent
+            ),
+            sprintf(
+                "%-8s = %10.5f",
+                'zmax',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    ($motar_trc->beam_ent + $motar_trc->height) :
+                    ($motar_rcc->beam_ent + $motar_rcc->height)
+            ),
+            # Output settings
+            sprintf("%-8s = %4s", 'axis', $t_heat->rz_motar->name ),
+            sprintf("%-8s = %s",  'file', $t_heat->rz_motar->fname),
+            sprintf("%-8s = %4s", 'unit', $t_heat->unit           ),
+            sprintf(
+                "%-8s = %4g%s",
+                'factor',
+                $t_heat->factor->{val},
+                eval { $t_heat->factor->{cmt} } // ''
+            ),
+            sprintf("%-8s = %s",  'title',    $t_heat->rz_motar->title  ),
+            sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout           ),
+            sprintf("%-8s = %4s", 'vtkout',   $t_heat->vtkout           ),
+            sprintf("%-8s = %s",  'angel',    $t_heat->rz_motar->angel  ),
+            sprintf("%-8s = %s",  'sangel',   $t_heat->rz_motar->sangel ),
+            sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
+            sprintf("%-8s = %4s", 'gshow',    $t_heat->gshow            ),
+            sprintf("%-8s = %4s", 'resol',    $t_heat->cell_bnd->{resol}),
+            sprintf("%-8s = %4s", 'width',    $t_heat->cell_bnd->{width}),
+            sprintf("%-8s = %4s", 'material', $t_heat->material         ),
+            sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
+            "";  # End
+
+        # T-Heat 10
+        # > Mesh: r-z
+        # > Axis: rz
+        # > Heat energy distribution over the rz plane of
+        #   a Mo target, for explicit plotting
+        push @{$phits->sects->{t_heat_rz_motar_twodtype4}},
+            $t_heat->Ctrls->switch =~ /off/i ?
+                $t_heat->sect_begin." off" :
+                $t_heat->sect_begin.sprintf(
+                    "  %s ".
+                    "%s No. %s, ".
+                    "%s No. %s, ".
+                    "%s No. %s",
+                    $phits->Cmt->symb,
+                    $t_heat->flag,     $t_heat->inc_t_counter(),
+                    $t_subtotal->flag, $t_subtotal->inc_t_counter(),
+                    $t_total->flag,    $t_total->inc_t_counter(),
+                ),
+            # Meshing
+            sprintf("%-8s = %4s",    'mesh',   $t_heat->mesh_shape->{rz}),
+            sprintf("%-8s = %4s",    'r-type', $t_heat->mesh_types->{r} ),
+            sprintf("%-8s = %4s",    'nr',     $t_heat->mesh_sizes->{r} ),
+            sprintf(
+                "%-8s = %4s",
+                'rmin',
+                0,
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'rmax',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    $motar_trc->top_radius : $motar_rcc->radius
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'z-type',
+                $t_heat->mesh_types->{z},
+            ),
+            sprintf(
+                "%-8s = %4s",
+                'nz',
+                $t_heat->mesh_sizes->{z},
+            ),
+            sprintf(
+                "%-8s = %10.5f",
+                'zmin',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    $motar_trc->beam_ent : $motar_rcc->beam_ent
+            ),
+            sprintf(
+                "%-8s = %10.5f",
+                'zmax',
+                $tar_of_int->flag eq $motar_trc->flag ?
+                    ($motar_trc->beam_ent + $motar_trc->height) :
+                    ($motar_rcc->beam_ent + $motar_rcc->height)
+            ),
+            # Output settings
+            sprintf("%-8s = %4s", 'axis', $t_heat->rz_motar->name           ),
+            sprintf("%-8s = %s",  'file', $t_heat->rz_motar_twodtype4->fname),
+            sprintf("%-8s = %4s", 'unit', $t_heat->unit                     ),
+            sprintf(
+                "%-8s = %4g%s",
+                'factor',
+                $t_heat->factor->{val},
+                eval { $t_heat->factor->{cmt} } // ''
+            ),
+            sprintf("%-8s = %s",  'title',    $t_heat->rz_motar->title  ),
+            sprintf("%-8s = %4s", 'output',   $t_heat->output           ),
+            sprintf(
+                "%-8s = %4s",
+                '2d-type',
+                $t_heat_mapdl->two_dim_type
+            ),
+            sprintf("%-8s = %4s", 'material', $t_heat->material         ),
+            sprintf("%-8s = %4s", 'electron', $t_heat->electron         ),
+            "";  # End
+
+        # T-Heat 11
         # > Mesh: reg
         # > Axis: reg
         # > Heat energy distribution in bremsstrahlung converter volume
@@ -7531,7 +9362,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7558,9 +9389,9 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout          ),
             sprintf("%-8s = %4s", 'material', $t_heat->material        ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron        ),
-            ""; # End
+            "";  # End
 
-        # T-Heat 9
+        # T-Heat 12
         # > Mesh: reg
         # > Axis: reg
         # > Heat energy distribution in molybdenum target volume
@@ -7568,7 +9399,7 @@ sub inner_iterator {
             $t_heat->Ctrls->switch =~ /off/i ?
                 $t_heat->sect_begin." off" :
                 $t_heat->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7601,7 +9432,7 @@ sub inner_iterator {
             sprintf("%-8s = %4s", 'epsout',   $t_heat->epsout          ),
             sprintf("%-8s = %4s", 'material', $t_heat->material        ),
             sprintf("%-8s = %4s", 'electron', $t_heat->electron        ),
-            ""; # End
+            "";  # End
 
         # T-Gshow 1
         # > Mesh: xyz
@@ -7611,7 +9442,7 @@ sub inner_iterator {
             $t_gshow->Ctrls->switch =~ /off/i ?
                 $t_gshow->sect_begin." off" :
                 $t_gshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7641,11 +9472,11 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'resol',  $t_gshow->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_gshow->cell_bnd->{width}),
             sprintf("%-6s = %s",  'title',  $t_gshow->xz->title        ),
-            sprintf("%-6s = %s",  'angel',  $t_gshow->xz->angel        ),
-            sprintf("%-6s = %s",  'sangel', $t_gshow->xz->sangel       ),
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
-            ""; # End
+            sprintf("%-6s = %s",  'angel',  $t_gshow->xz->angel        ),
+            sprintf("%-6s = %s",  'sangel', $t_gshow->xz->sangel       ),
+            "";  # End
 
         # T-Gshow 2
         # > Mesh: xyz
@@ -7655,7 +9486,7 @@ sub inner_iterator {
             $t_gshow->Ctrls->switch =~ /off/i ?
                 $t_gshow->sect_begin." off" :
                 $t_gshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7685,11 +9516,11 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'resol',  $t_gshow->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_gshow->cell_bnd->{width}),
             sprintf("%-6s = %s",  'title',  $t_gshow->yz->title        ),
-            sprintf("%-6s = %s",  'angel',  $t_gshow->yz->angel        ),
-            sprintf("%-6s = %s",  'sangel', $t_gshow->yz->sangel       ),
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
-            ""; # End
+            sprintf("%-6s = %s",  'angel',  $t_gshow->yz->angel        ),
+            sprintf("%-6s = %s",  'sangel', $t_gshow->yz->sangel       ),
+            "";  # End
 
         # T-Gshow 3
         # > Mesh: xyz
@@ -7701,7 +9532,7 @@ sub inner_iterator {
                 or $bconv->flag =~ /none/i
             ) ? $t_gshow->sect_begin." off" :
                 $t_gshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7731,11 +9562,11 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'resol',  $t_gshow->cell_bnd->{resol}),
             sprintf("%-6s = %4s", 'width',  $t_gshow->cell_bnd->{width}),
             sprintf("%-6s = %s",  'title',  $t_gshow->xy_bconv->title  ),
-            sprintf("%-6s = %s",  'angel',  $t_gshow->xy_bconv->angel  ),
-            sprintf("%-6s = %s",  'sangel', $t_gshow->xy_bconv->sangel ),
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout           ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout           ),
-            ""; # End
+            sprintf("%-6s = %s",  'angel',  $t_gshow->xy_bconv->angel  ),
+            sprintf("%-6s = %s",  'sangel', $t_gshow->xy_bconv->sangel ),
+            "";  # End
 
         # T-Gshow 4
         # > Mesh: xyz
@@ -7745,7 +9576,7 @@ sub inner_iterator {
             $t_gshow->Ctrls->switch =~ /off/i ?
                 $t_gshow->sect_begin." off" :
                 $t_gshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7787,11 +9618,11 @@ sub inner_iterator {
             sprintf("%-6s = %4s", 'resol',  $t_gshow->cell_bnd->{resol}  ),
             sprintf("%-6s = %4s", 'width',  $t_gshow->cell_bnd->{width}  ),
             sprintf("%-6s = %s",  'title',  $t_gshow->xy_motar->title    ),
-            sprintf("%-6s = %s",  'angel',  $t_gshow->xy_motar->angel_mo ),
-            sprintf("%-6s = %s",  'sangel', $t_gshow->xy_motar->sangel_mo),
             sprintf("%-6s = %4s", 'epsout', $t_gshow->epsout             ),
             sprintf("%-6s = %4s", 'vtkout', $t_gshow->vtkout             ),
-            ""; # End
+            sprintf("%-6s = %s",  'angel',  $t_gshow->xy_motar->angel_mo ),
+            sprintf("%-6s = %s",  'sangel', $t_gshow->xy_motar->sangel_mo),
+            "";  # End
 
         # T-3Dshow 1
         # > Left-to-right beam view
@@ -7799,7 +9630,7 @@ sub inner_iterator {
             $t_3dshow->Ctrls->switch =~ /off/i ?
                 $t_3dshow->sect_begin." off" :
                 $t_3dshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7809,36 +9640,40 @@ sub inner_iterator {
                     $t_total->flag,    $t_total->inc_t_counter(),
                 ),
             # View settings
-            sprintf("%-8s = %4s", 'output',   $t_3dshow->output               ),
-            sprintf("%-8s = %4s", 'material', $t_3dshow->material             ),
-            sprintf("%-8s = %4s", 'x0',     $t_3dshow->origin->{x}            ),
-            sprintf("%-8s = %4s", 'y0',     $t_3dshow->origin->{y}            ),
-            sprintf("%-8s = %4s", 'z0',     $t_3dshow->origin->{z1}           ),
-            sprintf("%-8s = %4s", 'w-wdt',  $t_3dshow->frame->{width}         ),
-            sprintf("%-8s = %4s", 'w-hgt',  $t_3dshow->frame->{height}        ),
-            sprintf("%-8s = %4s", 'w-dst',  $t_3dshow->frame->{distance}      ),
-            sprintf("%-8s = %4s", 'w-mnw',  $t_3dshow->frame->{wdt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-mnh',  $t_3dshow->frame->{hgt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-ang',  $t_3dshow->frame->{angle}         ),
-            sprintf("%-8s = %4s", 'e-the',  $t_3dshow->eye->{polar_angle1}    ),
-            sprintf("%-8s = %4s", 'e-phi',  $t_3dshow->eye->{azimuth_angle}   ),
-            sprintf("%-8s = %4s", 'e-dst',  $t_3dshow->eye->{distance}        ),
-            sprintf("%-8s = %4s", 'l-the',  $t_3dshow->light->{polar_angle1}  ),
-            sprintf("%-8s = %4s", 'l-phi',  $t_3dshow->light->{azimuth_angle} ),
-            sprintf("%-8s = %4s", 'l-dst',  $t_3dshow->light->{distance}      ),
-            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}        ),
+            sprintf("%-8s = %4s", 'output',   $t_3dshow->output  ),
+            sprintf("%-8s = %4s", 'material', $t_3dshow->material),
+            sprintf("%-8s = %4s", 'x0', $t_3dshow->origin->{x} ),
+            sprintf("%-8s = %4s", 'y0', $t_3dshow->origin->{y} ),
+            sprintf("%-8s = %4s", 'z0', $t_3dshow->origin->{z1}),
+            sprintf("%-8s = %4s", 'w-wdt', $t_3dshow->frame->{width}   ),
+            sprintf("%-8s = %4s", 'w-hgt', $t_3dshow->frame->{height}  ),
+            sprintf("%-8s = %4s", 'w-dst', $t_3dshow->frame->{distance}),
+            sprintf("%-8s = %4s", 'w-mnw', $t_3dshow->frame->{wdt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-mnh', $t_3dshow->frame->{hgt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-ang', $t_3dshow->frame->{angle}         ),
+            sprintf("%-8s = %4s", 'e-the', $t_3dshow->eye->{polar_angle1}    ),
+            sprintf("%-8s = %4s", 'e-phi', $t_3dshow->eye->{azimuth_angle}   ),
+            sprintf("%-8s = %4s", 'e-dst', $t_3dshow->eye->{distance}        ),
+            sprintf("%-8s = %4s", 'l-the', $t_3dshow->light->{polar_angle1}  ),
+            sprintf("%-8s = %4s", 'l-phi', $t_3dshow->light->{azimuth_angle} ),
+            sprintf("%-8s = %4s", 'l-dst', $t_3dshow->light->{distance}      ),
+            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}),
             # Output settings
-            sprintf("%-8s = %4s", 'heaven',  $t_3dshow->axis_info->{to_sky}   ),
-            sprintf("%-8s = %4s", 'axishow', $t_3dshow->axis_info->{crd_frame}),
-            sprintf("%-8s = %4s", 'resol',   $t_3dshow->cell_bnd->{resol}     ),
-            sprintf("%-8s = %4s", 'width',   $t_3dshow->cell_bnd->{width}     ),
-            sprintf("%-8s = %4s", 'line',    $t_3dshow->cell_bnd->{line}      ),
-            sprintf("%-8s = %s",  'title',   $t_3dshow->polar1->title         ),
-            sprintf("%-8s = %s",  'angel',   $t_3dshow->polar1->angel         ),
-            sprintf("%-8s = %s",  'sangel',  $t_3dshow->polar1->sangel        ),
-            sprintf("%-8s = %s",  'file',    $t_3dshow->polar1a->fname        ),
-            sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
-            ""; # End
+            sprintf("%-8s = %4s", 'heaven', $t_3dshow->axis_info->{to_sky}),
+            sprintf(
+                "%-8s = %4s",
+                'axishow',
+                $t_3dshow->axis_info->{crd_frame}
+            ),
+            sprintf("%-8s = %4s", 'resol',  $t_3dshow->cell_bnd->{resol}),
+            sprintf("%-8s = %4s", 'width',  $t_3dshow->cell_bnd->{width}),
+            sprintf("%-8s = %4s", 'line',   $t_3dshow->cell_bnd->{line} ),
+            sprintf("%-8s = %s",  'title',  $t_3dshow->polar1->title    ),
+            sprintf("%-8s = %4s", 'epsout', $t_3dshow->epsout           ),
+            sprintf("%-8s = %s",  'angel',  $t_3dshow->polar1->angel    ),
+            sprintf("%-8s = %s",  'sangel', $t_3dshow->polar1->sangel   ),
+            sprintf("%-8s = %s",  'file',   $t_3dshow->polar1a->fname   ),
+            "";  # End
 
         # T-3Dshow 2
         # > Left-to-right beam view
@@ -7847,7 +9682,7 @@ sub inner_iterator {
             $t_3dshow->Ctrls->switch =~ /off/i ?
                 $t_3dshow->sect_begin." off" :
                 $t_3dshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7857,36 +9692,40 @@ sub inner_iterator {
                     $t_total->flag,    $t_total->inc_t_counter(),
                 ),
             # View settings
-            sprintf("%-8s = %4s", 'output',   $t_3dshow->output               ),
-            sprintf("%-8s = %4s", 'material', $t_3dshow->material_cutaway     ),
-            sprintf("%-8s = %4s", 'x0',     $t_3dshow->origin->{x}            ),
-            sprintf("%-8s = %4s", 'y0',     $t_3dshow->origin->{y}            ),
-            sprintf("%-8s = %4s", 'z0',     $t_3dshow->origin->{z1}           ),
-            sprintf("%-8s = %4s", 'w-wdt',  $t_3dshow->frame->{width}         ),
-            sprintf("%-8s = %4s", 'w-hgt',  $t_3dshow->frame->{height}        ),
-            sprintf("%-8s = %4s", 'w-dst',  $t_3dshow->frame->{distance}      ),
-            sprintf("%-8s = %4s", 'w-mnw',  $t_3dshow->frame->{wdt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-mnh',  $t_3dshow->frame->{hgt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-ang',  $t_3dshow->frame->{angle}         ),
-            sprintf("%-8s = %4s", 'e-the',  $t_3dshow->eye->{polar_angle1}    ),
-            sprintf("%-8s = %4s", 'e-phi',  $t_3dshow->eye->{azimuth_angle}   ),
-            sprintf("%-8s = %4s", 'e-dst',  $t_3dshow->eye->{distance}        ),
-            sprintf("%-8s = %4s", 'l-the',  $t_3dshow->light->{polar_angle1}  ),
-            sprintf("%-8s = %4s", 'l-phi',  $t_3dshow->light->{azimuth_angle} ),
-            sprintf("%-8s = %4s", 'l-dst',  $t_3dshow->light->{distance}      ),
-            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}        ),
+            sprintf("%-8s = %4s", 'output',   $t_3dshow->output          ),
+            sprintf("%-8s = %4s", 'material', $t_3dshow->material_cutaway),
+            sprintf("%-8s = %4s", 'x0',    $t_3dshow->origin->{x}            ),
+            sprintf("%-8s = %4s", 'y0',    $t_3dshow->origin->{y}            ),
+            sprintf("%-8s = %4s", 'z0',    $t_3dshow->origin->{z1}           ),
+            sprintf("%-8s = %4s", 'w-wdt', $t_3dshow->frame->{width}         ),
+            sprintf("%-8s = %4s", 'w-hgt', $t_3dshow->frame->{height}        ),
+            sprintf("%-8s = %4s", 'w-dst', $t_3dshow->frame->{distance}      ),
+            sprintf("%-8s = %4s", 'w-mnw', $t_3dshow->frame->{wdt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-mnh', $t_3dshow->frame->{hgt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-ang', $t_3dshow->frame->{angle}         ),
+            sprintf("%-8s = %4s", 'e-the', $t_3dshow->eye->{polar_angle1}    ),
+            sprintf("%-8s = %4s", 'e-phi', $t_3dshow->eye->{azimuth_angle}   ),
+            sprintf("%-8s = %4s", 'e-dst', $t_3dshow->eye->{distance}        ),
+            sprintf("%-8s = %4s", 'l-the', $t_3dshow->light->{polar_angle1}  ),
+            sprintf("%-8s = %4s", 'l-phi', $t_3dshow->light->{azimuth_angle} ),
+            sprintf("%-8s = %4s", 'l-dst', $t_3dshow->light->{distance}      ),
+            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}),
             # Output settings
-            sprintf("%-8s = %4s", 'heaven',  $t_3dshow->axis_info->{to_sky}   ),
-            sprintf("%-8s = %4s", 'axishow', $t_3dshow->axis_info->{crd_frame}),
-            sprintf("%-8s = %4s", 'resol',   $t_3dshow->cell_bnd->{resol}     ),
-            sprintf("%-8s = %4s", 'width',   $t_3dshow->cell_bnd->{width}     ),
-            sprintf("%-8s = %4s", 'line',    $t_3dshow->cell_bnd->{line}      ),
-            sprintf("%-8s = %s",  'title',   $t_3dshow->polar1->title         ),
-            sprintf("%-8s = %s",  'angel',   $t_3dshow->polar1->angel         ),
-            sprintf("%-8s = %s",  'sangel',  $t_3dshow->polar1->sangel        ),
-            sprintf("%-8s = %s",  'file',    $t_3dshow->polar1b->fname        ),
-            sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
-            ""; # End
+            sprintf("%-8s = %4s", 'heaven', $t_3dshow->axis_info->{to_sky}),
+            sprintf(
+                "%-8s = %4s",
+                'axishow',
+                $t_3dshow->axis_info->{crd_frame}
+            ),
+            sprintf("%-8s = %4s", 'resol',  $t_3dshow->cell_bnd->{resol}),
+            sprintf("%-8s = %4s", 'width',  $t_3dshow->cell_bnd->{width}),
+            sprintf("%-8s = %4s", 'line',   $t_3dshow->cell_bnd->{line} ),
+            sprintf("%-8s = %s",  'title',  $t_3dshow->polar1->title    ),
+            sprintf("%-8s = %4s", 'epsout', $t_3dshow->epsout           ),
+            sprintf("%-8s = %s",  'angel',  $t_3dshow->polar1->angel    ),
+            sprintf("%-8s = %s",  'sangel', $t_3dshow->polar1->sangel   ),
+            sprintf("%-8s = %s",  'file',   $t_3dshow->polar1b->fname   ),
+            "";  # End
 
         # T-3Dshow 3
         # > Right-to-left beam view
@@ -7894,7 +9733,7 @@ sub inner_iterator {
             $t_3dshow->Ctrls->switch =~ /off/i ?
                 $t_3dshow->sect_begin." off" :
                 $t_3dshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7904,36 +9743,40 @@ sub inner_iterator {
                     $t_total->flag,    $t_total->inc_t_counter(),
                 ),
             # View settings
-            sprintf("%-8s = %4s", 'output',   $t_3dshow->output               ),
-            sprintf("%-8s = %4s", 'material', $t_3dshow->material             ),
-            sprintf("%-8s = %4s", 'x0',     $t_3dshow->origin->{x}            ),
-            sprintf("%-8s = %4s", 'y0',     $t_3dshow->origin->{y}            ),
-            sprintf("%-8s = %4s", 'z0',     $t_3dshow->origin->{z2}           ),
-            sprintf("%-8s = %4s", 'w-wdt',  $t_3dshow->frame->{width}         ),
-            sprintf("%-8s = %4s", 'w-hgt',  $t_3dshow->frame->{height}        ),
-            sprintf("%-8s = %4s", 'w-dst',  $t_3dshow->frame->{distance}      ),
-            sprintf("%-8s = %4s", 'w-mnw',  $t_3dshow->frame->{wdt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-mnh',  $t_3dshow->frame->{hgt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-ang',  $t_3dshow->frame->{angle}         ),
-            sprintf("%-8s = %4s", 'e-the',  $t_3dshow->eye->{polar_angle2}    ),
-            sprintf("%-8s = %4s", 'e-phi',  $t_3dshow->eye->{azimuth_angle}   ),
-            sprintf("%-8s = %4s", 'e-dst',  $t_3dshow->eye->{distance}        ),
-            sprintf("%-8s = %4s", 'l-the',  $t_3dshow->light->{polar_angle2}  ),
-            sprintf("%-8s = %4s", 'l-phi',  $t_3dshow->light->{azimuth_angle} ),
-            sprintf("%-8s = %4s", 'l-dst',  $t_3dshow->light->{distance}      ),
-            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}        ),
+            sprintf("%-8s = %4s", 'output',   $t_3dshow->output  ),
+            sprintf("%-8s = %4s", 'material', $t_3dshow->material),
+            sprintf("%-8s = %4s", 'x0',    $t_3dshow->origin->{x}            ),
+            sprintf("%-8s = %4s", 'y0',    $t_3dshow->origin->{y}            ),
+            sprintf("%-8s = %4s", 'z0',    $t_3dshow->origin->{z2}           ),
+            sprintf("%-8s = %4s", 'w-wdt', $t_3dshow->frame->{width}         ),
+            sprintf("%-8s = %4s", 'w-hgt', $t_3dshow->frame->{height}        ),
+            sprintf("%-8s = %4s", 'w-dst', $t_3dshow->frame->{distance}      ),
+            sprintf("%-8s = %4s", 'w-mnw', $t_3dshow->frame->{wdt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-mnh', $t_3dshow->frame->{hgt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-ang', $t_3dshow->frame->{angle}         ),
+            sprintf("%-8s = %4s", 'e-the', $t_3dshow->eye->{polar_angle2}    ),
+            sprintf("%-8s = %4s", 'e-phi', $t_3dshow->eye->{azimuth_angle}   ),
+            sprintf("%-8s = %4s", 'e-dst', $t_3dshow->eye->{distance}        ),
+            sprintf("%-8s = %4s", 'l-the', $t_3dshow->light->{polar_angle2}  ),
+            sprintf("%-8s = %4s", 'l-phi', $t_3dshow->light->{azimuth_angle} ),
+            sprintf("%-8s = %4s", 'l-dst', $t_3dshow->light->{distance}      ),
+            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}),
             # Output settings
-            sprintf("%-8s = %4s", 'heaven',  $t_3dshow->axis_info->{to_sky}   ),
-            sprintf("%-8s = %4s", 'axishow', $t_3dshow->axis_info->{crd_frame}),
-            sprintf("%-8s = %4s", 'resol',   $t_3dshow->cell_bnd->{resol}     ),
-            sprintf("%-8s = %4s", 'width',   $t_3dshow->cell_bnd->{width}     ),
-            sprintf("%-8s = %4s", 'line',    $t_3dshow->cell_bnd->{line}      ),
-            sprintf("%-8s = %s",  'title',   $t_3dshow->polar2->title         ),
-            sprintf("%-8s = %s",  'angel',   $t_3dshow->polar2->angel         ),
-            sprintf("%-8s = %s",  'sangel',  $t_3dshow->polar2->sangel        ),
-            sprintf("%-8s = %s",  'file',    $t_3dshow->polar2a->fname        ),
-            sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
-            ""; # End
+            sprintf("%-8s = %4s", 'heaven', $t_3dshow->axis_info->{to_sky}),
+            sprintf(
+                "%-8s = %4s",
+                'axishow',
+                $t_3dshow->axis_info->{crd_frame}
+            ),
+            sprintf("%-8s = %4s", 'resol',  $t_3dshow->cell_bnd->{resol}),
+            sprintf("%-8s = %4s", 'width',  $t_3dshow->cell_bnd->{width}),
+            sprintf("%-8s = %4s", 'line',   $t_3dshow->cell_bnd->{line} ),
+            sprintf("%-8s = %s",  'title',  $t_3dshow->polar2->title    ),
+            sprintf("%-8s = %4s", 'epsout', $t_3dshow->epsout           ),
+            sprintf("%-8s = %s",  'angel',  $t_3dshow->polar2->angel    ),
+            sprintf("%-8s = %s",  'sangel', $t_3dshow->polar2->sangel   ),
+            sprintf("%-8s = %s",  'file',   $t_3dshow->polar2a->fname   ),
+            "";  # End
 
         # T-3Dshow 4
         # > Right-to-left beam view
@@ -7942,7 +9785,7 @@ sub inner_iterator {
             $t_3dshow->Ctrls->switch =~ /off/i ?
                 $t_3dshow->sect_begin." off" :
                 $t_3dshow->sect_begin.sprintf(
-                    " %s ".
+                    "  %s ".
                     "%s No. %s, ".
                     "%s No. %s, ".
                     "%s No. %s",
@@ -7952,36 +9795,40 @@ sub inner_iterator {
                     $t_total->flag,    $t_total->inc_t_counter(),
                 ),
             # View settings
-            sprintf("%-8s = %4s", 'output',   $t_3dshow->output               ),
-            sprintf("%-8s = %4s", 'material', $t_3dshow->material_cutaway     ),
-            sprintf("%-8s = %4s", 'x0',     $t_3dshow->origin->{x}            ),
-            sprintf("%-8s = %4s", 'y0',     $t_3dshow->origin->{y}            ),
-            sprintf("%-8s = %4s", 'z0',     $t_3dshow->origin->{z2}           ),
-            sprintf("%-8s = %4s", 'w-wdt',  $t_3dshow->frame->{width}         ),
-            sprintf("%-8s = %4s", 'w-hgt',  $t_3dshow->frame->{height}        ),
-            sprintf("%-8s = %4s", 'w-dst',  $t_3dshow->frame->{distance}      ),
-            sprintf("%-8s = %4s", 'w-mnw',  $t_3dshow->frame->{wdt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-mnh',  $t_3dshow->frame->{hgt_num_meshes}),
-            sprintf("%-8s = %4s", 'w-ang',  $t_3dshow->frame->{angle}         ),
-            sprintf("%-8s = %4s", 'e-the',  $t_3dshow->eye->{polar_angle2}    ),
-            sprintf("%-8s = %4s", 'e-phi',  $t_3dshow->eye->{azimuth_angle}   ),
-            sprintf("%-8s = %4s", 'e-dst',  $t_3dshow->eye->{distance}        ),
-            sprintf("%-8s = %4s", 'l-the',  $t_3dshow->light->{polar_angle2}  ),
-            sprintf("%-8s = %4s", 'l-phi',  $t_3dshow->light->{azimuth_angle} ),
-            sprintf("%-8s = %4s", 'l-dst',  $t_3dshow->light->{distance}      ),
-            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}        ),
+            sprintf("%-8s = %4s", 'output',   $t_3dshow->output          ),
+            sprintf("%-8s = %4s", 'material', $t_3dshow->material_cutaway),
+            sprintf("%-8s = %4s", 'x0',    $t_3dshow->origin->{x}            ),
+            sprintf("%-8s = %4s", 'y0',    $t_3dshow->origin->{y}            ),
+            sprintf("%-8s = %4s", 'z0',    $t_3dshow->origin->{z2}           ),
+            sprintf("%-8s = %4s", 'w-wdt', $t_3dshow->frame->{width}         ),
+            sprintf("%-8s = %4s", 'w-hgt', $t_3dshow->frame->{height}        ),
+            sprintf("%-8s = %4s", 'w-dst', $t_3dshow->frame->{distance}      ),
+            sprintf("%-8s = %4s", 'w-mnw', $t_3dshow->frame->{wdt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-mnh', $t_3dshow->frame->{hgt_num_meshes}),
+            sprintf("%-8s = %4s", 'w-ang', $t_3dshow->frame->{angle}         ),
+            sprintf("%-8s = %4s", 'e-the', $t_3dshow->eye->{polar_angle2}    ),
+            sprintf("%-8s = %4s", 'e-phi', $t_3dshow->eye->{azimuth_angle}   ),
+            sprintf("%-8s = %4s", 'e-dst', $t_3dshow->eye->{distance}        ),
+            sprintf("%-8s = %4s", 'l-the', $t_3dshow->light->{polar_angle2}  ),
+            sprintf("%-8s = %4s", 'l-phi', $t_3dshow->light->{azimuth_angle} ),
+            sprintf("%-8s = %4s", 'l-dst', $t_3dshow->light->{distance}      ),
+            sprintf("%-8s = %4s", 'shadow', $t_3dshow->light->{shadow}),
             # Output settings
-            sprintf("%-8s = %4s", 'heaven',  $t_3dshow->axis_info->{to_sky}   ),
-            sprintf("%-8s = %4s", 'axishow', $t_3dshow->axis_info->{crd_frame}),
-            sprintf("%-8s = %4s", 'resol',   $t_3dshow->cell_bnd->{resol}     ),
-            sprintf("%-8s = %4s", 'width',   $t_3dshow->cell_bnd->{width}     ),
-            sprintf("%-8s = %4s", 'line',    $t_3dshow->cell_bnd->{line}      ),
-            sprintf("%-8s = %s",  'title',   $t_3dshow->polar2->title         ),
-            sprintf("%-8s = %s",  'angel',   $t_3dshow->polar2->angel         ),
-            sprintf("%-8s = %s",  'sangel',  $t_3dshow->polar2->sangel        ),
-            sprintf("%-8s = %s",  'file',    $t_3dshow->polar2b->fname        ),
-            sprintf("%-8s = %4s", 'epsout',  $t_3dshow->epsout                ),
-            ""; # End
+            sprintf("%-8s = %4s", 'heaven', $t_3dshow->axis_info->{to_sky}),
+            sprintf(
+                "%-8s = %4s",
+                'axishow',
+                $t_3dshow->axis_info->{crd_frame}
+            ),
+            sprintf("%-8s = %4s", 'resol',  $t_3dshow->cell_bnd->{resol}),
+            sprintf("%-8s = %4s", 'width',  $t_3dshow->cell_bnd->{width}),
+            sprintf("%-8s = %4s", 'line',   $t_3dshow->cell_bnd->{line} ),
+            sprintf("%-8s = %s",  'title',  $t_3dshow->polar2->title    ),
+            sprintf("%-8s = %4s", 'epsout', $t_3dshow->epsout           ),
+            sprintf("%-8s = %s",  'angel',  $t_3dshow->polar2->angel    ),
+            sprintf("%-8s = %s",  'sangel', $t_3dshow->polar2->sangel   ),
+            sprintf("%-8s = %s",  'file',   $t_3dshow->polar2b->fname   ),
+            "";  # End
 
         # End section
         push @{$phits->sects->{end}},
@@ -7998,8 +9845,8 @@ sub inner_iterator {
             "OMP_NUM_THREADS = n",
             "where n is the number of physical cores,",
             "NOT the number of threads that can be simultaneously processed.",
-            "This is because if OMP_NUM_THREADS is set to be",
-            "larger than the number of physical cores, competition takes place",
+            "This is because if OMP_NUM_THREADS is set to be larger than",
+            "the number of physical cores, competition takes place",
             "among the threads that involve file writing, which will in turn",
             "unnecessarily increase the CPU time.",
             "For an Intel Core i7-2600 Processor, for example,",
@@ -8012,7 +9859,7 @@ sub inner_iterator {
         $_ = $phits->Cmt->symb.($_ ? " " : "").$_
             for @{$phits->sects->{note}};
         push @{$phits->sects->{note}},
-            ""; # End
+            "";  # End
 
         #
         # Write to the PHITS input file.
@@ -8053,6 +9900,8 @@ sub inner_iterator {
             t_track_nrg_motar_low_emax
             t_track_nrg_flux_mnt_up
             t_track_nrg_flux_mnt_down
+            t_cross_intact
+            t_cross_intact_low_emax
             t_cross_bconv_ent
             t_cross_bconv_ent_low_emax
             t_cross_bconv_exit
@@ -8068,6 +9917,9 @@ sub inner_iterator {
             t_heat_xy_motar
             t_heat_xy_motar_ansys
             t_heat_rz_bconv
+            t_heat_rz_bconv_twodtype4
+            t_heat_rz_motar
+            t_heat_rz_motar_twodtype4
             t_heat_reg_bconv
             t_heat_reg_motar
             t_gshow_xz
@@ -8094,8 +9946,14 @@ sub inner_iterator {
             next if $flux_mnt_down->height <= 0 and $t =~ /flux_mnt_down/i;
 
             # Low emax
-            next if not $t_track->is_neut_of_int and $t =~ /t_track.*low_emax/i;
-            next if not $t_cross->is_neut_of_int and $t =~ /t_cross.*low_emax/i;
+            next if (
+                not $t_track->is_neut_of_int
+                and $t =~ /t_track.*low_emax/i
+            );
+            next if (
+                not $t_cross->is_neut_of_int
+                and $t =~ /t_cross.*low_emax/i
+            );
 
             # None of the above apply
             push @the_inp_sects, $t;
@@ -8195,7 +10053,7 @@ sub inner_iterator {
                 $phits->Cmt->abbrs->{height}[1]
             ),
             $mapdl->Cmt->borders->{'='},
-            "\n"; # End
+            "\n";  # End
 
         # Set entity indices.
         $mapdl->entities->set_area(
@@ -8248,11 +10106,11 @@ sub inner_iterator {
             heat_transfer_coeff => {
                 gconv => [
                     'heat_transfer_coeff_'.$bconv->cell_mat,
-                    1e+04 # !! <= Must be corrected to a calculated value !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    1e+04  # !! <= Must be corrected to a calculated value !!
                 ],
                 motar => [
                     'heat_transfer_coeff_'.$motar->cell_mat,
-                    1e+04 # !! <= Must be corrected to a calculated value !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    1e+04  # !! <= Must be corrected to a calculated value !!
                 ],
             },
             bulk_temperature => {
@@ -8272,8 +10130,8 @@ sub inner_iterator {
             $mapdl->Cmt->borders->{'='},
             sprintf(
                 "$_conv='%s'",
-                $mapdl->params->{tab_ext}[0], # Parameter name
-                $mapdl->params->{tab_ext}[1]  # Parameter value
+                $mapdl->params->{tab_ext}[0],  # Parameter name
+                $mapdl->params->{tab_ext}[1]   # Parameter value
             ),
             sprintf(
                 "$_conv='%s'",
@@ -8333,7 +10191,7 @@ sub inner_iterator {
                     );
             }
             push @{$mapdl->sects->{parameters}},
-                "\n"; # End
+                "\n";  # End
 
         # Title section:
         # > Defined after the parameter section as the setter method
@@ -8350,18 +10208,15 @@ sub inner_iterator {
         );
         push @{$mapdl->sects->{title}},
             # phitar front matter
-            (
-                $mapdl->Ctrls->write_fm =~ /on/i ?
-                    show_front_matter(
-                        $prog_info_href,
-                        'prog',
-                        'auth',
-                        'timestamp',
-                        'no_trailing_blkline',
-                        'no_newline',
-                        'copy',
-                        $mapdl->Cmt->symb,
-                    ) : ""
+            show_front_matter(
+                $prog_info_href,
+                'prog',
+                'auth',
+                'timestamp',
+                'no_trailing_blkline',
+                'no_newline',
+                'copy',
+                $mapdl->Cmt->symb,
             ),
             # MAPDL problem title
             sprintf(
@@ -8369,7 +10224,7 @@ sub inner_iterator {
                 $mapdl->commands->title->{cmd},
                 $mapdl->commands->title->{title}
             ),
-            "\n"; # End
+            "\n";  # End
 
         # [1/3] Preprocessor
         # Begin: Preprocessor
@@ -8378,15 +10233,15 @@ sub inner_iterator {
             sprintf("%s [1/3] Preprocessor", $mapdl->Cmt->symb),
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->pre->{begin},
-            ""; # End
+            "";  # End
 
         # Primitives (Units in MKS, Kelvin and degree)
         # Bremsstrahlung converter
         $mapdl->primitives->set_cylinder(
-            r1 => $bconv->radius   * 1e-02, #            Inner radius
-            r2 => '',                       # "Optional" outer radius
-            z1 => $bconv->beam_ent * 1e-02, # Starting z coordinate
-            z2 => $bconv->height   * 1e-02, # Ending   z coordinate
+            r1 => $bconv->radius   * 1e-02,  #            Inner radius
+            r2 => '',                        # "Optional" outer radius
+            z1 => $bconv->beam_ent * 1e-02,  # Starting z coordinate
+            z2 => $bconv->height   * 1e-02,  # Ending   z coordinate
         );
         push @{$mapdl->sects->{primitives}},
             $mapdl->Cmt->borders->{'='},
@@ -8395,13 +10250,13 @@ sub inner_iterator {
             $mapdl->materials->gconv->{begin},
             sprintf(
                 "%s,%s,%s,%s,%s,%s,%s",
-                $mapdl->primitives->cylinder->{cmd},    # Predefined
+                $mapdl->primitives->cylinder->{cmd},     # Predefined
                 $mapdl->primitives->cylinder->{r1},
                 $mapdl->primitives->cylinder->{r2},
                 $mapdl->primitives->cylinder->{z1},
                 $mapdl->primitives->cylinder->{z2},
-                $mapdl->primitives->cylinder->{theta1}, # Predefined
-                $mapdl->primitives->cylinder->{theta2}  # Predefined
+                $mapdl->primitives->cylinder->{theta1},  # Predefined
+                $mapdl->primitives->cylinder->{theta2}   # Predefined
             );
             # Molybdenum target, RCC
             if ($tar_of_int->flag eq $motar_rcc->flag) {
@@ -8427,8 +10282,8 @@ sub inner_iterator {
             # Molybdenum target, TRC
             if ($tar_of_int->flag eq $motar_trc->flag) {
                 $mapdl->primitives->set_cone(
-                    r1 => $motar_trc->bot_radius * 1e-02, # Bottom radius
-                    r2 => $motar_trc->top_radius * 1e-02, # Top    radius
+                    r1 => $motar_trc->bot_radius * 1e-02,  # Bottom radius
+                    r2 => $motar_trc->top_radius * 1e-02,  # Top    radius
                     z1 => $motar_trc->beam_ent   * 1e-02,
                     z2 => ($motar_trc->beam_ent + $motar_trc->height) * 1e-02,
                 );
@@ -8446,7 +10301,7 @@ sub inner_iterator {
                     );
             }
             push @{$mapdl->sects->{primitives}},
-            ""; # End
+            "";  # End
 
         # Material properties
         # Bremsstrahlung converter
@@ -8522,7 +10377,7 @@ sub inner_iterator {
                     );
             }
             push @{$mapdl->sects->{mat_props}},
-            ""; # End
+            "";  # End
 
         # Meshing
         $mapdl->meshing->set_et(
@@ -8648,12 +10503,12 @@ sub inner_iterator {
                     );
             }
             push @{$mapdl->sects->{meshing}},
-                ""; # End
+                "";  # End
 
         # End: Preprocessor
         push @{$mapdl->sects->{preproc_end}},
             $mapdl->processors->pre->{end},
-            "\n"; # End
+            "\n";  # End
 
         # [2/3] Solution processor
         # Begin: Solution processor
@@ -8662,7 +10517,7 @@ sub inner_iterator {
             sprintf("%s [2/3] Solution processor", $mapdl->Cmt->symb),
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->sol->{begin},
-            ""; # End
+            "";  # End
 
         # Loads
         $mapdl->set_params(
@@ -8816,9 +10671,11 @@ sub inner_iterator {
                     area   => $mapdl->entities->area->{motar}[0],
                     lab    => 'conv',
                     value  =>
-                        '%'.$mapdl->params->{heat_transfer_coeff}{motar}[0].'%',
+                        '%'.$mapdl->params
+                            ->{heat_transfer_coeff}{motar}[0].'%',
                     value2 =>
-                        '%'.$mapdl->params->{bulk_temperature}{motar}[0].'%',
+                        '%'.$mapdl->params
+                            ->{bulk_temperature}{motar}[0].'%',
                 );
                 push @{$mapdl->sects->{loads}},
                     sprintf(
@@ -8845,7 +10702,7 @@ sub inner_iterator {
                     );
             }
             push @{$mapdl->sects->{loads}},
-                ""; # End
+                "";  # End
 
         # Solver
         push @{$mapdl->sects->{solver}},
@@ -8853,12 +10710,12 @@ sub inner_iterator {
             sprintf("%s (2/2) Run the solver", $mapdl->Cmt->symb),
             $mapdl->Cmt->borders->{'='},
             $mapdl->commands->solve->{cmd},
-            ""; # End
+            "";  # End
 
         # End: Solution processor
         push @{$mapdl->sects->{solproc_end}},
             $mapdl->processors->sol->{end},
-            "\n"; # End
+            "\n";  # End
 
         # [3/3] General postprocessor
         # Begin: General postprocessor
@@ -8867,7 +10724,7 @@ sub inner_iterator {
             sprintf("%s [3/3] General postprocessor", $mapdl->Cmt->symb),
             $mapdl->Cmt->borders->{'#'},
             $mapdl->processors->gen_post->{begin},
-            ""; # End
+            "";  # End
 
         # Viewing direction and angle
         push @{$mapdl->sects->{viewpoint}},
@@ -8877,7 +10734,7 @@ sub inner_iterator {
             sprintf("%s,%s,%s,%s,%s", '/VIEW', 1, 0, 0.5, -0.866),
             sprintf("%s,%s,%s", '/VUP', 1, 'X'                  ),
             sprintf("%s,%s", '/REPLOT', 'FAST',                 ),
-            ""; # End
+            "";  # End
 
         # Contours
         push @{$mapdl->sects->{contours}},
@@ -8895,13 +10752,13 @@ sub inner_iterator {
                 'TEMP',
                 0
             ),
-            ""; # End
+            "";  # End
 
         # Generate image files
         push @{$mapdl->sects->{image_files}},
             $mapdl->Cmt->borders->{'='},
             sprintf("%s Generate image files", $mapdl->Cmt->symb),
-            $mapdl->Cmt->borders->{'='}; # End
+            $mapdl->Cmt->borders->{'='};  # End
 
         # PostScript
         $mapdl->commands->set_get(
@@ -8911,7 +10768,7 @@ sub inner_iterator {
             item1  => 'jobname',
         );
         $mapdl->set_ps_settings(
-            high_resol => 1, # Overwrite
+            high_resol => 1,  # Overwrite
         );
         $mapdl->commands->set_rename(
             # Old fname
@@ -8974,12 +10831,12 @@ sub inner_iterator {
                 $mapdl->commands->rename->{unused2},
                 $mapdl->commands->rename->{distkey},
             ),
-            ""; # End
+            "";  # End
 
         # End: General postprocessor
         push @{$mapdl->sects->{gen_postproc_end}},
             $mapdl->processors->gen_post->{end},
-            "\n"; # End
+            "\n";  # End
 
         # Write to the MAPDL macro file
         if ($mapdl->Ctrls->switch =~ /on/i) {
@@ -9031,7 +10888,7 @@ sub inner_iterator {
         #     because, as of PHITS v3.02 and ANGEl v4.36,
         #     the ANGEL dimension commands like cmmm
         #     identify only square bracketed cm, or [cm].
-        # > The tally filenames are memorized for later ANGEL running.
+        # > The tally filenames are memorized for future ANGEL running.
         # > Memorize nps from the summary output file (.out).
         #-----------------------------------------------------------
         if ($phits->Ctrls->switch =~ /on/i) {
@@ -9131,7 +10988,7 @@ sub inner_iterator {
 
         #
         # Modify tally file strings and memorize their filenames
-        # for later ANGEL running.
+        # for future ANGEL running.
         #
         if (
             $phits->Ctrls->switch           =~ /on/i
@@ -9140,7 +10997,8 @@ sub inner_iterator {
         ) {
             # T-Track "particle distributions"
             $angel->modify_and_or_memorize_ang_files(
-                $phits->source->type_of_int->{name}{val}, # Source particle
+                # Source particle
+                $phits->source->spat_dist_of_int->{proj}{val},
                 $angel->Cmt->annot_type,
                 $t_track->xz->fname,
                 $t_track->Ctrls->err_switch =~ /on/i ?
@@ -9161,7 +11019,7 @@ sub inner_iterator {
             # T-Track "energy spectra"
             if ($phits->params->{icntl}{val} eq 0) {
                 $angel->modify_and_or_memorize_ang_files(
-                    $phits->source->type_of_int->{name}{val},
+                    $phits->source->spat_dist_of_int->{proj}{val},
                     $angel->Cmt->annot_type,
                     $bconv->flag !~ /none/i ? (
                         $t_track->nrg_bconv->fname,
@@ -9179,8 +11037,10 @@ sub inner_iterator {
             # T-Cross
             if ($phits->params->{icntl}{val} eq 0) {
                 $angel->modify_and_or_memorize_ang_files(
-                    $phits->source->type_of_int->{name}{val},
+                    $phits->source->spat_dist_of_int->{proj}{val},
                     $angel->Cmt->annot_type,
+                    $t_cross->nrg_intact->fname,
+                    $t_cross->nrg_intact_low_emax->fname,
                     $bconv->flag !~ /none/i ? (
                         $t_cross->nrg_bconv_ent->fname,
                         $t_cross->nrg_bconv_ent_low_emax->fname,
@@ -9200,7 +11060,7 @@ sub inner_iterator {
                 $t_heat->Ctrls->switch =~ /on/i
             ) {
                 $angel->modify_and_or_memorize_ang_files(
-                    $phits->source->type_of_int->{name}{val},
+                    $phits->source->spat_dist_of_int->{proj}{val},
                     $angel->Cmt->annot_type,
                     $t_heat->xz->fname,
                     $t_heat->Ctrls->err_switch =~ /on/i ?
@@ -9211,23 +11071,25 @@ sub inner_iterator {
                     $bconv->flag !~ /none/i ? (
                         $t_heat->xy_bconv->fname,
                         $t_heat->rz_bconv->fname,
-#                        $t_heat->reg_bconv->fname,
                         $t_heat->Ctrls->err_switch =~ /on/i ?
                             (
                                 $t_heat->xy_bconv->err_fname,
                                 $t_heat->rz_bconv->err_fname,
                             ) : '',
+#                        $t_heat->reg_bconv->fname,
                     ) : '',
                     $t_heat->xy_motar->fname,
+                    $t_heat->rz_motar->fname,
                     $t_heat->Ctrls->err_switch =~ /on/i ?
                         $t_heat->xy_motar->err_fname : '',
+                        $t_heat->rz_motar->err_fname,
 #                    $t_heat->reg_motar->fname,
                 );
             }
 
             # T-Gshow
             $angel->modify_and_or_memorize_ang_files(
-                $phits->source->type_of_int->{name}{val},
+                $phits->source->spat_dist_of_int->{proj}{val},
                 $angel->Cmt->annot_type,
                 $t_gshow->xz->fname,
                 $t_gshow->yz->fname,
@@ -9237,7 +11099,7 @@ sub inner_iterator {
 
             # T-3Dshow
             $angel->modify_and_or_memorize_ang_files(
-                $phits->source->type_of_int->{name}{val},
+                $phits->source->spat_dist_of_int->{proj}{val},
                 $angel->Cmt->annot_type,
                 $t_3dshow->polar1a->fname,
                 $t_3dshow->polar1b->fname,
@@ -9318,7 +11180,7 @@ sub inner_iterator {
         #-----------------------------------------------------------
         # Step 5
         # > Run gs.exe (or Win ver) : .eps --> .pdf, .png, .jpg
-        # > Run inkscape.exe:         .eps --> .emf, .wmf
+        # > Run inkscape.exe:         .eps --> .svg, .emf, .wmf
         # > Memorize the names of the raster images for their
         #   animation by ImageMagick and/or FFmpeg at the Step 7.
         # > The Ghostscript's .eps --> .png/.jpg rasterization
@@ -9340,13 +11202,16 @@ sub inner_iterator {
         # > Direct use of Ghostscript works just fine for this job!
         #-----------------------------------------------------------
         if (
-            $image->Ctrls->png_switch        =~ /on/i
+            $image->Ctrls->pdf_switch        =~ /on/i
+            or $image->Ctrls->svg_switch     =~ /on/i
+            or $image->Ctrls->emf_switch     =~ /on/i
+            or $image->Ctrls->wmf_switch     =~ /on/i
+            or $image->Ctrls->png_switch     =~ /on/i
             or $image->Ctrls->png_trn_switch =~ /on/i
             or $image->Ctrls->jpg_switch     =~ /on/i
-            or $image->Ctrls->pdf_switch     =~ /on/i
             or $animate->Ctrls->gif_switch   =~ /on/i
-            or $animate->Ctrls->avi_switch   =~ /on/i
             or $animate->Ctrls->mp4_switch   =~ /on/i
+            or $animate->Ctrls->avi_switch   =~ /on/i
         ) {
             # When the animate switch has been turned on
             # but no rasterization is to be performed,
@@ -9359,8 +11224,8 @@ sub inner_iterator {
             $image->Ctrls->set_skipping_switch('on') if (
                 (
                     $animate->Ctrls->gif_switch    =~ /on/i
-                    or $animate->Ctrls->avi_switch =~ /on/i
                     or $animate->Ctrls->mp4_switch =~ /on/i
+                    or $animate->Ctrls->avi_switch =~ /on/i
                 ) and (
                     $image->Ctrls->png_switch         =~ /off/i
                     and $image->Ctrls->png_trn_switch =~ /off/i
@@ -9413,8 +11278,8 @@ sub inner_iterator {
                     ] : [],
                 # Hooks
                 {
-                    varying     => $phits->FileIO->varying_flag, # vhgt
-                    fixed       => $phits->FileIO->fixed_flag,   # frad-fgap
+                    varying     => $phits->FileIO->varying_flag,  # vhgt
+                    fixed       => $phits->FileIO->fixed_flag,    # frad-fgap
                     orientation => $angel->orientation,
                 },
             );
@@ -9469,6 +11334,17 @@ sub inner_iterator {
             # T-Cross
             if ($phits->params->{icntl}{val} eq 0) {
                 $image->convert(
+                    # Intact particles: Plain
+                    [
+                        $t_cross->nrg_intact->fname,
+                        $t_cross->nrg_intact->flag,
+                    ],
+                    # Intact particles: Low emax for photoneutrons
+                    $t_cross->is_neut_of_int ?
+                        [
+                            $t_cross->nrg_intact_low_emax->fname,
+                            $t_cross->nrg_intact_low_emax->flag,
+                        ] : [],
                     # Bremsstrahlung converter: Plain
                     $bconv->flag !~ /none/i ?
                         (
@@ -9583,6 +11459,15 @@ sub inner_iterator {
                             $t_heat->xy_motar->err_fname,
                             $t_heat->xy_motar->err_flag,
                         ] : [],
+                    [
+                        $t_heat->rz_motar->fname,
+                        $t_heat->rz_motar->flag
+                    ],
+                    $t_heat->Ctrls->err_switch =~ /on/i ?
+                        [
+                            $t_heat->rz_motar->err_fname,
+                            $t_heat->rz_motar->err_flag,
+                        ] : [],
 #                    [
 #                        $t_heat->reg_motar->fname,
 #                        $t_heat->reg_motar->flag,
@@ -9641,2484 +11526,80 @@ sub inner_iterator {
         }
 
         #-----------------------------------------------------------
-        # Step 6-1 (a)
-        # Calculate yield and specific yield of Mo-99
-        # and fill in the data reduction array reference.
+        # Step 6
+        # Calculate the yields and specific yields of
+        # Mo-99 and/or Au-196, and generate data files.
         #-----------------------------------------------------------
-        if (
+        if (  # Mo-99 from the Mo target in question
             $yield_mo99->Ctrls->switch =~ /on/i
-            and $motar->cell_mat =~ /mo/i # mo, moo2, moo3
+            and $motar->cell_mat =~ /mo/i  # mo, moo2, moo3
         ) {
-            my $yield_mo99_href = calc_rn_yield( # Return val: hash ref
-                {
-                    #
-                    # For reactant nuclide number density calculation
-                    #
-                    tar_mat => $motar->cell_mat =~ /mo\b/i ?
-                        'momet' : $motar->cell_mat,
-                    tar_dens_ratio =>
-                        $motar->dens_ratio,
-                    tar_vol => $tar_of_int->flag eq $motar_trc->flag ?
-                        $motar_trc->vol : $motar_rcc->vol,
-                    react_nucl =>
-                        'mo100',
-                    react_nucl_enri_lev =>
-                        $yield_mo99->react_nucl_enri_lev,
-                    enri_lev_type =>
-                        'amt_frac',
-                    prod_nucl =>
-                        'mo99',
-                    min_depl_lev_global =>
-                        0.0000,
-                    min_depl_lev_local_href =>
-                        {},
-                    depl_order =>
-                        'ascend',
-                    is_verbose =>
-                        0,
-
-                    #
-                    # For yield calculation
-                    #
-
-                    # Irradiation conditions
-                    avg_beam_curr =>
-                        $yield->avg_beam_curr, # uA
-                    end_of_irr =>
-                        $yield->end_of_irr,    # Hour
-
-                    # Particle fluence data
-                    mc_flue_dir => (
-                        $phits->FileIO->subdir.
-                        $phits->FileIO->path_delim.
-                        $phits->FileIO->subsubdir
-                    ),
-                    mc_flue_dat =>
-                        $t_track->nrg_motar->fname,
-                    mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
-                        4 : 2, # Column number for the reaction projectile
-
-                    # Microscopic xs data
-                    micro_xs_dir => (
-                        $phits->cwd.
-                        $phits->FileIO->path_delim.
-                        $yield_mo99->FileIO->micro_xs_dir
-                    ),
-                    micro_xs_dat =>
-                        $yield_mo99->FileIO->micro_xs_dat,
-                    micro_xs_interp_algo =>
-                        $yield_mo99->micro_xs_interp_algo,
-                    micro_xs_emin => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emin}{eff_nrg_range_mo99}
-                    ),
-                    micro_xs_emax => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emax}{eff_nrg_range_mo99}
-                    ),
-                    # '$yield_mo99->num_of_nrg_bins' has also been used in
-                    # '$t_track->nrg_motar' (look up 'T-Track 7'),
-                    # so that the same number of energy bins is used.
-                    micro_xs_ne =>
-                        $yield_mo99->num_of_nrg_bins,
-
-                    # precision_href: Overwrite the local %fmt_specifiers.
-                    precision_href => {
-                        avg_beam_curr => '%.2f',
-                        end_of_irr    => '%.3f',
-                        yield         => '%.2f',
-                        sp_yield      => '%.2f',
-                    },
-
-                    # Yield and specific yield units
-                    yield_unit =>
-                        $yield->unit, # If omitted, 'Bq' is used.
-                },
+            run_and_rpt_calc_rn_yield(
+                $motar,
+                'mo100',      # react_nucl
+                'mo99',       # prod_nucl
+                '',           # prod_nucl_flag
+                $yield,       # Delegate of all products
+                $yield_mo99,  # Delegate of products
+                $yield_mo99,  # Individual product
+                $yield_mo99_for_sp_src,
+                $pwm_mo99_for_sp_src,
+                $t_track->nrg_motar->fname,  # Fluence data
+                # >> Dependent on inner_iterator()
+                $tar_of_int,
+                $_varying_str,
+                $run_opts_href,
+                $prog_info_href,
+                $source_eg0,
+                # <<
             );
-            $yield_mo99->set_calc_rn_yield(%$yield_mo99_href);
-
-            # Fill in the columnar array ref for the step 6-2.
-            $_->add_columnar_arr(
-                $phits->curr_v_source_param->{val}, # Varying source param value
-                $varying_val * 10,                  # cm --> mm
-                $yield_mo99->calc_rn_yield->{prod_nucl_yield},
-                $yield_mo99->calc_rn_yield->{prod_nucl_yield_per_microamp},
-                $yield_mo99->calc_rn_yield->{prod_nucl_sp_yield},
-                $yield_mo99->calc_rn_yield->{prod_nucl_sp_yield_per_microamp},
-            ) for ($yield_mo99, $yield_mo99_for_specific_source);
-
-            # PWM
-            if ($yield_mo99->Ctrls->pwm_switch =~ /on/i) {
-                # Write data over the photon energy range.
-                for (
-                    my $i=0;
-                    $i<=$#{$yield_mo99->calc_rn_yield->{mc_flue_nrg_mega_ev}};
-                    $i++
-                ) {
-                    $pwm_mo99_for_specific_source->add_columnar_arr(
-                        $phits->curr_v_source_param->{val},
-                        $varying_val * 10,
-                        $yield_mo99->calc_rn_yield->{mc_flue_nrg_mega_ev}[$i],
-                        $yield_mo99->calc_rn_yield->{mc_flue_proj}[$i],
-                        $yield_mo99->calc_rn_yield->{xs_nrg_mega_ev}[$i],
-                        $yield_mo99->calc_rn_yield->{micro_xs_barn}[$i],
-                        $yield_mo99->calc_rn_yield->{'micro_xs_cm^2'}[$i],
-                        $yield_mo99->calc_rn_yield->{react_nucl_num_dens},
-                        $yield_mo99->calc_rn_yield->{'macro_xs_cm^-1'}[$i],
-                        $yield_mo99->calc_rn_yield->{pwm_micro}[$i],
-                        $yield_mo99->calc_rn_yield->{pwm_macro}[$i],
-                        $yield_mo99->calc_rn_yield->{avg_beam_curr},
-                        $yield_mo99->calc_rn_yield->{source_rate},
-                        $yield_mo99->calc_rn_yield->{react_rate_per_vol}[$i],
-                        $yield_mo99->calc_rn_yield->{tar_vol},
-                        $yield_mo99->calc_rn_yield->{react_rate}[$i],
-                    );
-                }
-
-                # Append the sums of pointwise multiplication products.
-                $pwm_mo99_for_specific_source->add_columnar_arr(
-                    $phits->curr_v_source_param->{val},
-                    $varying_val * 10,
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    $yield_mo99->calc_rn_yield->{pwm_micro_tot},
-                    $yield_mo99->calc_rn_yield->{pwm_macro_tot},
-                    'NaN',
-                    $yield_mo99->calc_rn_yield->{source_rate_tot},
-                    $yield_mo99->calc_rn_yield->{react_rate_per_vol_tot},
-                    'NaN',
-                    $yield_mo99->calc_rn_yield->{react_rate_tot},
-                );
-            }
         }
-        #-----------------------------------------------------------
-        # Step 6-1 (b)
-        # Calculate yield and specific yield of Au-196
-        # and fill in the data reduction array reference.
-        #-----------------------------------------------------------
-        # Upstream
-        if (
+        if (  # Au-196 from the upstream Au foil in question
             $yield_au196->Ctrls->switch =~ /on/i
             and $flux_mnt_up->height > 0
         ) {
-            my $yield_au196_1_href = calc_rn_yield( # Return val: hash ref
-                {
-                    #
-                    # For reactant nuclide number density calculation
-                    #
-                    tar_mat =>
-                        'aumet',
-                    tar_dens_ratio =>
-                        $flux_mnt_up->dens_ratio,
-                    tar_vol =>
-                        $flux_mnt_up->vol,
-                    react_nucl =>
-                        'au197',
-                    react_nucl_enri_lev =>
-                        $yield_au196->react_nucl_enri_lev,
-                    enri_lev_type =>
-                        'amt_frac',
-                    prod_nucl =>
-                        'au196',
-                    min_depl_lev_global =>
-                        0.0000,
-                    min_depl_lev_local_href =>
-                        {},
-                    depl_order =>
-                        'ascend',
-                    is_verbose =>
-                        0,
-
-                    #
-                    # For yield calculation
-                    #
-
-                    # Irradiation conditions
-                    avg_beam_curr =>
-                        $yield->avg_beam_curr,
-                    end_of_irr =>
-                        $yield->end_of_irr,
-
-                    # Particle fluence data
-                    mc_flue_dir => (
-                        $phits->FileIO->subdir.
-                        $phits->FileIO->path_delim.
-                        $phits->FileIO->subsubdir
-                    ),
-                    mc_flue_dat =>
-                        $t_track->nrg_flux_mnt_up->fname,
-                    mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
-                        4 : 2, # Column number for the reaction projectile
-
-                    # Microscopic xs data
-                    micro_xs_dir => (
-                        $phits->cwd.
-                        $phits->FileIO->path_delim.
-                        $yield_au196->FileIO->micro_xs_dir
-                    ),
-                    micro_xs_dat =>
-                        $yield_au196->FileIO->micro_xs_dat,
-                    micro_xs_interp_algo =>
-                        $yield_au196->micro_xs_interp_algo,
-                    micro_xs_emin => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emin}{eff_nrg_range_au196}
-                    ),
-                    micro_xs_emax => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emax}{eff_nrg_range_au196}
-                    ),
-                    # '$yield_au196->num_of_nrg_bins' has also been used in
-                    # '$t_track->nrg_autar' (look up 'T-Track 9'),
-                    # so that the same number of energy bins is used.
-                    micro_xs_ne =>
-                        $yield_au196->num_of_nrg_bins,
-
-                    # precision_href: Overwrite the local %fmt_specifiers.
-                    precision_href => {
-                        avg_beam_curr => '%.2f',
-                        end_of_irr    => '%.3f',
-                        yield         => '%.2f',
-                        sp_yield      => '%.2f',
-                    },
-
-                    # Yield and specific yield units
-                    yield_unit =>
-                        $yield->unit, # If omitted, 'Bq' is used.
-                },
+            run_and_rpt_calc_rn_yield(
+                $flux_mnt_up,
+                'au197',
+                'au196',
+                '_1',
+                $yield,
+                $yield_au196,
+                $yield_au196_1,
+                $yield_au196_1_for_sp_src,
+                $pwm_au196_1_for_sp_src,
+                $t_track->nrg_flux_mnt_up->fname,
+                # >> Dependent on inner_iterator()
+                $tar_of_int,
+                $_varying_str,
+                $run_opts_href,
+                $prog_info_href,
+                $source_eg0,
+                # <<
             );
-            $yield_au196_1->set_calc_rn_yield(%$yield_au196_1_href);
-
-            # Fill in the columnar array ref for the step 6-2.
-            $_->add_columnar_arr(
-                $phits->curr_v_source_param->{val}, # Varying source param value
-                $varying_val * 10,                  # cm --> mm
-                $yield_au196_1->calc_rn_yield->
-                    {prod_nucl_yield},
-                $yield_au196_1->calc_rn_yield->
-                    {prod_nucl_yield_per_microamp},
-                $yield_au196_1->calc_rn_yield->
-                    {prod_nucl_sp_yield},
-                $yield_au196_1->calc_rn_yield->
-                    {prod_nucl_sp_yield_per_microamp},
-            ) for ($yield_au196_1, $yield_au196_1_for_specific_source);
-
-            # PWM
-            if ($yield_au196->Ctrls->pwm_switch =~ /on/i) {
-                for (
-                    my $i=0;
-                    $i<=$#{
-                        $yield_au196_1->calc_rn_yield->{mc_flue_nrg_mega_ev}
-                    };
-                    $i++
-                ) {
-                    # Write data over the photon energy range.
-                    $pwm_au196_1_for_specific_source->add_columnar_arr(
-                        $phits->curr_v_source_param->{val},
-                        $varying_val * 10,
-                        $yield_au196_1->calc_rn_yield->{mc_flue_nrg_mega_ev}[$i],
-                        $yield_au196_1->calc_rn_yield->{mc_flue_proj}[$i],
-                        $yield_au196_1->calc_rn_yield->{xs_nrg_mega_ev}[$i],
-                        $yield_au196_1->calc_rn_yield->{micro_xs_barn}[$i],
-                        $yield_au196_1->calc_rn_yield->{'micro_xs_cm^2'}[$i],
-                        $yield_au196_1->calc_rn_yield->{react_nucl_num_dens},
-                        $yield_au196_1->calc_rn_yield->{'macro_xs_cm^-1'}[$i],
-                        $yield_au196_1->calc_rn_yield->{pwm_micro}[$i],
-                        $yield_au196_1->calc_rn_yield->{pwm_macro}[$i],
-                        $yield_au196_1->calc_rn_yield->{avg_beam_curr},
-                        $yield_au196_1->calc_rn_yield->{source_rate},
-                        $yield_au196_1->calc_rn_yield->{react_rate_per_vol}[$i],
-                        $yield_au196_1->calc_rn_yield->{tar_vol},
-                        $yield_au196_1->calc_rn_yield->{react_rate}[$i],
-                    );
-                }
-
-                # Append the sums of pointwise multiplication products.
-                $pwm_au196_1_for_specific_source->add_columnar_arr(
-                    $phits->curr_v_source_param->{val},
-                    $varying_val * 10,
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    $yield_au196_1->calc_rn_yield->{pwm_micro_tot},
-                    $yield_au196_1->calc_rn_yield->{pwm_macro_tot},
-                    'NaN',
-                    $yield_au196_1->calc_rn_yield->{source_rate_tot},
-                    $yield_au196_1->calc_rn_yield->{react_rate_per_vol_tot},
-                    'NaN',
-                    $yield_au196_1->calc_rn_yield->{react_rate_tot},
-                );
-            }
         }
-        # Downstream
-        if (
+        if (  # Au-196 from the downstream Au foil in question
             $yield_au196->Ctrls->switch =~ /on/i
             and $flux_mnt_down->height > 0
         ) {
-            my $yield_au196_2_href = calc_rn_yield( # Return val: hash ref
-                {
-                    #
-                    # For reactant nuclide number density calculation
-                    #
-                    tar_mat =>
-                        'aumet',
-                    tar_dens_ratio =>
-                        $flux_mnt_down->dens_ratio,
-                    tar_vol =>
-                        $flux_mnt_down->vol,
-                    react_nucl =>
-                        'au197',
-                    react_nucl_enri_lev =>
-                        $yield_au196->react_nucl_enri_lev,
-                    enri_lev_type =>
-                        'amt_frac',
-                    prod_nucl =>
-                        'au196',
-                    min_depl_lev_global =>
-                        0.0000,
-                    min_depl_lev_local_href =>
-                        {},
-                    depl_order =>
-                        'ascend',
-                    is_verbose =>
-                        0,
-
-                    #
-                    # For yield calculation
-                    #
-
-                    # Irradiation conditions
-                    avg_beam_curr =>
-                        $yield->avg_beam_curr,
-                    end_of_irr =>
-                        $yield->end_of_irr,
-
-                    # Particle fluence data
-                    mc_flue_dir => (
-                        $phits->FileIO->subdir.
-                        $phits->FileIO->path_delim.
-                        $phits->FileIO->subsubdir
-                    ),
-                    mc_flue_dat =>
-                        $t_track->nrg_flux_mnt_down->fname,
-                    mc_flue_dat_proj_col => $t_track->is_elec_of_int ?
-                        4 : 2, # Column number for the reaction projectile
-
-                    # Microscopic xs data
-                    micro_xs_dir => (
-                        $phits->cwd.
-                        $phits->FileIO->path_delim.
-                        $yield_au196->FileIO->micro_xs_dir
-                    ),
-                    micro_xs_dat =>
-                        $yield_au196->FileIO->micro_xs_dat,
-                    micro_xs_interp_algo =>
-                        $yield_au196->micro_xs_interp_algo,
-                    micro_xs_emin => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emin}{eff_nrg_range_au196}
-                    ),
-                    micro_xs_emax => sprintf(
-                        "%s"."e6", # eV
-                        $t_track->mesh_ranges->{emax}{eff_nrg_range_au196}
-                    ),
-                    # '$yield_au196->num_of_nrg_bins' has also been used in
-                    # '$t_track->nrg_autar' (look up 'T-Track 10'),
-                    # so that the same number of energy bins is used.
-                    micro_xs_ne =>
-                        $yield_au196->num_of_nrg_bins,
-
-                    # precision_href: Overwrite the local %fmt_specifiers.
-                    precision_href => {
-                        avg_beam_curr => '%.2f',
-                        end_of_irr    => '%.3f',
-                        yield         => '%.2f',
-                        sp_yield      => '%.2f',
-                    },
-
-                    # Yield and specific yield units
-                    yield_unit =>
-                        $yield->unit, # If omitted, 'Bq' is used.
-                },
-            );
-            $yield_au196_2->set_calc_rn_yield(%$yield_au196_2_href);
-
-            # Fill in the columnar array ref for the step 6-2.
-            $_->add_columnar_arr(
-                $phits->curr_v_source_param->{val}, # Varying source param value
-                $varying_val * 10,                  # cm --> mm
-                $yield_au196_2->calc_rn_yield->
-                    {prod_nucl_yield},
-                $yield_au196_2->calc_rn_yield->
-                    {prod_nucl_yield_per_microamp},
-                $yield_au196_2->calc_rn_yield->
-                    {prod_nucl_sp_yield},
-                $yield_au196_2->calc_rn_yield->
-                    {prod_nucl_sp_yield_per_microamp},
-            ) for ($yield_au196_2, $yield_au196_2_for_specific_source);
-
-            # PWM
-            if ($yield_au196->Ctrls->pwm_switch =~ /on/i) {
-                for (
-                    my $i=0;
-                    $i<=$#{
-                        $yield_au196_2->calc_rn_yield->{mc_flue_nrg_mega_ev}
-                    };
-                    $i++
-                ) {
-                    # Write data over the photon energy range.
-                    $pwm_au196_2_for_specific_source->add_columnar_arr(
-                        $phits->curr_v_source_param->{val},
-                        $varying_val * 10,
-                        $yield_au196_2->calc_rn_yield->{mc_flue_nrg_mega_ev}[$i],
-                        $yield_au196_2->calc_rn_yield->{mc_flue_proj}[$i],
-                        $yield_au196_2->calc_rn_yield->{xs_nrg_mega_ev}[$i],
-                        $yield_au196_2->calc_rn_yield->{micro_xs_barn}[$i],
-                        $yield_au196_2->calc_rn_yield->{'micro_xs_cm^2'}[$i],
-                        $yield_au196_2->calc_rn_yield->{react_nucl_num_dens},
-                        $yield_au196_2->calc_rn_yield->{'macro_xs_cm^-1'}[$i],
-                        $yield_au196_2->calc_rn_yield->{pwm_micro}[$i],
-                        $yield_au196_2->calc_rn_yield->{pwm_macro}[$i],
-                        $yield_au196_2->calc_rn_yield->{avg_beam_curr},
-                        $yield_au196_2->calc_rn_yield->{source_rate},
-                        $yield_au196_2->calc_rn_yield->{react_rate_per_vol}[$i],
-                        $yield_au196_2->calc_rn_yield->{tar_vol},
-                        $yield_au196_2->calc_rn_yield->{react_rate}[$i],
-                    );
-                }
-
-                # Append the sums of pointwise multiplication products.
-                $pwm_au196_2_for_specific_source->add_columnar_arr(
-                    $phits->curr_v_source_param->{val},
-                    $varying_val * 10,
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    'NaN',
-                    $yield_au196_2->calc_rn_yield->{pwm_micro_tot},
-                    $yield_au196_2->calc_rn_yield->{pwm_macro_tot},
-                    'NaN',
-                    $yield_au196_2->calc_rn_yield->{source_rate_tot},
-                    $yield_au196_2->calc_rn_yield->{react_rate_per_vol_tot},
-                    'NaN',
-                    $yield_au196_2->calc_rn_yield->{react_rate_tot},
-                );
-            }
-        }
-    }
-
-    #-----------------------------------------------------------
-    # Step 6-2
-    # Generate data files of the yields and specific yields
-    # calculated and filled in the step 6-1.
-    #-----------------------------------------------------------
-
-    # (a) Mo-99
-    if (@{$yield_mo99->columnar_arr}) {
-        # Heads and subheads 1
-        # > $yield_mo99 and $yield_mo99_for_specific_source
-        my $_heads1 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            sprintf(
-                "%s yield",
-                $yield_mo99->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s yield per uA",
-                $yield_mo99->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield",
-                $yield_mo99->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield per uA",
-                $yield_mo99->calc_rn_yield->{prod_nucl_symb},
-            ),
-        ];
-        my $_subheads1 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            sprintf(
-                "(%s)",
-                $yield_mo99->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s uA^{-1})",
-                $yield_mo99->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1})",
-                $yield_mo99->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1} uA^{-1})",
-                $yield_mo99->calc_rn_yield->{yield_unit},
-            ),
-        ];
-        # Heads and subheads 2
-        # > $pwm_mo99_for_specific_source
-        my $_heads2 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            "MC fluence energy",
-            "MC fluence",
-            "xs energy",
-            "Microscopic xs",
-            "Microscopic xs",
-            (
-                $yield_mo99->calc_rn_yield->{react_nucl_symb}.
-                ' number density'
-            ),
-            "Macroscopic xs",
-            "PWM for microscopic xs",
-            "PWM for macroscopic xs",
-            "Average beam current",
-            "Source rate",
-            sprintf(
-                "Reaction rate per %s volume",
-                $yield_mo99->calc_rn_yield->{tar_mat_symb},
-            ),
-            sprintf(
-                "%s volume",
-                $yield_mo99->calc_rn_yield->{tar_mat_symb},
-            ),
-            "Reaction rate",
-        ];
-        my $_subheads2 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            "(MeV)",
-            sprintf(
-                "(cm^{-2} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(MeV)",
-            "(b)",
-            "(cm^{2})",
-            "(cm^{-3})",
-            "(cm^{-1})",
-            sprintf(
-                "(%s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            sprintf(
-                "(cm^{-3} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(uA)",
-            sprintf(
-                "(%s s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(cm^{-3} s^{-1})",
-            "(cm^{3})",
-            "(s^{-1} or Bq)",
-        ];
-
-        (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
-            s/[.]/p/;
-        (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
-        (my $_varying_vals_fin  = $varying_vals[-1]) =~ s/[.]/p/;
-        my $_conv_cmt1 = '%-24s';
-        my $_conv_cmt2 = '%-30s';
-        my %yield_objs = (
-            yield_mo99 => {
-                obj_for_cmt => $yield_mo99,
-                rpt_bname => (                    # Filename w/o its ext
-                    'yields_mo99'.
-                    $phits->FileIO->fname_sep.    # -
-                    $_varying_str.                # v
-                    $phits->curr_v_source_param->{name}. # nrg
-                    $phits->FileIO->fname_sep.    # -
-                    $tar_of_int->flag.            # wrcc || w_rcc
-                    $phits->FileIO->fname_sep.    # -
-                    $phits->FileIO->varying_flag. # vhgt || v_hgt
-                    $_varying_vals_init.          # 0p10
-                    'to'.                         # to
-                    $_varying_vals_fin            # 0p70
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr => $yield_mo99->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            yield_mo99_for_specific_source => {
-                obj_for_cmt => $yield_mo99,
-                rpt_bname => (
-                    'yields_mo99'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}. # nrg
-                    $_curr_v_source_param_val.           # 35<--Here
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr => $yield_mo99_for_specific_source->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            pwm_mo99_for_specific_source => {
-                obj_for_cmt => $yield_mo99,
-                rpt_bname => (
-                    'yields_mo99'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}.
-                    $_curr_v_source_param_val.
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin.
-                    $phits->FileIO->fname_sep.
-                    'pwm'
-                ),
-                size         => 16,
-                heads        => $_heads2,
-                subheads     => $_subheads2,
-                columnar_arr => $pwm_mo99_for_specific_source->columnar_arr,
-                sum          => [3, 5, 6, 8..10, 13, 15],
-                switch       => $yield_mo99->Ctrls->pwm_switch,
-            },
-        );
-        foreach my $k (sort keys %yield_objs) {
-            next if (
-                exists $yield_objs{$k}{switch}
-                and $yield_objs{$k}{switch} =~ /off/i
-            );
-
-            my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
-            reduce_data(
-                { # Settings
-                    rpt_formats => $run_opts_href->{rpt_fmts},
-                    rpt_path    => $run_opts_href->{rpt_path},
-                    rpt_bname   => $yield_objs{$k}{rpt_bname},
-                    begin_msg => "collecting yields and specific yields...",
-                    prog_info => $yield_mo99->Ctrls->write_fm =~ /on/i ?
-                        $prog_info_href : undef,
-                    cmt_arr => [
-                        #
-                        # Shared comment 1: Yield calculation conditions
-                        #
-                        "-" x 69,
-                        " Yield calculation conditions (last evaluated)",
-                        "-" x 69,
-                        # (1) Source particle
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source particle:',
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Source peak energy:',
-                            $source_nrg,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA",
-                            'Source average current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s kW",
-                            'Source average power:',
-                            (
-                                $source_nrg
-                                * $obj_for_cmt->calc_rn_yield->{avg_beam_curr}
-                                / 1e3
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source shape:',
-                            $phits->curr_source_dist->{shape},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 1:',
-                            $phits->curr_source_dist->{dim1},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 2:',
-                            $phits->curr_source_dist->{dim2},
-                        ),
-                        # (2) Converter
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter material:',
-                            $bconv->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter density ratio:',
-                            $bconv->dens_ratio,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Converter mass density:',
-                            $bconv->cell_props->{dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter diameter:',
-                            2 * $bconv->radius * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter thickness:',
-                            $bconv->height * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Converter volume:',
-                            $bconv->vol,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Converter mass:',
-                            $bconv->mass,
-                        ),
-                        # Intertarget distance
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Distance to the target:',
-                            $bconv->gap * 10,
-                        ),
-                        # (3) Target material
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target material:',
-                            $motar->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target density ratio:',
-                            # Below: One of return values of calc_rn_yield().
-                            #        Equal to $motar->dens_ratio.
-                            $obj_for_cmt->calc_rn_yield->{tar_dens_ratio},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Target mass density:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens}
-                        ),
-                        (
-                            $tar_of_int->flag eq $motar_trc->flag ?
-                            (
-                                sprintf(
-                                    " $_conv_cmt1 %s mm",
-                                    'Target bottom radius:',
-                                    $motar_trc->bot_radius * 10,
-                                ),
-                                sprintf(
-                                    " $_conv_cmt1 %s mm",
-                                    'Target top radius:',
-                                    $motar_trc->top_radius * 10,
-                                ),
-                                sprintf(
-                                    " $_conv_cmt1 %s mm",
-                                    'Target thickness:',
-                                    $motar_trc->height * 10,
-                                ),
-                            ) : (
-                                sprintf(
-                                    " $_conv_cmt1 %s mm",
-                                    'Target diameter:',
-                                    2 * $motar_rcc->radius * 10,
-                                ),
-                                sprintf(
-                                    " $_conv_cmt1 %s mm",
-                                    'Target thickness:',
-                                    $motar_rcc->height * 10,
-                                ),
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Target volume:',
-                            $obj_for_cmt->calc_rn_yield->{tar_vol},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Target mass:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # (4) Flux monitor, upstream (conditional)
-                        '',
-                        $flux_mnt_up->height > 0 ? (
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Upstream flux monitor material:',
-                                $flux_mnt_up->cell_mat,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Upstream flux monitor density ratio:',
-                                $flux_mnt_up->dens_ratio,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s g cm^{-3}",
-                                'Upstream flux monitor mass density:',
-                                $flux_mnt_up->cell_props->{dens},
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s mm",
-                                'Upstream flux monitor diameter:',
-                                2 * $flux_mnt_up->radius * 10,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s um",
-                                'Upstream flux monitor thickness:',
-                                $flux_mnt_up->height * 1e4,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s cm^{3}",
-                                'Upstream flux monitor volume:',
-                                $flux_mnt_up->vol,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s g",
-                                'Upstream flux monitor mass:',
-                                $flux_mnt_up->mass,
-                            ),
-                        ) : " No upstream fluence",
-                        # (5) Flux monitor, downstream (conditional)
-                        $flux_mnt_down->height > 0 ? (
-                            '',
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Downstream flux monitor material:',
-                                $flux_mnt_down->cell_mat,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Downstream flux monitor density ratio:',
-                                $flux_mnt_down->dens_ratio,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s g cm^{-3}",
-                                'Downstream flux monitor mass density:',
-                                $flux_mnt_down->cell_props->{dens},
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s mm",
-                                'Downstream flux monitor diameter:',
-                                2 * $flux_mnt_down->radius * 10,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s um",
-                                'Downstream flux monitor thickness:',
-                                $flux_mnt_down->height * 1e4,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s cm^{3}",
-                                'Downstream flux monitor volume:',
-                                $flux_mnt_down->vol,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s g",
-                                'Downstream flux monitor mass:',
-                                $flux_mnt_down->mass,
-                            ),
-                        ) : " No downstream fluence",
-                        # (6) Target wrap (conditional)
-                        $tar_wrap->thickness > 0 ? (
-                            '',
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Target wrap flux monitor material:',
-                                $tar_wrap->cell_mat,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s",
-                                'Target wrap flux monitor density ratio:',
-                                $tar_wrap->dens_ratio,
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s g cm^{-3}",
-                                'Target wrap flux monitor mass density:',
-                                $tar_wrap->cell_props->{dens},
-                            ),
-                            sprintf(
-                                " $_conv_cmt1 %s um",
-                                'Target wrap flux monitor thickness:',
-                                $tar_wrap->thickness * 1e4,
-                            ),
-                        ) : " No target wrap",
-                        # Main calculation conditions
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{react_nucl_symb}.
-                                ' enrichment level:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{react_nucl_enri_lev},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA (%s)",
-                            'Average beam current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                            sprintf(
-                                "%s %ss s^{-1}",
-                                $obj_for_cmt->calc_rn_yield->{source_rate},
-                                $phits->source->type_of_int->{name}{val},
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s h",
-                            'Irradiation time:',
-                            $obj_for_cmt->calc_rn_yield->{end_of_irr},
-                        ),
-                        # PHITS summary
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Summary file:',
-                            $phits->params->{file}{summary_out_fname}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxcas:',
-                            $phits->retrieved->{maxcas},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxbch:',
-                            $phits->retrieved->{maxbch},
-                        ),
-                        # Particle fluence
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence file:',
-                            $t_track->nrg_motar->fname,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'Fluence energy range:',
-                            $t_track->mesh_ranges->{emin}{eff_nrg_range_mo99},
-                            $t_track->mesh_ranges->{emax}{eff_nrg_range_mo99},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence ne:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Fluence de:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_de},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence unit:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_unit},
-                        ),
-                        # Microscopic xs
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs file:',
-                            $obj_for_cmt->FileIO->micro_xs_dat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs interpolation algo:',
-                            $obj_for_cmt->micro_xs_interp_algo,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'xs energy range:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[0],
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[-1],
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs ne:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'xs de:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_de},
-                        ),
-                        "-" x 69,
-                        #
-                        # Shared comment 2: Part of calculation results
-                        #
-                        "-" x 69,
-                        " Part of calculation results (last evaluated)",
-                        "-" x 69,
-                        # Target material
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # Reactant nuclide element
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {tar_mat_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass},
-                        ),
-                        # Reactant nuclide
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' amount fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_amt_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass},
-                        ),
-                        # PWMs
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s %s^{-1}",
-                            'Sum of microscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_micro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} %s^{-1}",
-                            'Sum of macroscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_macro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} s^{-1}",
-                            'Sum of per-vol reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_per_vol_tot},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s s^{-1} or Bq",
-                            'Sum of reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_tot},
-                        ),
-                        ' (= saturation yield)',
-                        "-" x 69,
-                    ],
-                    # If given, the dataset separator of gnuplot, namely
-                    # a pair of two blank lines, is inserted to .dat files.
-#                    num_rows_per_dataset => @varying_vals * 1,
-                },
-                { # Columnar
-                    size     => $yield_objs{$k}{size}, # For col size validation
-                    heads    => $yield_objs{$k}{heads},
-                    subheads => $yield_objs{$k}{subheads},
-                    data_arr_ref => $yield_objs{$k}{columnar_arr},
-                    sum_idx_multiples =>
-                        $yield_objs{$k}{sum} // [],
-                    ragged_left_idx_multiples =>
-                        $yield_objs{$k}{ragged_left} // [],
-                    freeze_panes => 'D4', # Alt: {row => 3, col => 3}
-                    space_bef    => {dat => " ", tex => " "},
-                    heads_sep    => {dat => "|", csv => ","},
-                    space_aft    => {dat => " ", tex => " "},
-                    data_sep     => {dat => " ", csv => ","},
-                }
-            );
-        }
-    }
-
-    # (b) Au-196, upstream
-    if (@{$yield_au196_1->columnar_arr}) {
-        # Heads and subheads 1
-        # > $yield_au196_1 and $yield_au196_1_for_specific_source
-        my $_heads1 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            sprintf(
-                "%s yield",
-                $yield_au196_1->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s yield per uA",
-                $yield_au196_1->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield",
-                $yield_au196_1->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield per uA",
-                $yield_au196_1->calc_rn_yield->{prod_nucl_symb},
-            ),
-        ];
-        my $_subheads1 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            sprintf(
-                "(%s)",
-                $yield_au196_1->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s uA^{-1})",
-                $yield_au196_1->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1})",
-                $yield_au196_1->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1} uA^{-1})",
-                $yield_au196_1->calc_rn_yield->{yield_unit},
-            ),
-        ];
-        # Heads and subheads 2
-        # > $pwm_au196_1_for_specific_source
-        my $_heads2 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            "MC fluence energy",
-            "MC fluence",
-            "xs energy",
-            "Microscopic xs",
-            "Microscopic xs",
-            (
-                $yield_au196_1->calc_rn_yield->{react_nucl_symb}.
-                ' number density'
-            ),
-            "Macroscopic xs",
-            "PWM for microscopic xs",
-            "PWM for macroscopic xs",
-            "Average beam current",
-            "Source rate",
-            sprintf(
-                "Reaction rate per %s volume",
-                $yield_au196_1->calc_rn_yield->{tar_mat_symb},
-            ),
-            sprintf(
-                "%s volume",
-                $yield_au196_1->calc_rn_yield->{tar_mat_symb},
-            ),
-            "Reaction rate",
-        ];
-        my $_subheads2 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            "(MeV)",
-            sprintf(
-                "(cm^{-2} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(MeV)",
-            "(b)",
-            "(cm^{2})",
-            "(cm^{-3})",
-            "(cm^{-1})",
-            sprintf(
-                "(%s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            sprintf(
-                "(cm^{-3} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(uA)",
-            sprintf(
-                "(%s s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(cm^{-3} s^{-1})",
-            "(cm^{3})",
-            "(s^{-1} or Bq)",
-        ];
-
-        (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
-            s/[.]/p/;
-        (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
-        (my $_varying_vals_fin  = $varying_vals[-1]) =~ s/[.]/p/;
-        my $_conv_cmt1 = '%-24s';
-        my $_conv_cmt2 = '%-30s';
-        my %yield_objs = (
-            yield_au196_1 => {
-                obj_for_cmt => $yield_au196_1,
-                rpt_bname => (                    # Filename w/o its ext
-                    'yields_au196_1'.
-                    $phits->FileIO->fname_sep.    # -
-                    $_varying_str.                # v
-                    $phits->curr_v_source_param->{name}. # nrg
-                    $phits->FileIO->fname_sep.    # -
-                    $tar_of_int->flag.            # wrcc || w_rcc
-                    $phits->FileIO->fname_sep.    # -
-                    $phits->FileIO->varying_flag. # vhgt || v_hgt
-                    $_varying_vals_init.          # 0p10
-                    'to'.                         # to
-                    $_varying_vals_fin            # 0p70
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr => $yield_au196_1->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            yield_au196_1_for_specific_source => {
-                obj_for_cmt => $yield_au196_1,
-                rpt_bname => (
-                    'yields_au196_1'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}.
-                    $_curr_v_source_param_val.#<--Here
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr =>
-                    $yield_au196_1_for_specific_source->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            pwm_au196_1_for_specific_source => {
-                obj_for_cmt => $yield_au196_1,
-                rpt_bname => (
-                    'yields_au196_1'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}.
-                    $_curr_v_source_param_val.
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin.
-                    $phits->FileIO->fname_sep.
-                    'pwm'
-                ),
-                size         => 16,
-                heads        => $_heads2,
-                subheads     => $_subheads2,
-                columnar_arr => $pwm_au196_1_for_specific_source->columnar_arr,
-                sum          => [3, 5, 6, 8..10, 13, 15],
-                switch       => $yield_au196->Ctrls->pwm_switch,
-            },
-        );
-
-        foreach my $k (sort keys %yield_objs) {
-            next if (
-                exists $yield_objs{$k}{switch}
-                and $yield_objs{$k}{switch} =~ /off/i
-            );
-
-            my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
-            reduce_data(
-                { # Settings
-                    rpt_formats => $run_opts_href->{rpt_fmts},
-                    rpt_path    => $run_opts_href->{rpt_path},
-                    rpt_bname   => $yield_objs{$k}{rpt_bname},
-                    begin_msg => "collecting yields and specific yields...",
-                    prog_info => $yield_au196->Ctrls->write_fm =~ /on/i ?
-                        $prog_info_href : undef,
-                    cmt_arr => [
-                        #
-                        # Shared comment 1: Yield calculation conditions
-                        #
-                        "-" x 69,
-                        " Yield calculation conditions (last evaluated)",
-                        "-" x 69,
-                        # (1) Source particle
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source particle:',
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Source peak energy:',
-                            $source_nrg,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA",
-                            'Source average current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s kW",
-                            'Source average power:',
-                            (
-                                $source_nrg
-                                * $obj_for_cmt->calc_rn_yield->{avg_beam_curr}
-                                / 1e3
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source shape:',
-                            $phits->curr_source_dist->{shape},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 1:',
-                            $phits->curr_source_dist->{dim1},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 2:',
-                            $phits->curr_source_dist->{dim2},
-                        ),
-                        # (2) Converter
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter material:',
-                            $bconv->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter density ratio:',
-                            $bconv->dens_ratio,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Converter mass density:',
-                            $bconv->cell_props->{dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter diameter:',
-                            2 * $bconv->radius * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter thickness:',
-                            $bconv->height * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Converter volume:',
-                            $bconv->vol,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Converter mass:',
-                            $bconv->mass,
-                        ),
-                        # (3) Target material
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target material:',
-                            $flux_mnt_up->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target density ratio:',
-                            $obj_for_cmt->calc_rn_yield->{tar_dens_ratio},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Target mass density:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens}
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Target diameter:',
-                            2 * $flux_mnt_up->radius * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Target thickness:',
-                            $flux_mnt_up->height * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Target volume:',
-                            $obj_for_cmt->calc_rn_yield->{tar_vol},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Target mass:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # Main calculation conditions
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{react_nucl_symb}.
-                                ' enrichment level:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{react_nucl_enri_lev},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA (%s)",
-                            'Average beam current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                            sprintf(
-                                "%s %ss s^{-1}",
-                                $obj_for_cmt->calc_rn_yield->{source_rate},
-                                $phits->source->type_of_int->{name}{val},
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s h",
-                            'Irradiation time:',
-                            $obj_for_cmt->calc_rn_yield->{end_of_irr},
-                        ),
-                        # PHITS summary
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Summary file:',
-                            $phits->params->{file}{summary_out_fname}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxcas:',
-                            $phits->retrieved->{maxcas},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxbch:',
-                            $phits->retrieved->{maxbch},
-                        ),
-                        # Particle fluence
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence file:',
-                            $t_track->nrg_flux_mnt_up->fname,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'Fluence energy range:',
-                            $t_track->mesh_ranges->{emin}{eff_nrg_range_au196},
-                            $t_track->mesh_ranges->{emax}{eff_nrg_range_au196},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence ne:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Fluence de:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_de},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence unit:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_unit},
-                        ),
-                        # Microscopic xs
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs file:',
-                            $yield_au196->FileIO->micro_xs_dat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs interpolation algo:',
-                            $obj_for_cmt->micro_xs_interp_algo,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'xs energy range:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[0],
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[-1],
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs ne:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'xs de:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_de},
-                        ),
-                        "-" x 69,
-                        #
-                        # Shared comment 2: Part of calculation results
-                        #
-                        "-" x 69,
-                        " Part of calculation results (last evaluated)",
-                        "-" x 69,
-                        # Target material
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # Reactant nuclide element
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {tar_mat_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass},
-                        ),
-                        # Reactant nuclide
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' amount fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_amt_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass},
-                        ),
-                        # PWMs
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s %s^{-1}",
-                            'Sum of microscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_micro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} %s^{-1}",
-                            'Sum of macroscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_macro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} s^{-1}",
-                            'Sum of per-vol reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_per_vol_tot},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s s^{-1} or Bq",
-                            'Sum of reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_tot},
-                        ),
-                        ' (= saturation yield)',
-                        "-" x 69,
-                    ],
-                },
-                { # Columnar
-                    size     => $yield_objs{$k}{size},
-                    heads    => $yield_objs{$k}{heads},
-                    subheads => $yield_objs{$k}{subheads},
-                    data_arr_ref => $yield_objs{$k}{columnar_arr},
-                    sum_idx_multiples =>
-                        $yield_objs{$k}{sum} // [],
-                    ragged_left_idx_multiples =>
-                        $yield_objs{$k}{ragged_left} // [],
-                    freeze_panes => 'D4', # Alt: {row => 3, col => 3}
-                    space_bef    => {dat => " ", tex => " "},
-                    heads_sep    => {dat => "|", csv => ","},
-                    space_aft    => {dat => " ", tex => " "},
-                    data_sep     => {dat => " ", csv => ","},
-                }
-            );
-        }
-    }
-
-    # (c) Au-196, downstream
-    if (@{$yield_au196_2->columnar_arr}) {
-        # Heads and subheads 1
-        # > $yield_au196_2 and $yield_au196_2_for_specific_source
-        my $_heads1 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            sprintf(
-                "%s yield",
-                $yield_au196_2->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s yield per uA",
-                $yield_au196_2->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield",
-                $yield_au196_2->calc_rn_yield->{prod_nucl_symb},
-            ),
-            sprintf(
-                "%s sp_yield per uA",
-                $yield_au196_2->calc_rn_yield->{prod_nucl_symb},
-            ),
-        ];
-        my $_subheads1 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            sprintf(
-                "(%s)",
-                $yield_au196_2->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s uA^{-1})",
-                $yield_au196_2->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1})",
-                $yield_au196_2->calc_rn_yield->{yield_unit},
-            ),
-            sprintf(
-                "(%s g^{-1} uA^{-1})",
-                $yield_au196_2->calc_rn_yield->{yield_unit},
-            ),
-        ];
-        # Heads and subheads 2
-        # > $pwm_au196_2_for_specific_source
-        my $_heads2 = [
-            sprintf(
-                "%s", # beam_nrg
-                $phits->curr_v_source_param->{name},
-            ),
-            sprintf(
-                "%s %s", # wrcc vhgt
-                $tar_of_int->flag,
-                $phits->FileIO->varying_flag,
-            ),
-            "MC fluence energy",
-            "MC fluence",
-            "xs energy",
-            "Microscopic xs",
-            "Microscopic xs",
-            (
-                $yield_au196_2->calc_rn_yield->{react_nucl_symb}.
-                ' number density'
-            ),
-            "Macroscopic xs",
-            "PWM for microscopic xs",
-            "PWM for macroscopic xs",
-            "Average beam current",
-            "Source rate",
-            sprintf(
-                "Reaction rate per %s volume",
-                $yield_au196_2->calc_rn_yield->{tar_mat_symb},
-            ),
-            sprintf(
-                "%s volume",
-                $yield_au196_2->calc_rn_yield->{tar_mat_symb},
-            ),
-            "Reaction rate",
-        ];
-        my $_subheads2 = [
-            sprintf(
-                "(%s)",
-                $phits->curr_v_source_param->{unit},
-            ),
-            "(mm)",
-            "(MeV)",
-            sprintf(
-                "(cm^{-2} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(MeV)",
-            "(b)",
-            "(cm^{2})",
-            "(cm^{-3})",
-            "(cm^{-1})",
-            sprintf(
-                "(%s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            sprintf(
-                "(cm^{-3} %s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(uA)",
-            sprintf(
-                "(%s s^{-1})",
-                $phits->source->type_of_int->{name}{val},
-            ),
-            "(cm^{-3} s^{-1})",
-            "(cm^{3})",
-            "(s^{-1} or Bq)",
-        ];
-
-        (my $_curr_v_source_param_val = $phits->curr_v_source_param->{val}) =~
-            s/[.]/p/;
-        (my $_varying_vals_init = $varying_vals[0])  =~ s/[.]/p/;
-        (my $_varying_vals_fin  = $varying_vals[-1]) =~ s/[.]/p/;
-        my $_conv_cmt1 = '%-24s';
-        my $_conv_cmt2 = '%-30s';
-        my %yield_objs = (
-            yield_au196_2 => {
-                obj_for_cmt => $yield_au196_2,
-                rpt_bname => (                    # Filename w/o its ext
-                    'yields_au196_2'.
-                    $phits->FileIO->fname_sep.    # -
-                    $_varying_str.                # v
-                    $phits->curr_v_source_param->{name}. # nrg
-                    $phits->FileIO->fname_sep.    # -
-                    $tar_of_int->flag.            # wrcc || w_rcc
-                    $phits->FileIO->fname_sep.    # -
-                    $phits->FileIO->varying_flag. # vhgt || v_hgt
-                    $_varying_vals_init.          # 0p10
-                    'to'.                         # to
-                    $_varying_vals_fin            # 0p70
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr => $yield_au196_2->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            yield_au196_2_for_specific_source => {
-                obj_for_cmt => $yield_au196_2,
-                rpt_bname => (
-                    'yields_au196_2'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}.
-                    $_curr_v_source_param_val.#<--Here
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin
-                ),
-                size         => 6,
-                heads        => $_heads1,
-                subheads     => $_subheads1,
-                columnar_arr =>
-                    $yield_au196_2_for_specific_source->columnar_arr,
-                ragged_left  => [2..5],
-            },
-            pwm_au196_2_for_specific_source => {
-                obj_for_cmt => $yield_au196_2,
-                rpt_bname => (
-                    'yields_au196_2'.
-                    $phits->FileIO->fname_sep.
-                    $_varying_str.
-                    $phits->curr_v_source_param->{name}.
-                    $_curr_v_source_param_val.
-                    $phits->FileIO->fname_sep.
-                    $tar_of_int->flag.
-                    $phits->FileIO->fname_sep.
-                    $phits->FileIO->varying_flag.
-                    $_varying_vals_init.
-                    'to'.
-                    $_varying_vals_fin.
-                    $phits->FileIO->fname_sep.
-                    'pwm'
-                ),
-                size         => 16,
-                heads        => $_heads2,
-                subheads     => $_subheads2,
-                columnar_arr => $pwm_au196_2_for_specific_source->columnar_arr,
-                sum          => [3, 5, 6, 8..10, 13, 15],
-                switch       => $yield_au196->Ctrls->pwm_switch,
-            },
-        );
-        foreach my $k (sort keys %yield_objs) {
-            next if (
-                exists $yield_objs{$k}{switch}
-                and $yield_objs{$k}{switch} =~ /off/i
-            );
-
-            my $obj_for_cmt = $yield_objs{$k}{obj_for_cmt};
-            reduce_data(
-                { # Settings
-                    rpt_formats => $run_opts_href->{rpt_fmts},
-                    rpt_path    => $run_opts_href->{rpt_path},
-                    rpt_bname   => $yield_objs{$k}{rpt_bname},
-                    begin_msg => "collecting yields and specific yields...",
-                    prog_info => $yield_au196->Ctrls->write_fm =~ /on/i ?
-                        $prog_info_href : undef,
-                    cmt_arr => [
-                        #
-                        # Shared comment 1: Yield calculation conditions
-                        #
-                        "-" x 69,
-                        " Yield calculation conditions (last evaluated)",
-                        "-" x 69,
-                        # (1) Source particle
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source particle:',
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Source peak energy:',
-                            $source_nrg,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA",
-                            'Source average current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s kW",
-                            'Source average power:',
-                            (
-                                $source_nrg
-                                * $obj_for_cmt->calc_rn_yield->{avg_beam_curr}
-                                / 1e3
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source shape:',
-                            $phits->curr_source_dist->{shape},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 1:',
-                            $phits->curr_source_dist->{dim1},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Source distribution 2:',
-                            $phits->curr_source_dist->{dim2},
-                        ),
-                        # (2) Converter
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter material:',
-                            $bconv->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Converter density ratio:',
-                            $bconv->dens_ratio,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Converter mass density:',
-                            $bconv->cell_props->{dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter diameter:',
-                            2 * $bconv->radius * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Converter thickness:',
-                            $bconv->height * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Converter volume:',
-                            $bconv->vol,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Converter mass:',
-                            $bconv->mass,
-                        ),
-                        # (3) Target material
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target material:',
-                            $flux_mnt_down->cell_mat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Target density ratio:',
-                            $obj_for_cmt->calc_rn_yield->{tar_dens_ratio},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g cm^{-3}",
-                            'Target mass density:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens}
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Target diameter:',
-                            2 * $flux_mnt_down->radius * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s mm",
-                            'Target thickness:',
-                            $flux_mnt_down->height * 10,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s cm^{3}",
-                            'Target volume:',
-                            $obj_for_cmt->calc_rn_yield->{tar_vol},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s g",
-                            'Target mass:',
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # Main calculation conditions
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{react_nucl_symb}.
-                                ' enrichment level:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{react_nucl_enri_lev},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s uA (%s)",
-                            'Average beam current:',
-                            $obj_for_cmt->calc_rn_yield->{avg_beam_curr},
-                            sprintf(
-                                "%s %ss s^{-1}",
-                                $obj_for_cmt->calc_rn_yield->{source_rate},
-                                $phits->source->type_of_int->{name}{val},
-                            ),
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s h",
-                            'Irradiation time:',
-                            $obj_for_cmt->calc_rn_yield->{end_of_irr},
-                        ),
-                        # PHITS summary
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Summary file:',
-                            $phits->params->{file}{summary_out_fname}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxcas:',
-                            $phits->retrieved->{maxcas},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'maxbch:',
-                            $phits->retrieved->{maxbch},
-                        ),
-                        # Particle fluence
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence file:',
-                            $t_track->nrg_flux_mnt_down->fname,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'Fluence energy range:',
-                            $t_track->mesh_ranges->{emin}{eff_nrg_range_au196},
-                            $t_track->mesh_ranges->{emax}{eff_nrg_range_au196},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence ne:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'Fluence de:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_nrg_de},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'Fluence unit:',
-                            $obj_for_cmt->calc_rn_yield->{mc_flue_unit},
-                        ),
-                        # Microscopic xs
-                        '',
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs file:',
-                            $yield_au196->FileIO->micro_xs_dat,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs interpolation algo:',
-                            $obj_for_cmt->micro_xs_interp_algo,
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %.5f--%.5f MeV",
-                            'xs energy range:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[0],
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_mega_ev}[-1],
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s",
-                            'xs ne:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_ne},
-                        ),
-                        sprintf(
-                            " $_conv_cmt1 %s MeV",
-                            'xs de:',
-                            $obj_for_cmt->calc_rn_yield->{xs_nrg_de},
-                        ),
-                        "-" x 69,
-                        #
-                        # Shared comment 2: Part of calculation results
-                        #
-                        "-" x 69,
-                        " Part of calculation results (last evaluated)",
-                        "-" x 69,
-                        # Target material
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->{tar_mat_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->{tar_mass},
-                        ),
-                        # Reactant nuclide element
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {tar_mat_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_elem_mass},
-                        ),
-                        # Reactant nuclide
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' amount fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_amt_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass fraction in '.
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_elem_symb}.
-                                ':'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_frac},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3}",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' number density:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_num_dens},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s g",
-                            (
-                                $obj_for_cmt->calc_rn_yield->
-                                    {react_nucl_symb}.
-                                ' mass:'
-                            ),
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_nucl_mass},
-                        ),
-                        # PWMs
-                        '',
-                        sprintf(
-                            " $_conv_cmt2 %s %s^{-1}",
-                            'Sum of microscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_micro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} %s^{-1}",
-                            'Sum of macroscopic PWMs:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {pwm_macro_tot},
-                            $phits->source->type_of_int->{name}{val},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s cm^{-3} s^{-1}",
-                            'Sum of per-vol reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_per_vol_tot},
-                        ),
-                        sprintf(
-                            " $_conv_cmt2 %s s^{-1} or Bq",
-                            'Sum of reaction rates:',
-                            $obj_for_cmt->calc_rn_yield->
-                                {react_rate_tot},
-                        ),
-                        ' (= saturation yield)',
-                        "-" x 69,
-                    ],
-                },
-                { # Columnar
-                    size     => $yield_objs{$k}{size},
-                    heads    => $yield_objs{$k}{heads},
-                    subheads => $yield_objs{$k}{subheads},
-                    data_arr_ref => $yield_objs{$k}{columnar_arr},
-                    sum_idx_multiples =>
-                        $yield_objs{$k}{sum} // [],
-                    ragged_left_idx_multiples =>
-                        $yield_objs{$k}{ragged_left} // [],
-                    freeze_panes => 'D4', # Alt: {row => 3, col => 3}
-                    space_bef    => {dat => " ", tex => " "},
-                    heads_sep    => {dat => "|", csv => ","},
-                    space_aft    => {dat => " ", tex => " "},
-                    data_sep     => {dat => " ", csv => ","},
-                }
+            run_and_rpt_calc_rn_yield(
+                $flux_mnt_down,
+                'au197',
+                'au196',
+                '_2',
+                $yield,
+                $yield_au196,
+                $yield_au196_2,
+                $yield_au196_2_for_sp_src,
+                $pwm_au196_2_for_sp_src,
+                $t_track->nrg_flux_mnt_down->fname,
+                # >> Dependent on inner_iterator()
+                $tar_of_int,
+                $_varying_str,
+                $run_opts_href,
+                $prog_info_href,
+                $source_eg0,
+                # <<
             );
         }
     }
@@ -12126,7 +11607,7 @@ sub inner_iterator {
     #-----------------------------------------------------------
     # Step 7
     # Run magick.exe: .png/.jpg --> .gif
-    # Run ffmpeg.exe: .gif      --> .avi/.mp4
+    # Run ffmpeg.exe: .gif      --> .mp4/.avi
     #-----------------------------------------------------------
     if (
         $animate->Ctrls->gif_switch =~ /on/i or
@@ -12254,53 +11735,67 @@ sub inner_iterator {
     # Retrieve maximum total fluences from the tally files.
     # > Collect the total CPU times.
     # > Collect the maximum total fluences.
-    # > Generate data reduction reporting files.
+    # > Generate data reduction report files.
     #-----------------------------------------------------------
     state %hash_max_flues;
     my @retrieve_tot_flues_from;
 
     #
+    # Fill in a buffer: Intact particles
+    #
+    push @retrieve_tot_flues_from,               # e.g.
+        $t_cross->nrg_intact->flag;              # cross-eng-intact
+        # Low emax tallies (ceil(emax of [source] / 8))
+        push @retrieve_tot_flues_from,
+            $t_cross->nrg_intact_low_emax->flag  # cross-eng-intact_low_emax
+                if $t_cross->is_neut_of_int;
+
+    #
     # Fill in a buffer: Bremsstrahlung converter
     #
     if ($bconv->flag !~ /none/i) {
-        push @retrieve_tot_flues_from,      # e.g.
-            $t_track->nrg_bconv->flag,      # track-eng-w
-            $t_cross->nrg_bconv_ent->flag,  # cross-eng-w_ent
-            $t_cross->nrg_bconv_exit->flag; # cross-eng-w_exit (conv design)
-        # Low emax tallies (emax: ceil(e0 / 7))
+        push @retrieve_tot_flues_from,       # e.g.
+            $t_track->nrg_bconv->flag,       # track-eng-w
+            $t_cross->nrg_bconv_ent->flag,   # cross-eng-w_ent
+            $t_cross->nrg_bconv_exit->flag;  # cross-eng-w_exit (conv design)
+        # Low emax tallies (ceil(emax of [source] / 8))
         push @retrieve_tot_flues_from,
-            $t_track->nrg_bconv_low_emax->flag # track-eng-w_low_emax
+            $t_track->nrg_bconv_low_emax->flag  # track-eng-w_low_emax
                 if $t_track->is_neut_of_int;
         push @retrieve_tot_flues_from, (
-            $t_cross->nrg_bconv_ent_low_emax->flag,  # cross-eng-w_ent_low_emax
-            $t_cross->nrg_bconv_exit_low_emax->flag, # cross-eng-w_exit_low_emax
+            # cross-eng-w_ent_low_emax
+            # cross-eng-w_exit_low_emax
+            $t_cross->nrg_bconv_ent_low_emax->flag,
+            $t_cross->nrg_bconv_exit_low_emax->flag,
         ) if $t_cross->is_neut_of_int;
     }
 
     #
-    # Fill in the buffer: Molybdenum target
+    # Fill in a buffer: Molybdenum target
     #
     push @retrieve_tot_flues_from,          # e.g.
         $t_track->nrg_motar->flag,          # track-eng-mo (yield calc)
         $t_cross->nrg_motar_ent->flag,      # cross-eng-mo_ent
         $t_cross->nrg_motar_exit->flag;     # cross-eng-mo_exit
-        # Neutron tallies (emax: ceil(e0 / 7))
+        # Neutron tallies (ceil(emax of [source] / 8))
     push @retrieve_tot_flues_from,
         $t_track->nrg_motar_low_emax->flag  # track-eng-mo_low_emax
             if $t_track->is_neut_of_int;
     push @retrieve_tot_flues_from, (
-        $t_cross->nrg_motar_ent_low_emax->flag,  # cross-eng-mo_ent_low_emax
-        $t_cross->nrg_motar_exit_low_emax->flag, # cross-eng-mo_exit_low_emax
+        # cross-eng-mo_ent_low_emax
+        # cross-eng-mo_exit_low_emax
+        $t_cross->nrg_motar_ent_low_emax->flag,
+        $t_cross->nrg_motar_exit_low_emax->flag,
     ) if $t_cross->is_neut_of_int;
 
     #
     # Fill in a buffer: Flux monitors
     #
     push @retrieve_tot_flues_from,
-        $t_track->nrg_flux_mnt_up->flag # track-eng-au_up
+        $t_track->nrg_flux_mnt_up->flag  # track-eng-au_up
             if $flux_mnt_up->height > 0;
     push @retrieve_tot_flues_from,
-        $t_track->nrg_flux_mnt_down->flag # track-eng-au_down
+        $t_track->nrg_flux_mnt_down->flag  # track-eng-au_down
             if $flux_mnt_down->height > 0;
 
     #
@@ -12311,12 +11806,12 @@ sub inner_iterator {
 
     # Run retrieve_tot_fluences() and reduce_data().
     if ($t_tot_fluence->Ctrls->switch =~ /on/i) {
-        my($dir, $sub, $subsub) = (split /\/|\\/, getcwd())[-3, -2, -1];
+        my ($dir, $sub, $subsub) = (split /\/|\\/, getcwd())[-3, -2, -1];
         my %_total_cpu_times_sums;
         my @return_vals;
         foreach my $tally_flag (@retrieve_tot_flues_from) {
             #
-            # Important point in filling the arrays belonging to %hash_max_flues
+            # Note on filling the arrays belonging to %hash_max_flues
             # > The hash key is associated with a given set of
             #   a target material, a varying parameter, and a tally.
             #   This is necessary because different varying parameters
@@ -12329,7 +11824,7 @@ sub inner_iterator {
             #   so that we can see the change of the maximum total fluences
             #   with respect to beam energy or beam size.
             #   CAUTION: DO NOT mix the varying parameter of source particles,
-            #   which will overwrite the reporting files of max total fluences.
+            #   which will overwrite the report files of max total fluences.
             #
             unless (
                 exists
@@ -12365,14 +11860,14 @@ sub inner_iterator {
             # $return_vals[8]  $self->storage->{v_val_at_max}[0][$i]
             #
             @return_vals =
-                $t_tot_fluence->retrieve_tot_fluences(  # e.g.
-                    $tar_of_int->flag,                  # wrcc
-                    $phits->FileIO->varying_flag,       # vhgt
-                    $phits->FileIO->fixed_flag,         # frad-fgap
-                    $tally_flag,                        # cross-eng-w_exit
-                    $tar_of_int->cell_props->{cell_id}, # 1
-                    #-----------------------------------#
-                    $phits->Cmt->abbrs,                 # Hash ref for abbrs
+                $t_tot_fluence->retrieve_tot_fluences(   # e.g.
+                    $tar_of_int->flag,                   # wrcc
+                    $phits->FileIO->varying_flag,        # vhgt
+                    $phits->FileIO->fixed_flag,          # frad-fgap
+                    $tally_flag,                         # cross-eng-w_exit
+                    $tar_of_int->cell_props->{cell_id},  # 1
+                    #------------------------------------#
+                    $phits->Cmt->abbrs,                  # Hash ref for abbrs
                     [$prog_info_href, \&show_front_matter],
                 );
 
@@ -12385,29 +11880,29 @@ sub inner_iterator {
             #         {$tar_of_int->flag}
             #         {$phits->FileIO->varying_flag}
             #         {$tally_flag} <= Array reference
-            for (my $i=3; $i<=$#return_vals; $i+=6) { # Only one iteration
+            for (my $i=3; $i<=$#return_vals; $i+=6) {  # Only one iteration
                 # Assign the energy range to the data hash
                 $tot_flues
-                    {$phits->FileIO->subdir}  # Subdir name
-                    {$return_vals[$i]}        # [3] Tally-specific data filename
-                    {'emin_emax'}             # Key of the particle hash
-                        = $return_vals[$i+1]; # [4] emin and emax
+                    {$phits->FileIO->subdir}   # Subdir name
+                    {$return_vals[$i]}         # [3] Tally-specific data fname
+                    {'emin_emax'}              # Key of the particle hash
+                        = $return_vals[$i+1];  # [4] emin and emax
 
                 # Assign the maximum total fluence value to the particle hash
                 $tot_flues
-                    {$phits->FileIO->subdir}  # Subdir name
-                    {$return_vals[$i]}        # [3] Tally-specific data filename
-                    {$return_vals[$i+2]}      # [5] Particle name
-                    {'tot_flue'}              # Key of the particle hash
-                        = $return_vals[$i+3]; # [6] Maximum total fluence: Value
+                    {$phits->FileIO->subdir}   # Subdir name
+                    {$return_vals[$i]}         # [3] Tally-specific data fname
+                    {$return_vals[$i+2]}       # [5] Particle name
+                    {'tot_flue'}               # Key of the particle hash
+                        = $return_vals[$i+3];  # [6] Maximum total fluence: Val
 
                 # Assign the dimension value to the particle hash
                 $tot_flues
-                    {$phits->FileIO->subdir}  # Subdir name
-                    {$return_vals[$i]}        # [3] Tally-specific filename
-                    {$return_vals[$i+2]}      # [5] Particle name
-                    {$return_vals[$i+4]}      # Key of the particle hash ([7])
-                        = $return_vals[$i+5]; # [8] Value of varying dim
+                    {$phits->FileIO->subdir}   # Subdir name
+                    {$return_vals[$i]}         # [3] Tally-specific fname
+                    {$return_vals[$i+2]}       # [5] Particle name
+                    {$return_vals[$i+4]}       # Key of the particle hash ([7])
+                        = $return_vals[$i+5];  # [8] Value of varying geom
             }
 
             # Fill in the array of maximum total fluences.
@@ -12417,14 +11912,14 @@ sub inner_iterator {
                     {$phits->FileIO->varying_flag}
                     {$tally_flag}
             },
-                # Current varying beam parameter
-                $phits->curr_v_source_param->{val},
+                # Current value of the varying source parameter
+                $phits->v_src_param->{curr},
                 # Energy range
                 $tot_flues
-                    {$phits->FileIO->subdir}      # Subdir name
-                    {$t_tot_fluence->FileIO->dat} # [3] Tally-specific filename
-                    {'emin_emax'},                # Key of the particle hash
-                # Electron maximum total fluence and the corresponding v-dim
+                    {$phits->FileIO->subdir}       # Subdir name
+                    {$t_tot_fluence->FileIO->dat}  # [3] Tally-specific fname
+                    {'emin_emax'},                 # Key of the particle hash
+                # Electron maximum total fluence and the corresponding v-geom
                 $tot_flues
                     {$phits->FileIO->subdir}
                     {$t_tot_fluence->FileIO->dat}
@@ -12434,8 +11929,8 @@ sub inner_iterator {
                     {$phits->FileIO->subdir}
                     {$t_tot_fluence->FileIO->dat}
                     {'electron'}
-                    {$return_vals[7]}, # [7] Name of varying dim
-                # Photon maximum total fluence and the corresponding v-dim
+                    {$return_vals[7]},  # [7] Name of varying geom
+                # Photon maximum total fluence and the corresponding v-geom
                 $tot_flues
                     {$phits->FileIO->subdir}
                     {$t_tot_fluence->FileIO->dat}
@@ -12446,7 +11941,7 @@ sub inner_iterator {
                     {$t_tot_fluence->FileIO->dat}
                     {'photon'}
                     {$return_vals[7]},
-                # Neutron maximum total fluence and the corresponding v-dim
+                # Neutron maximum total fluence and the corresponding v-geom
                 $tot_flues
                     {$phits->FileIO->subdir}
                     {$t_tot_fluence->FileIO->dat}
@@ -12459,7 +11954,7 @@ sub inner_iterator {
                     {$return_vals[7]};
             #+++++debugging+++++#
 #            dump(\%tot_flues);
-#            pause_shell(); If on, the next iter doesn't work owing to its STDIN
+#            pause_shell(); If on, the next iter won't work owing to its STDIN
             #+++++++++++++++++++#
 
             #
@@ -12468,7 +11963,7 @@ sub inner_iterator {
             # to data reduction report files.
             #
             reduce_data(
-                { # Settings
+                {  # Settings
                     rpt_formats => $run_opts_href->{rpt_fmts},
                     rpt_path    => $run_opts_href->{rpt_path},
                     rpt_bname   => 'max_tot_flues'.(
@@ -12477,32 +11972,31 @@ sub inner_iterator {
                             $run_opts_href->{rpt_flag}
                         ) : ''
                     ).(
-                        $phits->FileIO->fname_sep.    # -
-                        $tar_of_int->flag.            # wrcc || w_rcc
-                        $phits->FileIO->fname_sep.    # -
-                        $phits->FileIO->varying_flag. # vhgt || v_hgt
+                        $phits->FileIO->fname_sep.     # -
+                        $tar_of_int->flag.             # wrcc || w_rcc
+                        $phits->FileIO->fname_sep.     # -
+                        $phits->FileIO->varying_flag.  # vhgt || v_hgt
                         $phits->FileIO->fname_sep.
                         $tally_flag
                     ),
-                    begin_msg   => "collecting maximum total fluences...",
-                    prog_info   => $t_tot_fluence->Ctrls->write_fm =~ /on/i ?
-                        $prog_info_href : undef,
-                    cmt_arr     => [],
+                    begin_msg => "collecting maximum total fluences...",
+                    prog_info => $prog_info_href,
+                    cmt_arr   => [],
                 },
-                { # Columnar
-                    size     => 8, # Used for column size validation
+                {  # Columnar
+                    size     => 8,  # Used for column size validation
                     heads    => [
-                        sprintf("%s", $phits->curr_v_source_param->{name}),
+                        sprintf("%s", $phits->v_src_param->{name}),
                         "emin     emax",
                         "max_elec_tot_flue",
-                        "$varying at max_elec_tot_flue",
+                        "$v_geom at max_elec_tot_flue",
                         "max_phot_tot_flue",
-                        "$varying at max_phot_tot_flue",
+                        "$v_geom at max_phot_tot_flue",
                         "max_neut_tot_flue",
-                        "$varying at max_neut_tot_flue",
+                        "$v_geom at max_neut_tot_flue",
                     ],
                     subheads => [
-                        sprintf("(%s)", $phits->curr_v_source_param->{unit}),
+                        sprintf("(%s)", $phits->v_src_param->{unit}),
                         "(MeV)",
                         "(cm^-2 source^-1)",
                         "(cm)",
@@ -12517,7 +12011,7 @@ sub inner_iterator {
                             {$phits->FileIO->varying_flag}
                             {$tally_flag},
                     ragged_left_idx_multiples => [1..8],
-                    freeze_panes => 'C4', # Alt: {row => 3, col => 2}
+                    freeze_panes => 'C4',  # Alt: {row => 3, col => 2}
                     space_bef    => {dat => " ", tex => " "},
                     heads_sep    => {dat => "|", csv => ","},
                     space_aft    => {dat => " ", tex => " "},
@@ -12534,11 +12028,11 @@ sub inner_iterator {
             $dir,
             $sub,
             $subsub,
-            $_total_cpu_times_sums{sec}, # Filled by the foreach loop above
+            $_total_cpu_times_sums{sec},  # Filled by the foreach loop above
             $_total_cpu_times_sums{hour},
             $_total_cpu_times_sums{day};
         reduce_data(
-            { # Settings
+            {  # Settings
                 rpt_formats => $run_opts_href->{rpt_fmts},
                 rpt_path    => $run_opts_href->{rpt_path},
                 rpt_bname   => 'cputimes'.(
@@ -12548,12 +12042,11 @@ sub inner_iterator {
                     ) : ''
                 ),
                 begin_msg => "collecting CPU time info...",
-                prog_info => $t_tot_fluence->Ctrls->write_fm =~ /on/i ?
-                    $prog_info_href : undef,
+                prog_info => $prog_info_href,
                 cmt_arr   => [],
             },
-            { # Columnar
-                size     => 6, # Used for column size validation
+            {  # Columnar
+                size     => 6,  # Used for column size validation
                 heads    => [
                     "Dir",
                     "Subdir",
@@ -12571,9 +12064,9 @@ sub inner_iterator {
                     "(d)",
                 ],
                 data_arr_ref              => $arr_ref_to_cpu_times,
-                sum_idx_multiples         => [3..5], # Can be discrete,
-                ragged_left_idx_multiples => [2..5], # but must be increasing
-                freeze_panes              => 'E4',   # Alt: {row => 3, col => 4}
+                sum_idx_multiples         => [3..5],  # Can be discrete,
+                ragged_left_idx_multiples => [2..5],  # but must be increasing
+                freeze_panes              => 'E4',    # {row => 3, col => 4}
                 space_bef                 => {dat => " ", tex => " "},
                 heads_sep                 => {dat => "|", csv => ","},
                 space_aft                 => {dat => " ", tex => " "},
@@ -12588,7 +12081,6 @@ sub inner_iterator {
 
 sub phitar {
     # """phitar main routine"""
-
     if (@ARGV) {
         my %prog_info = (
             titl       => basename($0, '.pl'),
@@ -12598,28 +12090,24 @@ sub phitar {
             date_first => $FIRST,
             auth       => {
                 name => 'Jaewoong Jang',
-#                posi => '',
-#                affi => '',
                 mail => 'jangj@korea.ac.kr',
             },
         );
-        my %cmd_opts = ( # Command-line opts
-            default      => qr/-?-d\b/i,
-            dump_src     => qr/-?-dump(?:_src)?\s*=\s*/i,
-            rpt_subdir   => qr/-?-(?:rpt_)?subdir\s*=\s*/i,
-            rpt_fmts     => qr/-?-(?:rpt_)?fmts\s*=\s*/i,
-            rpt_flag     => qr/-?-(?:rpt_)?flag\s*=\s*/i,
-            nofm         => qr/-?-nofm\b/i,
-            nopause      => qr/-?-nopause\b/i,
+        my %cmd_opts = (  # Command-line opts
+            default    => qr/-?-d\b/i,
+            dump_src   => qr/-?-dump(?:_src)?\s*=\s*/i,
+            rpt_subdir => qr/-?-(?:rpt_)?subdir\s*=\s*/i,
+            rpt_fmts   => qr/-?-(?:rpt_)?fmts\s*=\s*/i,
+            rpt_flag   => qr/-?-(?:rpt_)?flag\s*=\s*/i,
+            nopause    => qr/-?-nopause\b/i,
         );
-        my %run_opts = ( # Program run opts
-            inp             => '',
-            is_default      => 0,
-            rpt_path        => getcwd().'/'.'reports',
-            rpt_fmts        => ['dat', 'xlsx'],
-            rpt_flag        => '',
-            is_nofm         => 0,
-            is_nopause      => 0,
+        my %run_opts = (  # Program run opts
+            inp        => '',
+            is_default => 0,
+            rpt_path   => getcwd().'/'.'reports',
+            rpt_fmts   => ['dat', 'xlsx'],
+            rpt_flag   => '',
+            is_nopause => 0,
         );
 
         # ARGV validation and parsing
@@ -12627,8 +12115,7 @@ sub phitar {
         parse_argv(\@ARGV, \%cmd_opts, \%run_opts);
 
         # Notification - beginning
-        show_front_matter(\%prog_info, 'prog', 'auth')
-            unless $run_opts{is_nofm};
+        show_front_matter(\%prog_info, 'prog', 'auth');
         printf(
             "%s version: %s (%s)\n",
             $My::Toolset::PACKNAME,
@@ -12664,11 +12151,28 @@ sub phitar {
         default_run_settings();
 
         # > Parse the user input.
-        # > Must come AFTER default_run_settings() as the user input is intended
-        #   to override default parameters according to user specifications.
+        # > Must come AFTER default_run_settings()
+        #   as the user input is intended to override
+        #   default parameters according to user specifications.
         parse_inp(\%run_opts) if $run_opts{inp} and not $run_opts{is_default};
 
-        # > Populate Monte Carlo cell properties.
+        # The routines populate_gaussian_nrg_cutoffs() and
+        # determ_tally_emin_emax() below will be called again and "repeatedly"
+        # in outer_iterator(), if the Gaussian energy distribution
+        # has been set and if the center energy is to be varied.
+
+        # > Populate the attribute of Gaussian energy cutoffs.
+        populate_gaussian_nrg_cutoffs()
+            if $phits->source->nrg_dist_of_int->{type}{val} == 2;
+
+        # > Populate the attribute of free-form energy distribution.
+        populate_free_form_nrg_dist()
+            if $phits->source->nrg_dist_of_int->{type}{val} == 22;
+
+        # > Determine the emin and emax of tallies.
+        determ_tally_emin_emax();
+
+        # > Populate the attributes of Monte Carlo cell properties.
         # > The cell materials designated by the user-input file
         #   are applied in this routine.
         populate_mc_cell_props();
@@ -12699,16 +12203,16 @@ phitar - A PHITS wrapper for targetry design
 
 =head1 SYNOPSIS
 
-    perl phitar.pl [run_mode] [-rpt_subdir=dname] [-rpt_fmts=ext ...]
-                   [-rpt_flag=str] [-nofm] [-nopause]
+    perl phitar.pl [run_mode] [--rpt_subdir=dname] [--rpt_fmts=ext ...]
+                   [--rpt_flag=str] [--nopause]
 
 =head1 DESCRIPTION
 
     phitar is a PHITS wrapper written in Perl, intended for the design of
     bremsstrahlung converters and Mo targets. phitar can:
-      - examine a range of targetry dimensions and beam parameters
+      - examine ranges of source and geomeric parameters
         according to user specifications
-      - generate MAPDL table and macro files
+      - generate ANSYS MAPDL table and macro files
       - collect information from PHITS tally outputs and generate
         report files
       - collect information from PHITS general outputs and generate
@@ -12722,22 +12226,22 @@ phitar - A PHITS wrapper for targetry design
 
     run_mode
         file
-            An input file specifying simulation conditions.
+            Input file specifying simulation conditions.
             Refer to 'args.phi' for the syntax.
         -d
             Run simulations with the default settings.
-        -dump_src=particle
-                electron
-                photon
-                neutron
+        --dump_src=<particle>
+            electron
+            photon
+            neutron
             Run simulations using a dump source.
             (as of v1.03, particles entering a Mo target are used
             as the dump source)
 
-    -rpt_subdir=dname (short: -subdir, default: reports)
+    --rpt_subdir=dname (short: --subdir, default: reports)
         Name of subdirectory to which report files will be stored.
 
-    -rpt_fmts=ext ... (short: -fmts, default: dat,xlsx)
+    --rpt_fmts=ext ... (short: --fmts, default: dat,xlsx)
         Output file formats. Multiple formats are separated by the comma (,).
         all
             All of the following ext's.
@@ -12754,26 +12258,26 @@ phitar - A PHITS wrapper for targetry design
         yaml
             YAML
 
-    -rpt_flag=str (short: -flag)
-        str is appended to the report filenames followed by an underscore.
+    --rpt_flag=str (short: -flag)
+        The input str followed by an underscore is appended to
+        the names of the following files:
+        - maximum total fluences
+        - cputimes
         Use this option when different materials are simulated
-        in the same batch.
+        in the same batch to prevent unintended overwriting.
 
-    -nofm
-        The front matter will not be displayed at the beginning of program.
-
-    -nopause
-        The shell will not be paused at the end of program.
+    --nopause
+        The shell will not be paused at the end of the program.
         Use it for a batch run.
 
 =head1 EXAMPLES
 
     perl phitar.pl args.phi
     perl phitar.pl -d
-    perl phitar.pl -dump=electron -rpt_flag=elec_dmp args.phi
+    perl phitar.pl --dump=electron --rpt_flag=elec_dmp args.phi
     perl phitar.pl args.phi > phitar.log -nopause
-    perl phitar.pl -rpt_flag=au args.phi
-    perl phitar.pl -rpt_flag=moo3 args_moo3.phi
+    perl phitar.pl --rpt_flag=au args.phi
+    perl phitar.pl --rpt_flag=moo3 args_moo3.phi
 
 =head1 REQUIREMENTS
 
@@ -12787,13 +12291,29 @@ phitar - A PHITS wrapper for targetry design
 
 L<phitar on GitHub|https://github.com/jangcom/phitar>
 
+=head2 Utilities
+
+=over 5
+
+=item * L<excel2etype22 - Convert EXCEL-stored energy distribution data to PHITS e-type = 22 data|https://github.com/jangcom/phitar/tree/master/utils/excel2etype22/excel2etype22.py>
+
+=item * L<xsconv - Convert the units of cross section variables|https://github.com/jangcom/phitar/tree/master/utils/xsconv/xsconv.py>
+
+=item * L<xsaug - Augment cross section data|https://github.com/jangcom/phitar/tree/master/utils/xsaug/xsaug.py>
+
+=item * L<joinyld - Join phitar yield files|https://github.com/jangcom/phitar/tree/master/utils/joinyld/joinyld.py>
+
+=item * L<yld2datagen - Convert phitar yield files to a datagen input file|https://github.com/jangcom/phitar/tree/master/utils/yld2datagen/yld2datagen.py>
+
+=back
+
 =head1 AUTHOR
 
 Jaewoong Jang <jangj@korea.ac.kr>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2018-2019 Jaewoong Jang
+Copyright (c) 2018-2020 Jaewoong Jang
 
 =head1 LICENSE
 

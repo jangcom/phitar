@@ -1,0 +1,5 @@
+# Data array for fit-peaks
+# Beam energy (MeV) | Beam size (mm) | Gap (mm) | W thickness at peak ^{99}Mo yield (mm) | Peak ^{99}Mo yield (kBq g^{-1} uA^{-1})
+20, 15, 20, 1.74271085191324, 5.31390974238411, 
+35, 15, 20, 2.47791875808454, 14.7785330873593, 
+50, 15, 20, 3.05828930404006, 22.6397477215142, 

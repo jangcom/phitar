@@ -1,25 +1,17 @@
-# phitar records
-bak_phitar.pl/
-bak_args.phi/
-phitar_baker.bat
-args_baker.bat
-
-# Updates
+*.lnk
 updates.txt
 
+# Personal docs
+docs/figs/
+docs/notes/
+docs/testbed/
+nrg_dist/
+expt2_beam_nrg_dist.xlsx
+*.mat
+
 # phitar aux and result files
-figs/
-lines_counted/
-why_had_no_neuts/
-xs/goto_xs_dir.bat
 xs/*splines*
-phitar_lcounter.bat
 
-# MSWin link files
-*.lnk
-
-# POD-related
-phitar_usage.bat
-phitar.html
-pod2htmd.tmp
-phitar_pod2html.bat
+# baker
+bak_*
+*_baker.bat

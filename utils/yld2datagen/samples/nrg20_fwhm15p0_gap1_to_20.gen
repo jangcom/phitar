@@ -1,0 +1,58 @@
+# Perl code snippet for datagen.pl
+# Simple version
+# J. Jang
+# 2019-04-21
+
+#
+# (i)-(iv):  Required
+# (v)-(vii): Optional
+#
+
+# (i) Number of data columns
+$num_of_cols = 5;
+
+# (ii) Headings
+# - The number of elements must be the same as $num_of_cols assigned in (i).
+#   (assign "" where no heading is necessary)
+$heads_aref = [
+    "Beam energy",
+    "Beam size in FWHM",
+    "Gap between W and MoO_{3}",
+    "W thickness at peak ^{99}Mo yield",
+    "Peak ^{99}Mo yield",
+];
+
+# (iii) Subheadings
+# - The number of elements must be the same as $num_of_cols assigned in (i).
+#   (assign "" where no subheading is necessary)
+$subheads_aref = [
+    "(MeV)",
+    "(mm)",
+    "(mm)",
+    "(mm)",
+    "(kBq g^{-1} uA^{-1})",
+];
+
+# (iv) Columnar data
+# - The number of elements must be an integer multiple of
+#   $num_of_cols assigned in (i). For example, if $num_of_cols is 4,
+#   the number of elements of $data_aref must be 4, 8, 12, ..., etc.
+$data_aref = [
+    20, 15, 1, 2.0277665449584, 10.8565069470609, 
+    20, 15, 5, 1.90640380279131, 9.22891621353957, 
+    20, 15, 10, 1.8227747283729, 7.60909865452411, 
+    20, 15, 15, 1.76352254903318, 6.34421364290957, 
+    20, 15, 20, 1.74271085191324, 5.31390974238411, 
+];
+
+# (v) Column ordinal numbers where the sums will be calculated and appended
+# - Assign [] if not necessary.
+$sum_idx = [];
+
+# (vi) Column ordinal numbers where the data will be aligned ragged-left
+# - Assign [] if not necessary.
+$ragged_left_idx = [1..4];
+
+# (vii) An Excel cell at which the pane will be frozen.
+# - Assign "" if not necessary.
+$freeze_panes = "C4"; # e.g. 'C4' or {row => 3, col => 2}
