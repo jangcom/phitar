@@ -2,8 +2,6 @@
 updates.txt
 
 # Personal docs
-docs/run*.bat
-docs/*.tmp
 docs/figs/
 docs/notes/
 docs/testbed/
