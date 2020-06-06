@@ -10,7 +10,6 @@ docs/testbed/
 nrg_dist/
 expt2_beam_nrg_dist.xlsx
 *.mat
-*.tex
 
 # phitar aux and result files
 xs/*splines*
