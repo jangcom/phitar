@@ -2,12 +2,15 @@
 updates.txt
 
 # Personal docs
+docs/run*.bat
+docs/*.tmp
 docs/figs/
 docs/notes/
 docs/testbed/
 nrg_dist/
 expt2_beam_nrg_dist.xlsx
 *.mat
+*.tex
 
 # phitar aux and result files
 xs/*splines*

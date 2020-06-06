@@ -1,7 +1,11 @@
 # phitar
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3344971.svg)](https://doi.org/10.5281/zenodo.3229179)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-https%3A%2F%2Fjangcom.github.io%2Fphitar-brightgreen)](https://jangcom.github.io/phitar/)
+
+# Cotents
+
 <?xml version="1.0" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
