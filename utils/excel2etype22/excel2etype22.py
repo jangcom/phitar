@@ -49,13 +49,13 @@ def nrg2etype22(yml):
         ax.set_xlabel('Energy (MeV)')
         ax.set_ylabel('Normalized count')
         ax.plot(xdata, ydata, 'b-', label=yml[sheet]['lab'])
-        plt.legend()
-        plt.tight_layout()
+        ax.legend()
+        fig.tight_layout()
         plt.pause(1)
         pdf = '{}/{}.pdf'.format(yml['out_path'], yml[sheet]['out_bname'])
         svg = '{}/{}.svg'.format(yml['out_path'], yml[sheet]['out_bname'])
         for v in [pdf, svg]:
-            plt.savefig(v)
+            fig.savefig(v)
             print(f'[{v}] generated.')
         plt.close()
 
