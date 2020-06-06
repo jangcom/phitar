@@ -1,7 +1,7 @@
 #
 # Moose class for yield calculation
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -13,7 +13,7 @@ use namespace::autoclean;
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-05-23';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2019-01-04';
 
 has 'Ctrls' => (
@@ -30,7 +30,7 @@ has 'FileIO' => (
     default => sub { Yield::FileIO->new() },
 );
 
-has 'calc_rn_yield' => ( # Return value of calc_rn_yield() will be copy-pasted
+has 'calc_rn_yield' => (  # Return value of calc_rn_yield() will be copy-pasted
     traits  => ['Hash'],
     is      => 'ro',
     isa     => 'HashRef',
@@ -74,15 +74,15 @@ subtype 'My::Moose::Yield::Fraction'
 my %_calc_conds = (
     react_nucl_enri_lev => {
         isa  => 'My::Moose::Yield::Fraction',
-        dflt => 0.09744, # Mo-100 natural abundance (amount fraction)
+        dflt => 0.09744,  # Mo-100 natural abundance (amount fraction)
     },
     avg_beam_curr => {
         isa  => 'Num',
-        dflt => 1.0, # uA
+        dflt => 1.0,  # uA
     }, 
     end_of_irr => {
         isa  => 'Num|Str',
-        dflt => 10/60, # Hour
+        dflt => 10/60,  # h
     }, 
     num_of_nrg_bins => {
         isa  => 'Num',
@@ -132,11 +132,11 @@ has 'unit' => (
 
 #
 # gnuplot smoothing algorithms for microscopic xs data interpolation
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# !!! 2019/01/28 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# !!! Do not use mcsplines which, although useful for conserving !!!!!!!!!!!!!!!
-# !!! the convexity of the original curve, distorts the number of energy bins. !
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# ! 2019/01/28 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# ! Do not use mcsplines which, although useful for conserving !!!!!!!!!!!!!!!
+# ! the convexity of the original curve, distorts the number of energy bins. !
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #
 my %_micro_xs_interp_algos = map { $_ => 1 } qw(
     csplines
@@ -196,7 +196,7 @@ use Moose;
 use namespace::autoclean;
 with 'My::Moose::FileIO';
 
-my %_additional_attrs = ( # (key) attribute, (val) default
+my %_additional_attrs = (  # (key) attribute, (val) default
     micro_xs_dir => 'xs',
     micro_xs_dat => 'tendl2014_mo100_gn_mf3_t4.dat',
 );

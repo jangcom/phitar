@@ -1,0 +1,107 @@
+2020-05-10 (v1.04)
+- Methods '<..>_of_int' in default_run_settings() have been fixed.
+
+2020-05-06 (v1.04)
+- Free-form energy distribution setter (e-type = 22 subsection) has been added.
+  Steps
+  1. Prepare a space- or tab-separated e-lower, e-upper, and intensity.
+     Example:
+     33.168348045397224 33.168348045397224 0.00040684917805660297
+     33.173373153640306 33.173373153640306 0.0006188611090232474
+     33.17839826188339 33.17839826188339 0.0007434491283120395
+     ...
+  2. Assign the name of the file to source.free_form_nrg.file, and
+     set source.nrg_dist = free_form.
+  Note
+  - The use of e-lower and e-upper enables using both
+    - bin-expressed energy distribution data and
+    - pointwise energy distribution data.
+    In the latter case, assign equal values to pairs of e-lower and e-upper,
+    just as in the above example.
+  - The value of iter_param must NOT be eg0, which is a command dedicated to
+    the Gaussian energy distribution setter (gaussian_nrg).
+    The beam size parameters, namely rad, x_fwhm, y_fwhm, z_fwhm, xy_fwhms,
+    are allowed for iteration.
+
+2020-05-05 (v1.04)
+- The energy bins of a tally used for yield calculation
+  and the energy points of an excitation function
+  has become effectively the same.
+- Format specifiers of yield report files have been corrected.
+- Sums of pointwise multiplication products are no longer written to
+  yield report files.
+
+2020-05-04 (v1.04)
+- The step 6 has been replaced by a routine called run_and_rpt_calc_rn_yield().
+- Names of yield result files of varying source parameters corrected:
+  e.g. (old) yields_mo99-veg0-wrcc-vhgt0p20to0p30.dat
+       (new) yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat
+       which, for example, prevents overwriting 
+       'yields_mo99-veg0_30to40-wrcc-vhgt0p20to0p30.dat' by
+       'yields_mo99-veg0_40to50-wrcc-vhgt0p20to0p30.dat'.
+
+2020-05-03 (v1.04)
+- .svg conversion commands added.
+- particles_of_int string validation added to parse_inp().
+
+2020-05-02 (v1.04)
+- Gaussian energy distribution setter (e-type = 2 subsection) has been added
+  and replaced the previous monoenergetic energy setter (e0). The new keys in
+  the user input file are eg0, eg0s_of_int, fwhm, lt_from_eg0, and rt_from_eg0.
+- Monoenergetic sources can still be simulated by setting
+  source.gaussian_nrg.fwhm = 0.
+- T-Cross tallies added:
+  - Intact particles (before interacting with any materials)
+  - Intact particles, low emax
+  These tallies have been added in accordance with the addition of e-type = 2,
+  and can be useful for checking the initial spectra of Gaussian-energetic
+  source particles.
+- All write_fm() methods and the corresponding attributes have been removed.
+
+2020-05-01 (v1.04)
+- The order of the following commands in tally sections have been changed.
+  - Old
+    - angel
+    - sangel
+    - epsout
+    - vtkout
+  - New
+    - epsout
+    - vtkout
+    - angel
+    - sangel
+  This is because by using the "old" order, the epsout and vtkout were found
+  to be unresponsive in G-Show tallies (PHITS v3.02).
+  Using the "new" order solved the problem.
+  For consistency, the new order is used in all tallies.
+
+2020-04-07 (v1.04)
+- Heat tallies added:
+  - converter rz 2d-type:4
+  - Mo target rz
+  - Mo target rz 2d-type:4
+
+2020-01-19 (v1.04)
+- Utility programs 'joinyld' and 'yld2datagen' were written in Python and
+  added to './utils/'.
+
+2019-12-08 (v1.04)
+- The ANGEL legend of axis=xyz tallies can now be toggled
+  using $angel->Ctrls->set_nolegend_switch.
+  This is because the materials of axis=xyz tallies
+  are already labeled directly on the plot.
+
+2019-07-21 (v1.03)
+- v1.03 released on GitHub and Zenodo.
+
+2019-07-13 (v1.03)
+- The option section of usage instructions modified
+  (an explanation for the dump source option added).
+
+2019-06-03 (v1.03)
+- Au-196 sums of pointwise multiplication products corrected
+  (mistakenly placed in loops).
+
+2019-05-30
+- (v1.02) Sums of pointwise multiplication products are
+  printed at the end each varying parameter.

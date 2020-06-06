@@ -1,0 +1,41 @@
+#SUBENT      L0002003
+#AUTHORS     S.C.Fultz, R.L.Bramblett, J.T.Caldwell, N.A.Kerr
+#REFERENCE   Physical Review Vol.127, p.1273
+#YEAR        1962
+#TITLE       PHOTONEUTRON CROSS-SECTION MEASUREMENTS ON
+#+           GOLD USING NEARLY MONOCHROMATIC PHOTONS
+#REACTION    (79-AU-197(G,N)79-AU-196,,SIG)+(79-AU-197(G,N+P)78-PT-195,,SIG)
+#QUANTITY    Cross section
+#SUBP       L0002003 
+#Ene,MeV     Sig,mb      dSig,mb
+ 8.724       23          6
+ 9.339       47          5
+ 9.646       55          5
+ 9.954       62          6
+ 10.261      85          6
+ 10.568      97          6
+ 10.876      112         6
+ 11.183      148         8
+ 11.49       195         17
+ 11.797      226         20
+ 12.105      305         25
+ 12.412      362         6
+ 12.719      444         34
+ 13.027      498         23
+ 13.334      516         31
+ 13.641      549         30
+ 13.949      519         27
+ 14.256      502         27
+ 14.563      433         20
+ 14.87       402         15
+ 15.178      380         33
+ 15.485      302         24
+ 15.792      242         30
+ 16.1        176         20
+ 16.407      116         20
+ 16.714      65          16
+ 17.022      62          19
+ 17.329      26          20
+ 17.636      14          18
+ 17.943      5           14
+#END

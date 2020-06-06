@@ -1,7 +1,7 @@
 #
 # Moose class for wrapping ImageMagick and ffmpeg
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -13,7 +13,7 @@ use feature qw(say);
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.02';
-our $LAST     = '2019-05-18';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2018-08-19';
 
 has 'Cmt' => (
@@ -43,7 +43,7 @@ has 'exes' => (
     isa     => 'HashRef[Str]',
     default => sub {
         {
-            imagemagick          => 'magick.exe', # Legacy: 'convert.exe'
+            imagemagick          => 'magick.exe',  # Legacy: 'convert.exe'
             imagemagick_identify => 'identify.exe',
             ffmpeg               => 'ffmpeg.exe',
         }
@@ -80,7 +80,7 @@ has 'examined_dirs' => (
 );
 
 # Animating options
-my %_anim_opts = ( # (key) attribute => (val) default
+my %_anim_opts = (  # (key) attribute => (val) default
     loop          => 0,
     sec_per_frame => 1/100,
     delay         => 100,
@@ -97,7 +97,7 @@ has $_ => (
 
 sub rasters_to_anims {
     # """Animate raster images."""
-    
+
     #
     # Note on subroutine generalization
     #
@@ -105,7 +105,7 @@ sub rasters_to_anims {
     # > Initially written for phitar, this routine has now been generalized.
     #   Use img2ani for animating raster images.
     #
-    
+
     my $self = shift;
     # Arg 1: an aref containing raster directories
     # > phitar:  aref containing multiple subdirectories
@@ -115,7 +115,7 @@ sub rasters_to_anims {
     # > 'png', 'jpg'
     my $raster_format = $_[1];
     $raster_format =~ s/jpeg/jpg/i;
-    
+
     # Graphics resolutions for YUV420p
     # > When used with the -vf scale=<xres:yres> command-line
     #   option of FFmpeg, the number -2 in <xres:yres> adjusts
@@ -161,20 +161,20 @@ sub rasters_to_anims {
             width_scaled  => '-2:1440',
             height_scaled => '2560:-2',
         },
-        four_k_uhd => { # Double full HD
+        four_k_uhd => {  # Double full HD
             flag          => '4K UHD',
             fixed         => '3840:2160',
             width_scaled  => '-2:2160',
             height_scaled => '3840:-2',
         },
     );
-    
+
     # Animating programs
     my %progs = (
         imagemagick  => {
             switch   => $self->Ctrls->gif_switch,
             flag     => 'ImageMagick',
-            env_var  => '', # To be examined
+            env_var  => '',  # To be examined
             exe      => $self->exes->{imagemagick},
             mute_opt => $self->Ctrls->mute =~ /on/i ?
                 '' : ' -verbose',
@@ -202,9 +202,9 @@ sub rasters_to_anims {
                 fname_full => '',
                 switch     => $self->Ctrls->avi_switch,
                 cmd_opts   => '',
-                vcodec     => 'mpeg4',   # FFmpeg default: mpeg4
-                resolution => '',        # Determined wrto the raster size.
-                chroma     => 'yuv420p', # FFmpeg default: yuv420p
+                vcodec     => 'mpeg4',    # FFmpeg default: mpeg4
+                resolution => '',         # Determined wrto the raster size.
+                chroma     => 'yuv420p',  # FFmpeg default: yuv420p
                 kbps       => $self->Ctrls->avi_kbps,
             },
             # .mp4, to be encoded in "H.264 and YUV420p"
@@ -213,21 +213,21 @@ sub rasters_to_anims {
                 fname_full => '',
                 switch     => $self->Ctrls->mp4_switch,
                 cmd_opts   => '',
-                vcodec     => 'libx264', # FFmpeg default: libx264
+                vcodec     => 'libx264',  # FFmpeg default: libx264
                 resolution => '',
-                chroma     => 'yuv420p', # FFmpeg default: yuv444p
+                chroma     => 'yuv420p',  # FFmpeg default: yuv444p
                 crf        => $self->Ctrls->mp4_crf,
             },
         },
     );
-    
+
     # Define comment borders.
     $self->Cmt->set_symb('*');
     $self->Cmt->set_borders(
         leading_symb => $self->Cmt->symb,
         border_symbs => ['*', '=', '-'],
     );
-    
+
     # Warn for insufficient path environment variables.
     # (1) Check path env var: ImageMagick
     # (2) Check path env var: FFmpeg - standalone
@@ -237,8 +237,8 @@ sub rasters_to_anims {
     }
     # (3) Check path env var: FFmpeg - Residing in the ImageMagick dir
     $progs{ffmpeg}{env_var} = 1 if (
-        not $progs{ffmpeg}{env_var} # ffmpeg having no path env var,
-        and -e (                    # but installed within ImageMagick dir
+        not $progs{ffmpeg}{env_var}  # ffmpeg having no path env var,
+        and -e (                     # but installed within ImageMagick dir
             $progs{imagemagick}{env_var}.
             $self->FileIO->path_delim.
             $progs{ffmpeg}{exe}
@@ -259,7 +259,7 @@ sub rasters_to_anims {
             say $self->Cmt->borders->{'*'};
         }
     }
-    
+
     # Exit the routine if none of the animation switches has been turned on.
     if (
         $self->Ctrls->gif_switch =~ /off/i
@@ -269,10 +269,10 @@ sub rasters_to_anims {
         print "\n  No animation format specified; terminating.\n";
         return;
     }
-    
+
     # Notify the beginning of the routine.
     say "";
-    say $self->Cmt->borders->{'='}; # Top rule
+    say $self->Cmt->borders->{'='};  # Top rule
     printf(
         "%s [%s] animating\n".
         "%s the \U$raster_format"." images through [%s]".
@@ -281,7 +281,7 @@ sub rasters_to_anims {
         $self->Cmt->symb, $progs{imagemagick}{exe},
         $progs{ffmpeg}{switch} =~ /on/i ? " and \[$progs{ffmpeg}{exe}\]" : ""
     );
-    
+
     # If the animation duration passed is zero or negative, default it to 5.
     if ($self->Ctrls->duration <= 0) {
         say $self->Cmt->symb;
@@ -290,12 +290,12 @@ sub rasters_to_anims {
         say $self->Cmt->symb;
         $self->Ctrls->set_duration(5);
     }
-    say $self->Cmt->borders->{'='}; # Bottom rule
-    
+    say $self->Cmt->borders->{'='};  # Bottom rule
+
     # Hook for phitar
     my $is_phitar = 0;
     $is_phitar    = 1 if (split /\/|\\/, (caller)[1])[-1] =~ /phitar([.]pl)?/i;
-    
+
     #
     # Iterate over the directories containing raster image files.
     #
@@ -316,8 +316,8 @@ sub rasters_to_anims {
     #
     foreach my $dir (@raster_dirs) {
         next unless -d $dir;
-        $dir =~ s/[\\\/]+$//; # Path delim will be added later.
-        
+        $dir =~ s/[\\\/]+$//;  # Path delim will be added later.
+
         #
         # When a raster-containing subdirectory has been visited,
         # make the subdirectory not to be revisited.
@@ -338,12 +338,12 @@ sub rasters_to_anims {
         #
         next if defined $self->examined_dirs->{$dir};
         $self->set_examined_dirs($dir => 1);
-        
+
         #
         # Collect filename flags to group raster images.
         #
-        $self->clear_anim_flags(); # Initialization
-        
+        $self->clear_anim_flags();  # Initialization
+
         # (i) phitar-called
         # > Fixed:    a sequential string (e.g. '002' for photon)
         # > Variable: strings; e.g.
@@ -353,8 +353,8 @@ sub rasters_to_anims {
         if ($is_phitar) {
             opendir my $_dir_dh, $dir or die "Unable to open $dir: $!";
             foreach my $raster (readdir $_dir_dh) {
-                next if not $raster =~ $raster_format; # e.g. .png, .jpg
-                
+                next if not $raster =~ $raster_format;  # e.g. .png, .jpg
+
                 #
                 # Take the last filename elements,
                 # which are ascending numbers assigned by Ghostscript.
@@ -374,21 +374,21 @@ sub rasters_to_anims {
                 #
                 #      We take the last digits:
                 #      001, 002, 003 are taken and stored into
-                #      @{$self->anim_flags}. (to be exact, in the above example,
-                #      001, 002, 003, 001, 002, 003 are taken,
-                #      but will be uniq-ed to 001, 002, 003.)
+                #      @{$self->anim_flags}. (to be exact,
+                #      001, 002, 003, 001, 002, 003 are taken in the above
+                #      example, but will be uniq-ed to 001, 002, 003.)
                 #
-                $raster =~ s/[.]$raster_format$//; # Remove ext and its delim.
+                $raster =~ s/[.]$raster_format$//;  # Remove ext and its delim.
                 push @{$self->anim_flags},
                     (split $self->FileIO->fname_sep, $raster)[-1];
             }
             closedir $_dir_dh;
-            
+
             # Remove duplicate items.
             @{$self->anim_flags} = $self->uniq_anim_flags();
-            
+
             # Show the dir of interest and flags identified.
-            say "" if $dir ne $raster_dirs[0]; # Row sep from 2nd iter
+            say "" if $dir ne $raster_dirs[0];  # Row sep from 2nd iter
             say $self->Cmt->borders->{'-'};
             print $self->Cmt->symb." Dir of interest:  [$dir]\n";
             print $self->Cmt->symb." Flags identified: ";
@@ -396,38 +396,38 @@ sub rasters_to_anims {
             print "\n";
             say $self->Cmt->borders->{'-'};
         }
-        
+
         # (ii) Called by other than phitar (e.g. img2ani)
         # > Fixed:    a string (e.g. shiba)
         # > Variable: sequential strings (e.g. 001, 002, ...)
         else { push @{$self->anim_flags}, $self->FileIO->seq_bname }
-        
+
         #
         # Iterate over the collected filename flags.
         #
         foreach my $flag (@{$self->anim_flags}) {
-            say "" if $flag ne $self->anim_flags->[0]; # Row sep from 2nd iter
+            say "" if $flag ne $self->anim_flags->[0];  # Row sep from 2nd iter
             say "  Flag of interest: [$flag]";
-            
+
             # Buffer the rasters to be animated.
-            my @to_be_anim; # Initialization
+            my @to_be_anim;  # Initialization
             my $is_first_raster = 1;
             opendir my $dir_dh, $dir or die "Unable to open $dir: $!";
             foreach my $raster (sort readdir $dir_dh) {
                 next if not $raster =~ /[.]$raster_format$/;
-                
+
                 if ($raster =~ /$flag/i) {
                     # ani_bname for img2ani-called
                     # > Look up "ani_bname for phitar-called"
                     if (
-                        not $is_phitar #<--Important hook
+                        not $is_phitar  # <--Important hook
                         and $is_first_raster
                         and not $self->FileIO->ani_bname
                     ) {
-                        $self->FileIO->set_ani_bname($&); # The matched part
+                        $self->FileIO->set_ani_bname($&);  # The matched part
                         $is_first_raster = 0;
                     }
-                    
+
                     # Fill in a storage with to-be-animated rasters.
                     # > Store the rasters including their paths.
                     # > The 'next' command below is necessary not to animate
@@ -444,19 +444,20 @@ sub rasters_to_anims {
                 }
             }
             close $dir_dh;
-            
+
             # Exit the routine if no raster file is available.
             if (not $to_be_anim[0]) {
                 print "\n  No [$raster_format] file found; terminating.\n";
                 return;
             }
-            
+
             #
             # Determine the video resolution based on the pixel size of
             # the "first" raster out of the rasters in queue.
             #
-            
-            # Fetch the pixel size using the identify executable of ImageMagick.
+
+            # Fetch the pixel size using
+            # the identify executable of ImageMagick.
             my($_the_cmd, $_identified_width_height);
             $_the_cmd = sprintf(
                 "%s -ping -format \"%s\" %s",
@@ -465,12 +466,12 @@ sub rasters_to_anims {
                 $to_be_anim[0],
             );
             $_identified_width_height = `$_the_cmd`;
-            
+
             # Find the closest height to the identified height.
             my $_is_first_iter  = 1;
             my $_abs_diff       = 0;
             my $_least_abs_diff = 0;
-            my $the_resolution  = 'hd'; # Default
+            my $the_resolution  = 'hd';  # Default
             foreach my $k (keys %resolutions) {
                 # Absolute height difference between the first raster
                 # and the resolution standards
@@ -482,7 +483,7 @@ sub rasters_to_anims {
                 if ($_is_first_iter) {
                     $_least_abs_diff = $_abs_diff;
                     $the_resolution  = $k;
-                    $_is_first_iter  = 0; # Block-blocker
+                    $_is_first_iter  = 0;  # Block-blocker
                 }
                 # Find the smallest absolute height difference.
                 if ($_abs_diff < $_least_abs_diff) {
@@ -490,13 +491,13 @@ sub rasters_to_anims {
                     $the_resolution  = $k;
                 }
             }
-            
+
             # Assign the resolutions to the video formats.
             foreach my $video (qw(avi mp4)) {
                 $progs{ffmpeg}{$video}{resolution} =
                     $resolutions{$the_resolution}{width_scaled};
             }
-            
+
             # Show the frame information identified and
             # its effects on the animation settings.
             my $fps = (
@@ -514,22 +515,22 @@ sub rasters_to_anims {
             printf("  Number of frames: [%d]\n",       (@to_be_anim * 1)     );
             printf("  Duration:         [%s s]\n",     $self->Ctrls->duration);
             printf("  Frame rate:       [%.4g fps]\n", $fps                  );
-            
+
             #
             # Define the animation filenames using the raster dir name.
             #
-            
+
             # ani_bname for phitar-called
             # > Look up "ani_bname for img2ani-called"
             if ($is_phitar) {
                 (my $ani_backbone = $dir) =~ s!^ [.(/ | \\)]* !!x;
                 $self->FileIO->set_ani_bname(
-                    $ani_backbone.            # w_rcc-vhgt-frad-fgap-track-xz
-                    $self->FileIO->fname_sep. # -
-                    $flag                     # 001
+                    $ani_backbone.             # w_rcc-vhgt-frad-fgap-track-xz
+                    $self->FileIO->fname_sep.  # -
+                    $flag                      # 001
                 )
             }
-            
+
             # ImageMagick - .gif
             $progs{imagemagick}{gif}{fname} =
                 $self->FileIO->ani_bname.
@@ -539,7 +540,7 @@ sub rasters_to_anims {
                 $dir.
                 $self->FileIO->path_delim.
                 $progs{imagemagick}{gif}{fname};
-            
+
             # FFmpeg - .avi, .mp4
             foreach my $ani (qw(avi mp4)) {
                 $progs{ffmpeg}{$ani}{fname} =
@@ -551,25 +552,25 @@ sub rasters_to_anims {
                     $self->FileIO->path_delim.
                     $progs{ffmpeg}{$ani}{fname};
             }
-            
+
             #
             # Define the command-line options.
             #
-            
+
             # ImageMagick - .gif
             $progs{imagemagick}{gif}{cmd_opts} = sprintf(
                 "%s".  # Verbose option
                 " -loop %s".
                 " -delay %s".
-                " %s". # Inputs
-                " %s", # The output
+                " %s".  # Inputs
+                " %s",  # The output
                 $progs{imagemagick}{mute_opt},
                 $self->loop,
                 $self->Ctrls->duration * $self->delay / @to_be_anim,
                 join(' ', @to_be_anim),
                 $progs{imagemagick}{gif}{fname_full},
             );
-            
+
             # FFmpeg - Common
             # > QuickTime and PowerPoint (For 2010, QuickTime installation
             #   required. For >2013, NOT required.) can play back videos
@@ -582,20 +583,20 @@ sub rasters_to_anims {
             # > H.264/MPEG-4 AVC, or simply H.264, is video compression
             #   standard preferable to the once widely used MPEG-4.
             # > x264 (FFmpeg's libx264) is an open-source library for H.264.
-            
+
             # FFmpeg - .avi
             # > FFmpeg (>v3.4) defaults: MPEG-4, YUV420p
             $progs{ffmpeg}{avi}{cmd_opts} = sprintf(
-                "-y ".           # Overwrite existing files
-                #----------------#
-                "%s".            # Log level and banner switch; used for muting.
-                " -i %s".        # A single GIF file generated by ImageMagick
-                " -vcodec %s".   # Video encoder
-                " -vf scale=%s". # Video resolution scaled for YUV420p
-                " -pix_fmt %s".  # Chroma subsampling type
-                " -b:v %s".      # Constant bitrate (-b:v == -vb)
-                " %s",           # A single AVI output
-                #----------------#
+                "-y ".            # Overwrite existing files
+                #-----------------#
+                "%s".             # Log level and banner switch used for muting
+                " -i %s".         # A single GIF file generated by ImageMagick
+                " -vcodec %s".    # Video encoder
+                " -vf scale=%s".  # Video resolution scaled for YUV420p
+                " -pix_fmt %s".   # Chroma subsampling type
+                " -b:v %s".       # Constant bitrate (-b:v == -vb)
+                " %s",            # A single AVI output
+                #-----------------#
                 $progs{ffmpeg}{mute_opt},
                 $progs{imagemagick}{gif}{fname_full},
                 $progs{ffmpeg}{avi}{vcodec},
@@ -604,9 +605,9 @@ sub rasters_to_anims {
                 $progs{ffmpeg}{avi}{kbps},
                 $progs{ffmpeg}{avi}{fname_full},
             );
-            
+
             # FFmpeg - .mp4
-            # > FFmpeg (>v3.4) defaults: H.264, YUV444p <= Change it to YUV420p!
+            # FFmpeg (>v3.4) defaults: H.264, YUV444p <= Change it to YUV420p!
             $progs{ffmpeg}{mp4}{cmd_opts} = sprintf(
                 "-y ".
                 #--------------------#
@@ -626,7 +627,7 @@ sub rasters_to_anims {
                 $progs{ffmpeg}{mp4}{crf},
                 $progs{ffmpeg}{mp4}{fname_full},
             );
-            
+
             #
             # Run the executable and notify the file generations.
             #
@@ -673,7 +674,7 @@ sub rasters_to_anims {
             #   into video files by FFmpeg, now without a format specifier
             #   as we have only one input stream.
             #
-            
+
             # ImageMagick - .gif
             # > Even if its switch has been turned off,
             #   ImageMagick is executed to provide FFmpeg with GIF images
@@ -696,7 +697,7 @@ sub rasters_to_anims {
                     },
                 );
             }
-            
+
             # FFmpeg - .avi
             if ($self->Ctrls->avi_switch =~ /on/i) {
                 system sprintf(
@@ -716,7 +717,7 @@ sub rasters_to_anims {
                     ($progs{ffmpeg}{avi}{kbps} / 1e3),
                 );
             }
-            
+
             # FFmpeg - .mp4
             if ($self->Ctrls->mp4_switch =~ /on/i) {
                 my $_conv = '';
@@ -751,7 +752,7 @@ sub rasters_to_anims {
                     ($self->Ctrls->avi_switch =~ /on/i ? ' ' : ''),
                 );
             }
-            
+
             # Remove the GIF image if its switch has been turned off.
             # (must be placed after the FFmpeg executions)
             if ($self->Ctrls->gif_switch =~ /off/i) {
@@ -759,7 +760,7 @@ sub rasters_to_anims {
             }
         }
     }
-    
+
     return;
 }
 
@@ -786,8 +787,8 @@ with 'My::Moose::Ctrls';
 # Additional animation options
 my %_additional_anim_opts = (
     # (key) attribute, (val) default
-    raster_format => 'png', # Raster format to be animated
-    duration      => 5,     # Animation duration in second
+    raster_format => 'png',  # Raster format to be animated
+    duration      => 5,      # Animation duration in second
 );
 
 has $_ => (
@@ -821,12 +822,12 @@ has 'avi_kbps' => (
     # Saturated at 1000 kbps under 4-kbps bitrate tolerance.
     # To see the video quality change wrto bitrate,
     # refer to the AVI files found in: \cs\graphics\ffmpeg\mpeg4_bitrate_comp\
-    default => 1000 * 1e3, # == 1000 kbps, as the FFmpeg bitrate unit is bps.
+    default => 1000 * 1e3,  # == 1000 kbps, as the FFmpeg bitrate unit is bps.
 );
 
 sub set_avi_kbps {
     my $self = shift;
-    
+
     if (defined $_[0] and $_[0] <= 0) {
         printf(
             "\nkbps [%s] less than or equal to zero; defaulting to [%s].\n",
@@ -835,11 +836,11 @@ sub set_avi_kbps {
         );
         # Do nothing.
     }
-    
+
     elsif (defined $_[0] and $_[0] > 0) {
         $self->avi_kbps($_[0] * 1e3);
     }
-    
+
     return;
 }
 
@@ -867,7 +868,7 @@ has 'mp4_crf' => (
 
 sub set_mp4_crf {
     my $self = shift;
-    
+
     if (defined $_[0] and $_[0] <= 0) {
         printf(
             "\ncrf [%s] less than or equal to zero; defaulting to [%s].\n",
@@ -876,11 +877,11 @@ sub set_mp4_crf {
         );
         # Do nothing.
     }
-    
+
     elsif (defined $_[0] and $_[0] > 0) {
         $self->mp4_crf($_[0]);
     }
-    
+
     return;
 }
 

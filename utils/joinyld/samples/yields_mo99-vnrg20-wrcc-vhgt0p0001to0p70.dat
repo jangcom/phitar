@@ -1,0 +1,109 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# phitar - A PHITS wrapper for targetry design
+# phitar v1.04 (2019-10-27)
+# Perl v5.24.0
+# Current time: 2020-01-15 22:28:16
+#
+# Jaewoong Jang
+# jangj@korea.ac.kr
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#---------------------------------------------------------------------
+# Yield calculation conditions (last evaluated)
+#---------------------------------------------------------------------
+# Source particle:         electron
+# Source peak energy:      20 MeV
+# Source average current:  15 uA
+# Source average power:    0.3 kW
+# Source shape:            gaussian_xy
+# Source distribution 1:   FWHM on the xy plane: 15 mm
+# Source distribution 2:   z-axis coordinates: -50 mm to -50 mm
+#
+# Converter material:      w
+# Converter density ratio: 1.0000
+# Converter mass density:  19.25 g cm^{-3}
+# Converter diameter:      25 mm
+# Converter thickness:     0.5 mm
+# Converter volume:        0.245436926061703 cm^{3}
+# Converter mass:          4.72466082668778 g
+#
+# Distance to the target:  1 mm
+#
+# Target material:         moo3
+# Target density ratio:    1.00000
+# Target mass density:     4.69000 g cm^{-3}
+# Target diameter:         10 mm
+# Target thickness:        5 mm
+# Target volume:           0.39270 cm^{3}
+# Target mass:             1.84176 g
+#
+# No upstream fluence
+# No downstream fluence
+# No target wrap
+#
+# Mo-100 enrichment level: 0.09744
+# Average beam current:    15 uA (93622640100000 electrons s^{-1})
+# Irradiation time:        0.0833333333333333 h
+#
+# Summary file:            wrcc-vhgt0p0500-frad1p25-fgap0p1.out
+# maxcas:                  1000
+# maxbch:                  1000
+#
+# Fluence file:            wrcc-vhgt0p0500-frad1p25-fgap0p1-track-eng-moo3.ang
+# Fluence energy range:    8.29183--20.00000 MeV
+# Fluence ne:              1000
+# Fluence de:              1.1708170E-02 MeV
+# Fluence unit:            1/cm^2/source (PHITS tally unit number 1)
+#
+# xs file:                 tendl2015_mo100_gn_mf3_t4.dat
+# xs interpolation algo:   csplines
+# xs energy range:         8.29183--20.00000 MeV
+# xs ne:                   1000
+# xs de:                   0.0117200000000004 MeV
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+# Part of calculation results (last evaluated)
+#---------------------------------------------------------------------
+# MoO_{3} mass density:          4.69000 g cm^{-3}
+# MoO_{3} number density:        1.96210e+022 cm^{-3}
+# MoO_{3} mass:                  1.84176 g
+#
+# Mo mass fraction in MoO_{3}:   0.66656
+# Mo mass density:               3.12615 g cm^{-3}
+# Mo number density:             1.96210e+022 cm^{-3}
+# Mo mass:                       1.22764 g
+#
+# Mo-100 amount fraction in Mo:  0.09744
+# Mo-100 mass fraction in Mo:    0.10146
+# Mo-100 mass density:           0.31718 g cm^{-3}
+# Mo-100 number density:         1.91187e+021 cm^{-3}
+# Mo-100 mass:                   0.12456 g
+#
+# Sum of microscopic PWMs:       2.16694850791994e-027 electron^{-1}
+# Sum of macroscopic PWMs:       4.14292712497793e-006 cm^{-3} electron^{-1}
+# Sum of per-vol reaction rates: 387871775.182336 cm^{-3} s^{-1}
+# Sum of reaction rates:         152316889.930957 s^{-1} or Bq
+# (= saturation yield)
+#---------------------------------------------------------------------
+
+#------------------------------------------------------------------------------------------------
+# nrg   | wrcc vhgt | Mo-99 yield | Mo-99 yield per uA | Mo-99 sp_yield | Mo-99 sp_yield per uA
+# (MeV) | (mm)      | (kBq)       | (kBq uA^{-1})      | (kBq g^{-1})   | (kBq g^{-1} uA^{-1}) 
+#------------------------------------------------------------------------------------------------
+20        0.001             54.10                 3.61            44.07                    2.94
+20        0.5              133.37                 8.89           108.64                    7.24
+20        1                182.51                12.17           148.66                    9.91
+20        1.5              202.13                13.48           164.65                   10.98
+20        2                200.77                13.38           163.54                   10.90
+20        2.5              189.91                12.66           154.70                   10.31
+20        3                177.55                11.84           144.63                    9.64
+20        3.5              165.11                11.01           134.50                    8.97
+20        4                152.88                10.19           124.53                    8.30
+20        4.5              142.07                 9.47           115.72                    7.71
+20        5                131.35                 8.76           107.00                    7.13
+20        5.5              121.72                 8.11            99.15                    6.61
+20        6                113.20                 7.55            92.21                    6.15
+20        6.5              104.71                 6.98            85.30                    5.69
+20        7                 97.23                 6.48            79.20                    5.28
+#------------------------------------------------------------------------------------------------
+#eof

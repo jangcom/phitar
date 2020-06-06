@@ -1,7 +1,7 @@
 #
 # Moose class for electron linear accelerators
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #
@@ -13,7 +13,7 @@ use feature qw(say);
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2019-01-01';
+our $LAST     = '2020-05-03';
 our $FIRST    = '2018-08-16';
 
 has 'rf_power_source' => (
@@ -50,43 +50,37 @@ has $_ => (
 
 sub set_peak_beam_power {
     my $self = shift;
-    
     $self->peak_beam_power(
         $self->peak_beam_nrg
         * $self->peak_beam_curr
     );
-    
     return;
 }
 
 sub set_avg_beam_curr {
     my $self = shift;
-    
     $self->avg_beam_curr(
         $self->peak_beam_curr
         * $self->rf_power_source->duty_cycle
     );
-    
     return;
 }
 
 sub set_avg_beam_power {
     my $self = shift;
-    
     $self->avg_beam_power(
         $self->peak_beam_nrg
         * $self->avg_beam_curr
     );
-    
     return;
 }
 
 sub set_params {
     my $self   = shift;
     my %params = @_;
-    
+
     $self->set_name($params{name}) if defined $params{name};
-    
+
     # Exit if compulsory parameters have not been passed.
     foreach ('rf_power_source', 'peak_beam_nrg', 'peak_beam_curr') {
         unless (defined $params{$_}) {
@@ -94,38 +88,38 @@ sub set_params {
             exit;
         }
     }
-    
+
     # "Peak" quantities
-    $self->set_peak_beam_nrg($params{peak_beam_nrg});   # eV
-    $self->set_peak_beam_curr($params{peak_beam_curr}); # A
-    $self->set_peak_beam_power();                       # W
-    
+    $self->set_peak_beam_nrg($params{peak_beam_nrg});    # eV
+    $self->set_peak_beam_curr($params{peak_beam_curr});  # A
+    $self->set_peak_beam_power();                        # W
+
     # "Average" quantities
     $self->rf_power_source->_set_kly_params(
-        "\L$params{rf_power_source}" # The klystron name must be all-lowercase
-                                     # letters for hash access.
+        "\L$params{rf_power_source}"  # The klystron name must all be
+                                      # lowercased for hash access.
     );
     $self->set_avg_beam_curr();
     $self->set_avg_beam_power();
-    
+
     return;
 }
 
 sub update_params {
     my $self   = shift;
     my %params = @_;
-    
+
     if (%params) {
         foreach my $k (keys %params) {
             my $_param_setter = 'set_'.$k;
             $self->$_param_setter($params{$k});
         }
     }
-    
+
     $self->set_peak_beam_power();
     $self->set_avg_beam_curr();
     $self->set_avg_beam_power();
-    
+
     return;
 }
 
@@ -174,9 +168,9 @@ has 'thales_lband_tv2022b' => (
 sub _build_thales_lband_tv2022b {
     return {
         name             => 'Thales L-band TV2022B',
-        oper_freq        => 1.3e+09, # sec^-1 (Hz)
-        rf_pulse_width   => 4e-06,   # sec
-        rf_pulse_per_sec => 100,     # sec^-1
+        oper_freq        => 1.3e+09,  # sec^-1 (Hz)
+        rf_pulse_width   => 4e-06,    # sec
+        rf_pulse_per_sec => 100,      # sec^-1
     };
 };
 
@@ -192,9 +186,9 @@ has 'tetd_sband_e37307' => (
 sub _build_tetd_sband_e37307 {
     return {
         name             => 'TETD S-band E37307',
-        oper_freq        => 2.856e+09, # sec^-1 (Hz)
-        rf_pulse_width   => 18e-06,    # sec
-        rf_pulse_per_sec => 667,       # sec^-1
+        oper_freq        => 2.856e+09,  # sec^-1 (Hz)
+        rf_pulse_width   => 18e-06,     # sec
+        rf_pulse_per_sec => 667,        # sec^-1
     };
 };
 
@@ -210,22 +204,22 @@ has 'tetd_xband_e37113' => (
 sub _build_tetd_xband_e37113 {
     return {
         name             => 'TETD X-band E37113',
-        oper_freq        => 11.9942e+09, # sec^-1 (Hz)
-        rf_pulse_width   => 5e-06,       # sec
-        rf_pulse_per_sec => 400,         # sec^-1
+        oper_freq        => 11.9942e+09,  # sec^-1 (Hz)
+        rf_pulse_width   => 5e-06,        # sec
+        rf_pulse_per_sec => 400,          # sec^-1
     };
 };
 
 sub _set_kly_params  {
     my $self     = shift;
-    my $klystron = shift; # Must always be lowercased for hash access.
-    
-    my %klystrons_list = ( # Used in place of symbolic references.
+    my $klystron = shift;  # Must always be lowercased for hash access.
+
+    my %klystrons_list = (  # Used in place of symbolic references.
         thales_lband_tv2022b => $self->thales_lband_tv2022b,
         tetd_sband_e37307    => $self->tetd_sband_e37307,
         tetd_xband_e37113    => $self->tetd_xband_e37113,
     );
-    
+
     # Exit if a wrong klystron has been input.
     # (i.e. If the klystron had not been registered to %klystrons_list.)
     my $is_registered = grep $klystron eq $_, keys %klystrons_list;
@@ -235,7 +229,7 @@ sub _set_kly_params  {
         say for keys %klystrons_list;
         exit;
     }
-    
+
     $self->$_($klystrons_list{$klystron}{$_}) for qw(
         name
         oper_freq
@@ -243,7 +237,7 @@ sub _set_kly_params  {
         rf_pulse_per_sec
     );
     $self->duty_cycle($self->rf_pulse_width * $self->rf_pulse_per_sec);
-    
+
     return;
 }
 

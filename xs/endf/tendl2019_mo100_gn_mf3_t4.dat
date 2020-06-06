@@ -1,0 +1,30 @@
+#LIBRARY    TENDL-2019
+#REACTION   MO-100(G,INL)MO-100,SIG
+#NUCLEUS    Mo-100
+#MF         3
+#MT         4
+#EN-MIN     8.29425e+06
+#EN-MAX     2e+08
+#E,eV        Sig,b        Interpolation
+ 8.29425E+06 0            Lin-Lin
+ 8.39203E+06 0.0010141    Lin-Lin
+ 9E+06       0.0252135    Lin-Lin
+ 1E+07       0.0331464    Lin-Lin
+ 1.1E+07     0.0448178    Lin-Lin
+ 1.2E+07     0.0627104    Lin-Lin
+ 1.3E+07     0.0877894    Lin-Lin
+ 1.4E+07     0.117798     Lin-Lin
+ 1.5E+07     0.0976644    Lin-Lin
+ 1.6E+07     0.055964     Lin-Lin
+ 1.7E+07     0.0305903    Lin-Lin
+ 1.8E+07     0.0172679    Lin-Lin
+ 1.9E+07     0.0108823    Lin-Lin
+ 2E+07       0.00765807   Lin-Lin
+ 2.2E+07     0.00421128   Lin-Lin
+ 2.4E+07     0.00260528   Lin-Lin
+ 2.6E+07     0.00176859   Lin-Lin
+ 2.8E+07     0.00127894   Lin-Lin
+ 3E+07       0.000966002  Lin-Lin
+ 3E+07       0            Lin-Lin
+ 2E+08       0            Lin-Lin
+#END

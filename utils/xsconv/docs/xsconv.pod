@@ -1,0 +1,50 @@
+=head1 NAME
+
+xsconv - Convert the units of cross section variables
+
+=head1 SYNOPSIS
+
+    python xsconv.py [-h] file
+
+=head1 DESCRIPTION
+
+    Convert the units of cross section variables
+    so that they can be correctly read by phitar.
+
+=head1 OPTIONS
+
+    -h, --help
+        The argparse help message will be displayed.
+
+    file
+        .yaml file describing conversion conditions
+
+=head1 EXAMPLES
+
+    python xsconv.py exfor.yaml
+
+=head1 REQUIREMENTS
+
+    Python 3
+        PyYAML, pandas
+
+=head1 SEE ALSO
+
+L<phitar|https://github.com/jangcom/phitar>
+
+L<xsaug - Augment cross section data|https://github.com/jangcom/phitar/tree/master/utils/xsaug/xsaug.py>
+
+=head1 AUTHOR
+
+Jaewoong Jang <jangj@korea.ac.kr>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2020 Jaewoong Jang
+
+=head1 LICENSE
+
+This software is available under the MIT license;
+the license information is found in 'LICENSE'.
+
+=cut

@@ -1,0 +1,106 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+lcounter - Count the numbers of lines of text files
+lcounter v1.03 (2019-10-27)
+Perl v5.30.1
+
+Jaewoong Jang
+jangj@korea.ac.kr
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Counted at [2020-05-12 22:00:30]
+Comment symbol: [#]
+
+File [../lib/My/Moose/ANSYS.pm]
+Number of comment lines: 127
+Number of blank lines:   120
+Number of plain lines:   732
+
+File [../lib/My/Moose/Animate.pm]
+Number of comment lines: 275
+Number of blank lines:   83
+Number of plain lines:   555
+
+File [../lib/My/Moose/Cmt.pm]
+Number of comment lines: 19
+Number of blank lines:   19
+Number of plain lines:   90
+
+File [../lib/My/Moose/Ctrls.pm]
+Number of comment lines: 7
+Number of blank lines:   10
+Number of plain lines:   51
+
+File [../lib/My/Moose/Data.pm]
+Number of comment lines: 18
+Number of blank lines:   12
+Number of plain lines:   80
+
+File [../lib/My/Moose/FileIO.pm]
+Number of comment lines: 52
+Number of blank lines:   20
+Number of plain lines:   93
+
+File [../lib/My/Moose/Image.pm]
+Number of comment lines: 269
+Number of blank lines:   98
+Number of plain lines:   605
+
+File [../lib/My/Moose/Linac.pm]
+Number of comment lines: 24
+Number of blank lines:   38
+Number of plain lines:   183
+
+File [../lib/My/Moose/MonteCarloCell.pm]
+Number of comment lines: 25
+Number of blank lines:   13
+Number of plain lines:   122
+
+File [../lib/My/Moose/PHITS.pm]
+Number of comment lines: 238
+Number of blank lines:   209
+Number of plain lines:   1237
+
+File [../lib/My/Moose/Parser.pm]
+Number of comment lines: 12
+Number of blank lines:   16
+Number of plain lines:   47
+
+File [../lib/My/Moose/Phys.pm]
+Number of comment lines: 7
+Number of blank lines:   7
+Number of plain lines:   37
+
+File [../lib/My/Moose/Tally.pm]
+Number of comment lines: 444
+Number of blank lines:   172
+Number of plain lines:   1256
+
+File [../lib/My/Moose/Yield.pm]
+Number of comment lines: 19
+Number of blank lines:   28
+Number of plain lines:   166
+
+File [../lib/My/Moose/gnuplot.pm]
+Number of comment lines: 7
+Number of blank lines:   19
+Number of plain lines:   52
+
+File [../lib/My/Nuclear.pm]
+Number of comment lines: 707
+Number of blank lines:   245
+Number of plain lines:   2964
+
+File [../lib/My/Toolset.pm]
+Number of comment lines: 383
+Number of blank lines:   178
+Number of plain lines:   1094
+
+File [../phitar.pl]
+Number of comment lines: 1790
+Number of blank lines:   507
+Number of plain lines:   10026
+
+Total numbers of lines
+Number of comment lines: 4423
+Number of blank lines:   1794
+Number of plain lines:   19390

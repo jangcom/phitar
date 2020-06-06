@@ -1,0 +1,63 @@
+=head1 NAME
+
+yld2datagen - Convert phitar yield files to a datagen input file
+
+=head1 SYNOPSIS
+
+    python yld2datagen.py [-h] --nrg_of_int NRG_OF_INT -o OUT
+                          file [file ...]
+
+=head1 DESCRIPTION
+
+    By converting phitar yield files to a datagen input file,
+    the phitar yield data can become a function of a different
+    independent variable.
+    For example, phitar yields calculated as a function of beam energy
+    can become a function of of W-MoO3 gap.
+
+=head1 OPTIONS
+
+    -h, --help
+        The argparse help message will be displayed.
+
+    --nrg_of_int NRG_OF_INT
+        Beam energy of interest
+
+    -o OUT, --out OUT
+        Output file to become a datagen input file
+
+    file ...
+        Ordered list of phitar yield files
+
+=head1 EXAMPLES
+
+    python yld2datagen.py ^
+        gap0p1_yields_mo99-vnrg-wrcc-vhgt0p0001to0p70_peaks_by_fit_annot_peak_data_array.txt ^
+        gap0p5_yields_mo99-vnrg-wrcc-vhgt0p0001to0p70_peaks_by_fit_annot_peak_data_array.txt ^
+        --nrg_of_int 20 ^
+        --out nrg20_fwhm15p0_gap1_to_20.gen
+
+=head1 REQUIREMENTS
+
+Python 3
+
+=head1 SEE ALSO
+
+L<phitar|https://github.com/jangcom/phitar>
+
+L<datagen|https://github.com/jangcom/datagen>
+
+=head1 AUTHOR
+
+Jaewoong Jang <jangj@korea.ac.kr>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2020 Jaewoong Jang
+
+=head1 LICENSE
+
+This software is available under the MIT license;
+the license information is found in 'LICENSE'.
+
+=cut

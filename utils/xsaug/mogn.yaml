@@ -1,0 +1,84 @@
+%YAML 1.2
+---
+xs_of_int:
+  - iaea_med_2019
+  - beil1974
+iaea_med_2019:
+  inp: ./samples/endf/iaea_med_2019_mo100_gn_xsconv.dat
+  out_bname: ./samples/endf/iaea_med_2019_mo100_gn_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.52e+07
+    fit_stop: 1.83e+07
+    extrap_start: 1.85e+07
+    extrap_stop: 2e+08
+    extrap_num: 251
+  xs:
+    col: 1
+  fit:
+    func: exp1
+    p0:  # Initial guess for coefficients
+      - 242.5
+      - -4.936e-07
+  plt:
+    style: bmh  # MPL style sheets
+    title: '$^{100}$Mo($\gamma$,n)$^{99}$Mo'
+    dat:
+      lab: IAEA-Med-2019
+      mrk: gs
+    extrap:
+      lab: Extrapolated
+      mrk: rs
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 9
+beil1974:
+  inp: ./samples/exfor/beil1974_mo100_gn_t4_xsconv.dat
+  out_bname: ./samples/exfor/beil1974_mo100_gn_t4_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.4e+07
+    fit_stop: 1.65e+07
+    extrap_start: 1.8e+07
+    extrap_stop: 2e+08
+    extrap_num: 251
+  xs:
+    col: 1
+  fit:
+    func: exp1
+    p0:
+      - 34.76
+      - -3.766e-07
+  plt:
+    style: bmh
+    title: '$^{100}$Mo($\gamma$,n)$^{99}$Mo'
+    dat:
+      lab: Beil 1974
+      mrk: bo
+    extrap:
+      lab: Extrapolated
+      mrk: ro
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 9
+...

@@ -1,7 +1,7 @@
 #
 # Moose class for gnuplot
 #
-# Copyright (c) 2018-2019 Jaewoong Jang
+# Copyright (c) 2018-2020 Jaewoong Jang
 # This script is available under the MIT license;
 # the license information is found in 'LICENSE'.
 #

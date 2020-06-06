@@ -19,7 +19,11 @@
   <li><a href="#OPTIONS">OPTIONS</a></li>
   <li><a href="#EXAMPLES">EXAMPLES</a></li>
   <li><a href="#REQUIREMENTS">REQUIREMENTS</a></li>
-  <li><a href="#SEE-ALSO">SEE ALSO</a></li>
+  <li><a href="#SEE-ALSO">SEE ALSO</a>
+    <ul>
+      <li><a href="#Utilities">Utilities</a></li>
+    </ul>
+  </li>
   <li><a href="#AUTHOR">AUTHOR</a></li>
   <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
   <li><a href="#LICENSE">LICENSE</a></li>
@@ -31,16 +35,16 @@
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
-<pre><code>    perl phitar.pl [run_mode] [-rpt_subdir=dname] [-rpt_fmts=ext ...]
-                   [-rpt_flag=str] [-nofm] [-nopause]</code></pre>
+<pre><code>    perl phitar.pl [run_mode] [--rpt_subdir=dname] [--rpt_fmts=ext ...]
+                   [--rpt_flag=str] [--nopause]</code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
 <pre><code>    phitar is a PHITS wrapper written in Perl, intended for the design of
     bremsstrahlung converters and Mo targets. phitar can:
-      - examine a range of targetry dimensions and beam parameters
+      - examine ranges of source and geomeric parameters
         according to user specifications
-      - generate MAPDL table and macro files
+      - generate ANSYS MAPDL table and macro files
       - collect information from PHITS tally outputs and generate
         report files
       - collect information from PHITS general outputs and generate
@@ -54,22 +58,22 @@
 
 <pre><code>    run_mode
         file
-            An input file specifying simulation conditions.
+            Input file specifying simulation conditions.
             Refer to &#39;args.phi&#39; for the syntax.
         -d
             Run simulations with the default settings.
-        -dump_src=particle
-                electron
-                photon
-                neutron
+        --dump_src=&lt;particle&gt;
+            electron
+            photon
+            neutron
             Run simulations using a dump source.
             (as of v1.03, particles entering a Mo target are used
             as the dump source)
 
-    -rpt_subdir=dname (short: -subdir, default: reports)
+    --rpt_subdir=dname (short: --subdir, default: reports)
         Name of subdirectory to which report files will be stored.
 
-    -rpt_fmts=ext ... (short: -fmts, default: dat,xlsx)
+    --rpt_fmts=ext ... (short: --fmts, default: dat,xlsx)
         Output file formats. Multiple formats are separated by the comma (,).
         all
             All of the following ext&#39;s.
@@ -86,26 +90,26 @@
         yaml
             YAML
 
-    -rpt_flag=str (short: -flag)
-        str is appended to the report filenames followed by an underscore.
+    --rpt_flag=str (short: -flag)
+        The input str followed by an underscore is appended to
+        the names of the following files:
+        - maximum total fluences
+        - cputimes
         Use this option when different materials are simulated
-        in the same batch.
+        in the same batch to prevent unintended overwriting.
 
-    -nofm
-        The front matter will not be displayed at the beginning of program.
-
-    -nopause
-        The shell will not be paused at the end of program.
+    --nopause
+        The shell will not be paused at the end of the program.
         Use it for a batch run.</code></pre>
 
 <h1 id="EXAMPLES">EXAMPLES</h1>
 
 <pre><code>    perl phitar.pl args.phi
     perl phitar.pl -d
-    perl phitar.pl -dump=electron -rpt_flag=elec_dmp args.phi
+    perl phitar.pl --dump=electron --rpt_flag=elec_dmp args.phi
     perl phitar.pl args.phi &gt; phitar.log -nopause
-    perl phitar.pl -rpt_flag=au args.phi
-    perl phitar.pl -rpt_flag=moo3 args_moo3.phi</code></pre>
+    perl phitar.pl --rpt_flag=au args.phi
+    perl phitar.pl --rpt_flag=moo3 args_moo3.phi</code></pre>
 
 <h1 id="REQUIREMENTS">REQUIREMENTS</h1>
 
@@ -119,13 +123,34 @@
 
 <p><a href="https://github.com/jangcom/phitar">phitar on GitHub</a></p>
 
+<h2 id="Utilities">Utilities</h2>
+
+<ul>
+
+<li><p><a href="https://github.com/jangcom/phitar/tree/master/utils/excel2etype22/excel2etype22.py">excel2etype22 - Convert EXCEL-stored energy distribution data to PHITS e-type = 22 data</a></p>
+
+</li>
+<li><p><a href="https://github.com/jangcom/phitar/tree/master/utils/xsconv/xsconv.py">xsconv - Convert the units of cross section variables</a></p>
+
+</li>
+<li><p><a href="https://github.com/jangcom/phitar/tree/master/utils/xsaug/xsaug.py">xsaug - Augment cross section data</a></p>
+
+</li>
+<li><p><a href="https://github.com/jangcom/phitar/tree/master/utils/joinyld/joinyld.py">joinyld - Join phitar yield files</a></p>
+
+</li>
+<li><p><a href="https://github.com/jangcom/phitar/tree/master/utils/yld2datagen/yld2datagen.py">yld2datagen - Convert phitar yield files to a datagen input file</a></p>
+
+</li>
+</ul>
+
 <h1 id="AUTHOR">AUTHOR</h1>
 
 <p>Jaewoong Jang &lt;jangj@korea.ac.kr&gt;</p>
 
 <h1 id="COPYRIGHT">COPYRIGHT</h1>
 
-<p>Copyright (c) 2018-2019 Jaewoong Jang</p>
+<p>Copyright (c) 2018-2020 Jaewoong Jang</p>
 
 <h1 id="LICENSE">LICENSE</h1>
 

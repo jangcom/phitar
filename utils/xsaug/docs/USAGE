@@ -1,0 +1,40 @@
+NAME
+    xsaug - Augment cross section data
+
+SYNOPSIS
+        python xsaug.py [-h] file
+
+DESCRIPTION
+        Augment cross section data so that
+        they can be correctly read by phitar.
+
+OPTIONS
+        -h, --help
+            The argparse help message will be displayed.
+
+        file
+            .yaml file describing augmentation conditions
+
+EXAMPLES
+        python xsaug.py exfor.yaml
+
+REQUIREMENTS
+        Python 3
+            PyYAML, NumPy, SciPy, pandas, Matplotlib
+
+SEE ALSO
+    phitar <https://github.com/jangcom/phitar>
+
+    xsconv - Convert the units of cross section variables
+    <https://github.com/jangcom/phitar/tree/master/utils/xsconv/xsconv.py>
+
+AUTHOR
+    Jaewoong Jang <jangj@korea.ac.kr>
+
+COPYRIGHT
+    Copyright (c) 2020 Jaewoong Jang
+
+LICENSE
+    This software is available under the MIT license; the license
+    information is found in 'LICENSE'.
+

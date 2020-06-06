@@ -1,0 +1,166 @@
+%YAML 1.2
+---
+xs_of_int:
+  - plaisir2012
+  - berman1987
+  - veyssiere1970
+  - fultz1962
+plaisir2012:
+  inp: ./samples/exfor/plaisir2012_au197_gn_xsconv.dat
+  out_bname: ./samples/exfor/plaisir2012_au197_gn_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.5e+07
+    fit_stop: 2e+07
+    extrap_start: 2.01e+07
+    extrap_stop: 2e+08
+    extrap_num: 301
+  xs:
+    col: 1
+  fit:
+    func: exp2
+    p0:
+      - 3.355e+05
+      - -9.748e-07
+      - 3.868
+      - -2.303e-07
+  plt:
+    style: bmh  # MPL style sheets
+    title: '$^{197}$Au($\gamma$,n)$^{196}$Au'
+    dat:
+      lab: Plaisir 2012
+      mrk: k*
+    extrap:
+      lab: Extrapolated
+      mrk: r*
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 10
+berman1987:
+  inp: ./samples/exfor/berman1987_au197_gn_t4_xsconv.dat
+  out_bname: ./samples/exfor/berman1987_au197_gn_t4_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.58e+07
+    fit_stop: 1.69e+07
+    extrap_start: 1.7e+07
+    extrap_stop: 2e+08
+    extrap_num: 251
+  xs:
+    col: 1
+  fit:
+    func: exp1
+    p0:  # Initial guess for coefficients
+      - 9.478e+06
+      - -1.098e-06
+  plt:
+    style: bmh
+    title: '$^{197}$Au($\gamma$,n)$^{196}$Au'
+    dat:
+      lab: Berman 1987
+      mrk: gs
+    extrap:
+      lab: Extrapolated
+      mrk: rs
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 9
+veyssiere1970:
+  inp: ./samples/exfor/veyssiere1970_au197_gn_t4_xsconv.dat
+  out_bname: ./samples/exfor/veyssiere1970_au197_gn_t4_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.67e+07
+    fit_stop: 1.98e+07
+    extrap_start: 2e+07
+    extrap_stop: 2e+08
+    extrap_num: 251
+  xs:
+    col: 1
+  fit:
+    func: exp1
+    p0:
+      - 191.5
+      - -4.419e-07
+  plt:
+    style: bmh
+    title: '$^{197}$Au($\gamma$,n)$^{196}$Au'
+    dat:
+      lab: Veyssiere 1970
+      mrk: bo
+    extrap:
+      lab: Extrapolated
+      mrk: m*
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 8
+fultz1962:
+  inp: ./samples/exfor/fultz1962_au197_gn_t4_xsconv.dat
+  out_bname: ./samples/exfor/fultz1962_au197_gn_t4_xsconv_xsaug
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    fit_start: 1.55e+07
+    fit_stop: 1.8e+07
+    extrap_start: 1.9e+07
+    extrap_stop: 2e+08
+    extrap_num: 251
+  xs:
+    col: 1
+  fit:
+    func: exp1
+    p0:
+      - 2.491e+08
+      - -1.312e-06
+  plt:
+    style: bmh
+    title: '$^{197}$Au($\gamma$,n)$^{196}$Au'
+    dat:
+      lab: Fultz 1962
+      mrk: g*
+    extrap:
+      lab: Extrapolated
+      mrk: r*
+    xlim:
+      min: 0
+      max: 3.5e+07
+    fmts:
+      - svg
+      - pdf
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 8
+...

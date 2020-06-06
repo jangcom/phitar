@@ -1,3 +1,20 @@
+2020-05-05 (v1.00)
+- Attribute name changed:
+  - curr_src_dist --> curr_src_spat_dist
+  - varying_param --> iter_param
+
+2020-05-02 (v1.00)
+- type_of_int -> spat_dist_of_int
+- gaussian_nrg and discrete_nrg added
+- set_nrg_val_fixed -> set_eg0_val_fixed
+- set_nrg_vals_of_int -> set_eg0_vals_of_int
+
+2020-04-08 (v1.00)
+- heat_mev_per_cm3 added in addition to heat_mev
+
+2020-02-09 (v1.00)
+- Superscript minus signs modified from ^{-<num>} to ^{$-$<num>}.
+
 2019-12-08 (v1.00)
 - PHITS::Ctrls->nolegend_switch has been added.
 - The default value of PHITS::Ctrls->modify_switch has been changed to 'on'

@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+xs_of_int:
+  - iaea_med_2019
+  - beil1974
+iaea_med_2019:
+  inp: ./samples/endf/iaea_med_2019_mo100_gn.dat
+  out: ./samples/endf/iaea_med_2019_mo100_gn_xsconv.dat
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    multiply_by: 1e6  # MeV -> eV
+  xs:
+    col: 1
+    multiply_by: 1  # b -> b
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 9
+beil1974:
+  inp: ./samples/exfor/beil1974_mo100_gn_t4.dat
+  out: ./samples/exfor/beil1974_mo100_gn_t4_xsconv.dat
+  headers:
+    nrg: 'Energy (eV)'
+    xs: 'Cross section (b)'
+  nrg:
+    col: 0
+    multiply_by: 1e6  # MeV -> eV
+  xs:
+    col: 1
+    multiply_by: 1e-3  # mb -> b
+  preserve_comments:
+    toggle: 1
+    start_row: 0
+    stop_row: 9
+...

@@ -1,0 +1,19 @@
+%YAML 1.2
+---
+out_path: ./samples
+excel_path: ./samples
+excel_fname: sample.xlsx
+sheets_of_int:
+  - 20MeV
+  - 50MeV
+20MeV:
+  xcol: 'Randomized energy (MeV)'
+  ycol: 'Randomized 8-bit count'
+  lab: '20 MeV'
+  out_bname: sample_nrg20
+50MeV:
+  xcol: 'Randomized energy (MeV)'
+  ycol: 'Randomized 8-bit count'
+  lab: '50 MeV'
+  out_bname: sample_nrg50
+...

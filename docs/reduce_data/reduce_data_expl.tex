@@ -1,0 +1,44 @@
+\documentclass{article}
+
+\usepackage[
+    tabular % Loads booktabs, multicol, multirow, makecell, colortbl, dcolumn
+]{mypacks}
+\usepackage[
+  smallcapcode
+]{myshortcuts}
+
+\usepackage[
+%  showframe,
+  top   =20mm,
+  bottom=20mm,
+  left  =5mm,
+  right =5mm,
+]{geometry}
+\pagenumbering{gobble}
+\usepackage{underscore}
+
+\title{Report formats of \texttt{reduce{\textunderscore}data}}
+\author{Jaewoong Jang}
+\date{\compileTime}
+
+\begin{document}
+
+\maketitle
+
+\fontsize{9}{11}\selectfont
+\centering
+\begin{tabular}{l|lc|c|cc|cc}
+  \toprule
+  \multirow{2}{*}{\texttt{rpt_formats}} & \multicolumn{2}{c|}{Application}             & Third-party                  & \multicolumn{2}{c|}{File} & \multicolumn{2}{c}{Tabular layout} \\
+  {}                                    & \multicolumn{1}{c}{Purpose}  & Program       & {\perl} module               & Format & extension        & {Vertical alignment} & {Border}    \\
+  \midrule
+  gp                                    & Data visualization           & \gnuplot      & None                         & Text   & .dat             & Yes                  & Yes         \\
+  tex                                   & Data visualization           & \LaTeX        & None                         & Text   & .tex             & Yes                  & Yes         \\
+  csv                                   & Data visualization           & Many          & \texttt{Text::CSV}           & Text   & .csv             & No                   & No          \\
+  xlsx                                  & Data visualization           & {\excel} etc. & \texttt{Excel::Writer::XLSX} & Binary & .xlsx            & Yes                  & Yes         \\
+  json                                  & Data interchange             & Many          & \texttt{JSON}                & Text   & .json            & n/a                  & n/a         \\
+  yaml                                  & Data interchange             & Many          & \texttt{YAML}                & Text   & .yaml            & n/a                  & n/a         \\
+  \bottomrule
+\end{tabular}
+
+\end{document}
