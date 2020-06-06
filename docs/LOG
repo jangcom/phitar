@@ -2,13 +2,13 @@
 - v1.04 released on GitHub and Zenodo.
 
 2020-05-11 (v1.04)
-- Utility programs 'xsaug' written in Python has been added to './utils/'.
+- Utility program 'xsaug' written in Python has been added to './utils/'.
 
 2020-05-10 (v1.04)
-- Utility programs 'xsconv' written in Python has been added to './utils/'.
+- Utility program 'xsconv' written in Python has been added to './utils/'.
 
 2020-05-09 (v1.04)
-- Utility programs 'excel2etype22' written in Python has been added to './utils/'.
+- Utility program 'excel2etype22' written in Python has been added to './utils/'.
 
 2020-05-10 (v1.04)
 - Methods '<..>_of_int' in default_run_settings() have been fixed.
