@@ -37,8 +37,8 @@
 
 2020-05-05 (v1.04)
 - The energy bins of a tally used for yield calculation
-  and the energy points of an excitation function
-  has become effectively the same.
+  have become effectively the same as
+  the energy points of an excitation function.
 - Format specifiers of yield report files have been corrected.
 - Sums of pointwise multiplication products are no longer written to
   yield report files.
