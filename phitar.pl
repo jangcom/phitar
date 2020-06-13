@@ -77,8 +77,8 @@ my $yield_au196_2_for_sp_src = Yield->new();
 my $pwm_au196_2_for_sp_src   = Yield->new();
 
 
-our $VERSION = '1.04';
-our $LAST    = '2020-05-12';
+our $VERSION = '1.05';
+our $LAST    = '2020-06-13';
 our $FIRST   = '2018-04-23';
 
 
@@ -2157,6 +2157,29 @@ sub parse_inp {
             }
 
             # Spatial distribution parameters
+            # Releasing coordinates
+            if ($key =~ /crd/i) {
+                ($subkey = $key) =~ s/(\w+)$obj_attr_delim(\w+)/$2/;
+                $key             =~ s/(\w+)$obj_attr_delim(\w+)/$1/;
+                # z0: gaussian_xyz only
+                if ($phits->source->spat_dist_of_int->{type}{val} == 3) {
+                    $phits->source->set_z_center($val)
+                        if $subkey =~ /z_center/i;
+                }
+                # z_beg and z_end: gaussian_xy and cylindrical
+                else {
+                    $phits->source->set_z_beg($val) if $subkey =~ /z_beg/i;
+                    $phits->source->set_z_end($val) if $subkey =~ /z_end/i;
+                }
+                # x0 and y0: Common to all spatial distribution setters
+                if ($subkey =~ /x_center/i) {
+                    $phits->source->set_x_center($val);
+                }
+                if ($subkey =~ /y_center/i) {
+                    $phits->source->set_y_center($val);
+                }
+            }
+
             # gaussian_xy: xy_fwhms only
             if ($key =~ /xy_fwhm_fixed/i) {
                 $phits->source->set_xy_fwhms_val_fixed($val);

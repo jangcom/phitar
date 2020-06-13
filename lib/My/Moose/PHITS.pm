@@ -17,7 +17,7 @@ use File::Copy qw(copy);
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.00';
-our $LAST     = '2020-05-07';
+our $LAST     = '2020-06-13';
 our $FIRST    = '2018-08-19';
 
 has 'Cmt' => (
@@ -1552,6 +1552,20 @@ has 'mode' => (
     writer  => 'set_mode',
 );
 
+# Energy distribution
+has $_ => (
+    traits  => ['Hash'],
+    is      => 'ro',
+    isa     => 'HashRef[Str|HashRef]',
+    default => sub { {} },
+    handles => {
+        'set_'.$_ => 'set',
+    },
+) for qw(
+    gaussian_nrg
+    free_form_nrg
+);
+
 # Spatial distribution
 has $_ => (
     traits  => ['Hash'],
@@ -1566,20 +1580,6 @@ has $_ => (
     gaussian_xyz
     cylindrical
     dump
-);
-
-# Energy distribution
-has $_ => (
-    traits  => ['Hash'],
-    is      => 'ro',
-    isa     => 'HashRef[Str|HashRef]',
-    default => sub { {} },
-    handles => {
-        'set_'.$_ => 'set',
-    },
-) for qw(
-    gaussian_nrg
-    free_form_nrg
 );
 
 # Variables into which values of interest will be copy-pasted
@@ -1606,6 +1606,38 @@ sub set_eg0_val_fixed {
 sub set_eg0_vals_of_int {
     my $self = shift;
     @{$self->gaussian_nrg->{eg0}{vals_of_int}} = @{$_[0]}
+        if defined $_[0];
+    return;
+}
+
+# Setters for spatial distribution, releasing coordinates
+sub set_x_center {
+    my $self = shift;
+    $self->spat_dist_of_int->{x_center}{val} = $_[0]
+        if defined $_[0];
+    return;
+}
+sub set_y_center {
+    my $self = shift;
+    $self->spat_dist_of_int->{y_center}{val} = $_[0]
+        if defined $_[0];
+    return;
+}
+sub set_z_center {
+    my $self = shift;
+    $self->spat_dist_of_int->{z_center}{val} = $_[0]
+        if defined $_[0];
+    return;
+}
+sub set_z_beg {
+    my $self = shift;
+    $self->spat_dist_of_int->{z_beg}{val} = $_[0]
+        if defined $_[0];
+    return;
+}
+sub set_z_end {
+    my $self = shift;
+    $self->spat_dist_of_int->{z_end}{val} = $_[0]
         if defined $_[0];
     return;
 }
