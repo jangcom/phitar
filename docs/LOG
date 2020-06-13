@@ -1,3 +1,7 @@
+2020-06-13 (v1.05)
+- The releasing coordinates of a source particle can now be
+  designated via the user input file.
+
 2020-06-06 (v1.04)
 - v1.04 released on GitHub and Zenodo.
 

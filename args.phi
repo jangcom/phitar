@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
-# User input file of phitar v1.04
-# - Last:  2020-05-10
+# User input file of phitar v1.05
+# - Last:  2020-06-13
 # - First: 2018-07-14
 #
 # Syntax
@@ -153,6 +153,14 @@ source.gaussian_nrg.rt_from_eg0 = 3
 # source.nrg_dist = free_form
 #----------------------------
 source.free_form_nrg.file = './nrg_dist/expt2_nrg35.txt'
+#--------------------------------
+# source.spat_dist, releasing coordinates
+#--------------------------------
+source.crd.x_center = 0.0
+source.crd.y_center = 0.0
+source.crd.z_center = -5.0  # gaussian_xyz only
+source.crd.z_beg    = -5.0
+source.crd.z_end    = -5.0
 #--------------------------------
 # source.spat_dist = gaussian_xy
 #--------------------------------
