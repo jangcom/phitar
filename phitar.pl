@@ -78,7 +78,7 @@ my $pwm_au196_2_for_sp_src   = Yield->new();
 
 
 our $VERSION = '1.05';
-our $LAST    = '2020-06-13';
+our $LAST    = '2020-07-11';
 our $FIRST   = '2018-04-23';
 
 
@@ -12313,6 +12313,8 @@ phitar - A PHITS wrapper for targetry design
 =head1 SEE ALSO
 
 L<phitar on GitHub|https://github.com/jangcom/phitar>
+
+L<autophits - A PHITS wrapper enabling parametric simulations|https://github.com/jangcom/autophits>
 
 =head2 Utilities
 

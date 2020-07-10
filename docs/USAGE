@@ -85,6 +85,9 @@ REQUIREMENTS
 SEE ALSO
     phitar on GitHub <https://github.com/jangcom/phitar>
 
+    autophits - A PHITS wrapper enabling parametric simulations
+    <https://github.com/jangcom/autophits>
+
   Utilities
     *    excel2etype22 - Convert EXCEL-stored energy distribution data to
          PHITS e-type = 22 data

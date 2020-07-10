@@ -11,9 +11,10 @@
 * [phitar: Testing of the e-type = 22 source subsection](https://nbviewer.jupyter.org/github/jangcom/phitar/blob/master/docs/testing_results/etype22.ipynb)
 * [phitar: Energy bin synchronization between tallies and cross sections](https://nbviewer.jupyter.org/github/jangcom/phitar/blob/master/docs/testing_results/sync_nrg.ipynb)
 
-# Cotents
+# Contents
 
 <?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -134,6 +135,8 @@
 <h1 id="SEE-ALSO">SEE ALSO</h1>
 
 <p><a href="https://github.com/jangcom/phitar">phitar on GitHub</a></p>
+
+<p><a href="https://github.com/jangcom/autophits">autophits - A PHITS wrapper enabling parametric simulations</a></p>
 
 <h2 id="Utilities">Utilities</h2>
 
