@@ -136,7 +136,7 @@
 
 <p><a href="https://github.com/jangcom/phitar">phitar on GitHub</a></p>
 
-<p><a href="https://github.com/jangcom/automc">automc - Parameterize Monte Carlo simulations</a></p>
+<p><a href="https://github.com/jangcom/automc">automc - A wrapper enabling parametric Monte Carlo simulations</a></p>
 
 <h2 id="Utilities">Utilities</h2>
 
@@ -175,4 +175,3 @@
 </body>
 
 </html>
-

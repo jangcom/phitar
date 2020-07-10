@@ -85,7 +85,7 @@ REQUIREMENTS
 SEE ALSO
     phitar on GitHub <https://github.com/jangcom/phitar>
 
-    automc - Parameterize Monte Carlo simulations
+    automc - A wrapper enabling parametric Monte Carlo simulations
     <https://github.com/jangcom/automc>
 
   Utilities
