@@ -12314,7 +12314,7 @@ phitar - A PHITS wrapper for targetry design
 
 L<phitar on GitHub|https://github.com/jangcom/phitar>
 
-L<automc - Parameterize Monte Carlo simulations|https://github.com/jangcom/automc>
+L<automc - A wrapper enabling parametric Monte Carlo simulations|https://github.com/jangcom/automc>
 
 =head2 Utilities
 
