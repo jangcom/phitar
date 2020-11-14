@@ -1,17 +1,16 @@
-*.lnk
-updates.txt
+# phitar records
+bak_*
+*_baker.bat
 
-# Personal docs
+# phitar aux and result files
 docs/figs/
 docs/notes/
 docs/testbed/
+docs/updates.txt
 nrg_dist/
 expt2_beam_nrg_dist.xlsx
 *.mat
-
-# phitar aux and result files
 xs/*splines*
 
-# baker
-bak_*
-*_baker.bat
+# MSWin link files
+*.lnk

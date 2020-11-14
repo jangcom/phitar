@@ -1,3 +1,6 @@
+2020-08-07 (v1.01)
+- Yields units for uA-h added: sp_yield_per_microamp_hour
+
 2020-05-05 (v1.01)
 - adjust_num_of_decimal_places() corrected for phitar run.
 - read_in_mc_flues() now stores the average of e-lower and e-upper

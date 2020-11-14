@@ -85,8 +85,8 @@ REQUIREMENTS
 SEE ALSO
     phitar on GitHub <https://github.com/jangcom/phitar>
 
-    automc - A wrapper enabling parametric Monte Carlo simulations
-    <https://github.com/jangcom/automc>
+    phitar in a paper: *Nucl. Instrum. Methods Phys. Res. A* 987 (2021)
+    164815 <https://doi.org/10.1016/j.nima.2020.164815>
 
   Utilities
     *    excel2etype22 - Convert EXCEL-stored energy distribution data to

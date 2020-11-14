@@ -73,7 +73,7 @@ our %EXPORT_TAGS = (
 
 our $PACKNAME = __PACKAGE__;
 our $VERSION  = '1.01';
-our $LAST     = '2020-05-06';
+our $LAST     = '2020-08-07';
 our $FIRST    = '2018-09-24';
 
 
@@ -1049,10 +1049,11 @@ sub adjust_num_of_decimal_places {
         react_rate             => '%.6e',
         react_rate_tot         => '%.6e',
         # Yields
-        yield                 => '%.2f',
-        yield_per_microamp    => '%.2f',
-        sp_yield              => '%.2f',
-        sp_yield_per_microamp => '%.2f',
+        yield                      => '%.2f',
+        yield_per_microamp         => '%.2f',
+        sp_yield                   => '%.2f',
+        sp_yield_per_microamp      => '%.2f',
+        sp_yield_per_microamp_hour => '%.2f',
     );
     # Override the format specifiers if any have been
     # designated via the input file.
@@ -2360,12 +2361,13 @@ sub gen_chem_hrefs {
             symb      => 'Zr-90m',
             name      => 'zirconium-90m',
             # Radioactive
-            half_life             => (809.2e-3 / 3600),           # h
-            dec_const             => log(2) / (809.2e-3 / 3600),  # h^-1
-            yield                 => 0,  # TBC
-            yield_per_microamp    => 0,  # TBC
-            sp_yield              => 0,  # TBC
-            sp_yield_per_microamp => 0,  # TBC
+            half_life => (809.2e-3 / 3600),           # h
+            dec_const => log(2) / (809.2e-3 / 3600),  # h^-1
+            yield                      => 0,  # TBC
+            yield_per_microamp         => 0,  # TBC
+            sp_yield                   => 0,  # TBC
+            sp_yield_per_microamp      => 0,  # TBC
+            sp_yield_per_microamp_hour => 0,  # TBC
         },
         '91' => {
             data_type      => 'nucl',
@@ -2396,12 +2398,13 @@ sub gen_chem_hrefs {
             symb      => 'Zr-93',
             name      => 'zirconium-93',
             # Radioactive
-            half_life             => (1.53e+6 * 365 * 24),
-            dec_const             => log(2) / (1.53e+6 * 365 * 24),
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => (1.53e+6 * 365 * 24),
+            dec_const => log(2) / (1.53e+6 * 365 * 24),
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
         '94' => {
             data_type      => 'nucl',
@@ -2439,12 +2442,13 @@ sub gen_chem_hrefs {
             symb      => 'Zr-98',
             name      => 'zirconium-98',
             # Radioactive
-            half_life             => (30.7  / 3600),
-            dec_const             => log(2) / (30.7  / 3600),
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => (30.7  / 3600),
+            dec_const => log(2) / (30.7  / 3600),
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
     );
     #--------------------------------------------------------------------------
@@ -2566,12 +2570,13 @@ sub gen_chem_hrefs {
             symb      => 'Mo-99',
             name      => 'molybdenum-99',
             # Radioactive
-            half_life             => 65.94,
-            dec_const             => log(2) / 65.94,
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => 65.94,
+            dec_const => log(2) / 65.94,
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
         '100' => {
             data_type      => 'nucl',
@@ -2606,12 +2611,13 @@ sub gen_chem_hrefs {
             symb      => 'Tc-99',
             name      => 'technetium-99',
             # Radioactive
-            half_life             => 2.111e5 * 365 * 24,  # 211,100 years
-            dec_const             => log(2) / (2.111e5 * 365 * 24),
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => 2.111e5 * 365 * 24,  # 211,100 years
+            dec_const => log(2) / (2.111e5 * 365 * 24),
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
         '99m' => {
             data_type => 'nucl',
@@ -2620,12 +2626,13 @@ sub gen_chem_hrefs {
             symb      => 'Tc-99m',
             name      => 'technetium-99m',
             # Radioactive
-            half_life             => 6.01,
-            dec_const             => log(2) / 6.01,
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => 6.01,
+            dec_const => log(2) / 6.01,
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
     );
     #--------------------------------------------------------------------------
@@ -2649,12 +2656,13 @@ sub gen_chem_hrefs {
             symb      => 'Au-196',
             name      => 'gold-196',
             # Radioactive
-            half_life             => 6.183 * 24,
-            dec_const             => log(2) / (6.183 * 24),
-            yield                 => 0,
-            yield_per_microamp    => 0,
-            sp_yield              => 0,
-            sp_yield_per_microamp => 0,
+            half_life => 6.183 * 24,
+            dec_const => log(2) / (6.183 * 24),
+            yield                      => 0,
+            yield_per_microamp         => 0,
+            sp_yield                   => 0,
+            sp_yield_per_microamp      => 0,
+            sp_yield_per_microamp_hour => 0,
         },
         '197' => {
             data_type      => 'nucl',
@@ -3535,9 +3543,16 @@ sub tot_react_rate_to_yield_and_sp_yield {
         # NOT the mass of the target!
         #**********************************************************************
         / $_react_nucl_elem_mass;
+
+    #   $mo{'99'}{sp_yield_per_microamp}
     $_prod_nucl->{sp_yield_per_microamp} =
         $_prod_nucl->{sp_yield}
         / $_avg_beam_curr;
+
+    #   $mo{'99'}{sp_yield_per_microamp_hour}
+    $_prod_nucl->{sp_yield_per_microamp_hour} =
+        $_prod_nucl->{sp_yield_per_microamp}
+        / $_end_of_irr;
 
     return;
 }
@@ -3869,6 +3884,10 @@ sub calc_rn_yield {
             $chem_hrefs->{$prod_nucl_elem}
                          {$prod_nucl_mass_num}
                          {sp_yield_per_microamp},
+        prod_nucl_sp_yield_per_microamp_hour =>
+            $chem_hrefs->{$prod_nucl_elem}
+                         {$prod_nucl_mass_num}
+                         {sp_yield_per_microamp_hour},
 
         # Irradiation conditions
         avg_beam_curr => $avg_beam_curr,
