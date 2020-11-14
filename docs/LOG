@@ -1,3 +1,6 @@
+2020-08-07 (v1.05)
+- A yield unit added: kBq g^-1 uA^-1 h^-1
+
 2020-06-13 (v1.05)
 - The releasing coordinates of a source particle can now be
   designated via the user input file.

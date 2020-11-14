@@ -78,7 +78,7 @@ my $pwm_au196_2_for_sp_src   = Yield->new();
 
 
 our $VERSION = '1.05';
-our $LAST    = '2020-07-11';
+our $LAST    = '2020-11-14';
 our $FIRST   = '2018-04-23';
 
 
@@ -3462,10 +3462,11 @@ sub run_and_rpt_calc_rn_yield {
                 react_rate_per_vol_tot => $_conv_val2,
                 react_rate             => $_conv_val2,
                 react_rate_tot         => $_conv_val2,
-                yield                 => $_conv_val1,
-                yield_per_microamp    => $_conv_val1,
-                sp_yield              => $_conv_val1,
-                sp_yield_per_microamp => $_conv_val1,
+                yield                      => $_conv_val1,
+                yield_per_microamp         => $_conv_val1,
+                sp_yield                   => $_conv_val1,
+                sp_yield_per_microamp      => $_conv_val1,
+                sp_yield_per_microamp_hour => $_conv_val1,
             },
 
             # Yield and specific yield units
@@ -3482,6 +3483,7 @@ sub run_and_rpt_calc_rn_yield {
         $yld_pn_each->calc_rn_yield->{prod_nucl_yield_per_microamp},
         $yld_pn_each->calc_rn_yield->{prod_nucl_sp_yield},
         $yld_pn_each->calc_rn_yield->{prod_nucl_sp_yield_per_microamp},
+        $yld_pn_each->calc_rn_yield->{prod_nucl_sp_yield_per_microamp_hour},
     ) for ($yld_pn_each, $yld_pn_each_sp_src);
 
     # PWM
@@ -3545,6 +3547,10 @@ sub run_and_rpt_calc_rn_yield {
                 "%s sp_yield per uA",
                 $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
             ),
+            sprintf(
+                "%s sp_yield per uA-h",
+                $yld_pn_each->calc_rn_yield->{prod_nucl_symb},
+            ),
         ];
         my $_subheads1 = [
             sprintf(
@@ -3566,6 +3572,10 @@ sub run_and_rpt_calc_rn_yield {
             ),
             sprintf(
                 "(%s g^{-1} uA^{-1})",
+                $yld_pn_each->calc_rn_yield->{yield_unit},
+            ),
+            sprintf(
+                "(%s g^{-1} uA^{-1} h^{-1})",
                 $yld_pn_each->calc_rn_yield->{yield_unit},
             ),
         ];
@@ -3674,11 +3684,11 @@ sub run_and_rpt_calc_rn_yield {
                     'to'.                          # to
                     $_v_geom_param_stop            # 0p70
                 ),
-                size         => 6,
+                size         => 7,
                 heads        => $_heads1,
                 subheads     => $_subheads1,
                 columnar_arr => $yld_pn_each->columnar_arr,
-                ragged_left  => [2..5],
+                ragged_left  => [2..6],
             },
             yld_pn_each_sp_src => {
                 obj_for_cmt => $yld_pn_each,
@@ -3700,11 +3710,11 @@ sub run_and_rpt_calc_rn_yield {
                     'to'.
                     $_v_geom_param_stop
                 ),
-                size         => 6,
+                size         => 7,
                 heads        => $_heads1,
                 subheads     => $_subheads1,
                 columnar_arr => $yld_pn_each_sp_src->columnar_arr,
-                ragged_left  => [2..5],
+                ragged_left  => [2..6],
             },
             pwm_pn_each_sp_src => {
                 obj_for_cmt => $yld_pn_each,
@@ -12117,7 +12127,7 @@ sub phitar {
             },
         );
         my %cmd_opts = (  # Command-line opts
-            default    => qr/-?-d\b/i,
+            default    => qr/-d\b/i,
             dump_src   => qr/-?-dump(?:_src)?\s*=\s*/i,
             rpt_subdir => qr/-?-(?:rpt_)?subdir\s*=\s*/i,
             rpt_fmts   => qr/-?-(?:rpt_)?fmts\s*=\s*/i,
@@ -12314,7 +12324,7 @@ phitar - A PHITS wrapper for targetry design
 
 L<phitar on GitHub|https://github.com/jangcom/phitar>
 
-L<automc - A wrapper enabling parametric Monte Carlo simulations|https://github.com/jangcom/automc>
+L<phitar in a paper: I<Nucl. Instrum. Methods Phys. Res. A> B<987> (2021) 164815|https://doi.org/10.1016/j.nima.2020.164815>
 
 =head2 Utilities
 
